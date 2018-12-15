@@ -1,0 +1,71 @@
+
+     Every n miliseconds =>
+        Call CMD_CHECK to check the followong topics:
+           Check Motion
+           Check Noise Variation
+           Check Temperature Variation
+           Check Lux Variation
+                         
+     If alert trigerred =>
+        Call CMD_INFOS to get the following infos:
+           0: alert status
+           1: picture number
+           2: motor_state
+           3: direction
+           4: distance
+           5: temperature
+           6: brightness
+           7: noise
+      
+        Call CMD_ALERT to perform:
+           If motor_state == STATE_GO => Stop
+           Make 3 pictures left, front and right 
+           
+           If the PI server is activated for alert =>
+              Send Infos to the ESP8266 Client via the Serial bus and then via WIFI to the PI server
+              Send 3 Pictures to the ESP8266 Client via the Serial bus and then via WIFI to the PI server
+
+     Else if the ESP8266 Server requests something (interrupt received) =>
+        Read the message received from the ESP8266 server via the Serial bus
+        If it is a command, Execute the command and reply via the Serial bus to the ESP8266 Server
+        If it is a response, Update the robot with the response
+    
+     Else if the PI server is activated for periodic infos and timer is reached => 
+        Call CMD_INFOS to get the following infos:
+           0: alert status
+           1: picture number
+           2: motor_state
+           3: direction
+           4: distance
+           5: temperature
+           6: brightness
+           7: noise
+        Send Infos to the ESP8266 Client via the Serial bus and then via WIFI to the PI server
+   
+     Else if motor_state == STATE_GO =>
+        Call CMD_GO to perform:
+           If motor_state != STATE_GO, start_forward
+           Call go to perform:
+              Check Contacts sensors right and left
+              Check distance minimum with IR every second
+              
+              If obstacle detected during go process => 
+                 stop
+                 buzz(3);
+                 blink(Led_Red); 
+                 check_around using TiltPan and IR
+              
+                 If (dir == DIRECTION_LEFT) 
+                    start_forward
+                    turn  -45 degrees during 5s max
+                 else if (dir == DIRECTION_RIGHT)
+                    start_forward
+                    turn  +45 degrees during 5s max
+                 else
+               	    buzz(3);
+                    blink(Led_Red);
+              	    turn back during 10s max
+                   
+  
+  
+   
