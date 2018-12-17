@@ -1,5 +1,5 @@
 
-#define IOT_PIN 18 //INT5 MEGA2560
+#define IOT_PIN 3 //INT1 MEGA2560
  
 volatile int IntIOT = 0; 
 

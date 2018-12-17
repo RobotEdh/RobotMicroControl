@@ -13,9 +13,9 @@
 
 #define SUCCESS 0
 #define SPEED_ERROR -1
-#define OBSTACLE -2
-#define OBSTACLE_LEFT -3
-#define OBSTACLE_RIGHT -4
+#define OBSTACLE 12
+#define OBSTACLE_LEFT 13
+#define OBSTACLE_RIGHT 14
 #define TIMEOUT -5
 #define BAD_ANGLE -6
 #define COMPASS_ERROR -7

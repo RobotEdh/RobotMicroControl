@@ -34,13 +34,5 @@ void setup()
 
 void loop()
 {
-  int ret = SUCCESS;
- 
-  ret = robot_main(); 
- 
-  Serial.print("Call robot_main, ret: ");
-  Serial.println(ret);
-
-     
- 
+  robot_main(); 
 }

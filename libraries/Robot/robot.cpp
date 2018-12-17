@@ -43,7 +43,7 @@ int PI_activated = PI_NO_COMM;
 unsigned long PI_freqInfos = 0;  
 unsigned long PI_previousTimeInfos = 0;
 
-unsigned long freqCheck = 30*1000; // 30s
+unsigned long freqCheck = 0;
 unsigned long previousTimeCheck = 0;
 
 unsigned long GOtimeout = 10;
@@ -352,26 +352,18 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      
      stop();
      motor_state = STATE_STOP;
-     *resplen = 0;
+     resp[0] = STATE_STOP;
+     *resplen = 0+1;
      break; 
   
  case CMD_START:
-     if (cmd[1] == 0)
-     {  
-           Serial.println("CMD_START");
-           lcd.print("START"); 
+     Serial.println("CMD_START");
+     lcd.print("START"); 
            
-           start_forward();
-     }
-     else
-     {       
-           Serial.print("CMD_START_TEST motor: "); Serial.println((int)cmd[1]);
-           lcd.print("START motor: "); lcd.print((int)cmd[1]); 
-           
-           start_forward_test(cmd[1]);           
-     }                      
+     start_forward();        
      motor_state = STATE_GO;
-     *resplen = 0;
+     resp[0] = STATE_GO;
+     *resplen = 0+1;
      break; 
  
  case CMD_CHECK_AROUND:
@@ -441,8 +433,8 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
     break;        
      
      
- case CMD_INFOS: 
-     Serial.println("CMD_INFOS");
+ case CMD_GET_INFOS: 
+     Serial.println("CMD_GET_INFOS");
 
      ret = infos (resp, &infolen);
        
@@ -602,11 +594,11 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      Serial.print("CMD_CHECK");Serial.print(" - freq: ");Serial.println((int)cmd[1]);
      lcd.print("Check"); ;lcd.print((int)cmd[1]);
      
-     freqCheck = (int)cmd[1]* 1000;
-        
-     alert_status = check();
+     freqCheck = (unsigned long)cmd[1] * 1000;
      
-     if (alert_status != SUCCESS) {
+     if (freqCheck > 0) alert_status = check();
+     
+     if (alert_status != 0) {
            Serial.print("Alert detected: ");Serial.println(alert_status);
            lcd.setCursor(0,1); 
            lcd.print("Alert: "); lcd.print(alert_status);                
@@ -624,7 +616,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      break; 
   
  case CMD_GO: 
-     Serial.print("CMD_GO, nb seconds: "); Serial.print((int)cmd[1]);
+     Serial.print("CMD_GO, nb seconds: "); Serial.println((int)cmd[1]);
      lcd.print("GO ");lcd.print((int)cmd[1]);lcd.print("secs");
      
      if (motor_state != STATE_GO)
@@ -787,12 +779,12 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      lcd.print("PI activated ");lcd.print((int)cmd[1]);
  
      PI_activated = (int)cmd[1];
-     if (PI_activated != PI_NO_COMM) PI_freqInfos = (int)cmd[2]* 1000;
-        
      Serial.print("PI_activated: "); Serial.println(PI_activated);
-     Serial.print("PI_freqInfos: ");Serial.println(PI_freqInfos);
-  
-     
+     if (PI_activated == PI_ALERT_INFOS) {
+         PI_freqInfos = (unsigned long)cmd[2]* 1000;
+         Serial.print("PI_freqInfos: "); Serial.println(PI_freqInfos);
+     }
+       
     *resplen = 0;     
      break;
           
@@ -817,7 +809,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
  return ret;
 }
 
-int robot_main ()
+void robot_main ()
 {    
  uint16_t cmd[CMD_SIZE];
  uint16_t resp[RESP_SIZE];
@@ -836,6 +828,7 @@ int robot_main ()
              previousTimeCheck = currentTimeCheck;   
              Serial.print("Call command CHECK every ");Serial.print(freqCheck/1000);Serial.println(" seconds");
              cmd[0] = CMD_CHECK;
+             cmd[1] = (uint16_t)freqCheck/1000;
              ret = robot_command (cmd, resp, &resplen);
  
              Serial.print("Call robot_command, ret: "); Serial.println(ret);	
@@ -884,7 +877,7 @@ int robot_main ()
              }
              else
              {
-                Serial.println("PI communucation not activated"); 
+                Serial.println("PI communication not activated"); 
                 alert_status = 0;   
              }                        
        }
@@ -897,6 +890,7 @@ int robot_main ()
              ret = robot_IOT(); 
              if (ret != SUCCESS) {
                    Serial.print("robot_IOT error: "); Serial.println(ret);
+                   ret = IOTSerial.IOTSflush(2);
              }
              else
              {
@@ -957,6 +951,7 @@ int robot_IOT ()
  if (ret != SUCCESS) {
        Serial.println("error IOTSread, Call IOTSsend 2 with RESP_KO");  
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       return -1;
  }
    
  IOTSerial.IOTSgetTags(msg, tag, value, &nbtags);   
@@ -965,25 +960,26 @@ int robot_IOT ()
  if (nbtags < 1) {
        Serial.println("nbtags < 1, Call IOTSsend 2 with RESP_KO");    
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       return -2;
  }
  
  Serial.print(", tag[0]: "); Serial.print((int)tag[0],HEX); Serial.print(", value[0]: "); Serial.println((int)value[0],HEX);
  if (tag[0] != TAG_CMDID) {
        Serial.println("TAG_CMDID Missing, Call IOTSsend 2 with RESP_KO");    
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       return -3;
  }
- else
- {   
-    cmdId = value[0];
-    Serial.print("cmdId: "); Serial.println((int)cmdId);
- }
- 
+
+ cmdId = value[0];
+ Serial.print("cmdId: "); Serial.println((int)cmdId);
+  
  if (tag[1] == TAG_CMD)
  {
        Serial.println("Tag CMD");
        if (nbtags > MAX_TAGS) {
                Serial.println("nbtags > MAX_TAGS, Call IOTSsend 2 with RESP_KO");    
                ret = IOTSerial.IOTSsend(2, RESP_KO);
+               return -4;
        }     
              
        for (uint8_t j=0; j<(nbtags-1); j++)
@@ -998,17 +994,23 @@ int robot_IOT ()
 
        if (ret == SUCCESS) { 
         	 Serial.println("Call IOTSsend 2 with RESP_OK");    
+        	 for (uint8_t k=0; k<resplen; k++)
+             {
+                Serial.print("resp["); Serial.print((int)k); Serial.print("]: "); Serial.println((int)resp[k]);
+             }
              ret = IOTSerial.IOTSsend(2, RESP_OK, resp, resplen, cmdId);
        }
        else
        {
         	 Serial.println("Call IOTSsend 2 with RESP_KO");    
              ret = IOTSerial.IOTSsend(2, RESP_KO);
+             return -5;
        }        
  }
  else {
        Serial.println("Call IOTSsend 2 with RESP_KO");    
        IOTSerial.IOTSsend(2, RESP_KO);
+       return -6;
  }
     
  Serial.println("End OK robot_IOT"); 

@@ -9,7 +9,7 @@
 #include <IOTSerial.h>
 #include "IoTWiFiClient.h"
 
-const char* ssid     = "WIFICOTEAU2";     // WIFI SSID
+const char* ssid     = "WIFICOTEAU";     // WIFI SSID
 const char* password = "kitesurf9397";    // WIFI Password
 const char* host = "192.168.0.18";        // Server IP
 const int   port = 8080;                  // Server Port
@@ -43,7 +43,23 @@ int IoTWiFiClientClass::IoTWCbegin()
     //Serial.println("IP address: ");
     //Serial.println(WiFi.localIP());
     
-    ret = IOTSerial.IOTSbegin(0); // Serial
+    // MAC address 
+    byte mac[6]; 
+    WiFi.macAddress(mac);
+    Serial.print("MAC: ");
+    Serial.print(mac[0],HEX);
+    Serial.print(":");
+    Serial.print(mac[1],HEX);
+    Serial.print(":");
+    Serial.print(mac[2],HEX);
+    Serial.print(":");
+    Serial.print(mac[3],HEX);
+    Serial.print(":");
+    Serial.print(mac[4],HEX);
+    Serial.print(":");
+    Serial.println(mac[5],HEX);
+    
+   // ret = IOTSerial.IOTSbegin(0); // Serial
     
     digitalWrite(5, LOW); // Led off
     return ret;                   

@@ -46,7 +46,7 @@
 #define MICRO_Pin    A3   // Electret micro             
 #define MOTION_PIN  19    // Pin used by the Motion sensor connected to interrupt INT4 on MEGA2560
 
-#define IOT_PIN     18    // Pin used by the IOT connected to interrupt INT5 on MEGA2560
+#define IOT_PIN     3    // Pin used by the IOT connected to interrupt INT1 on MEGA2560
 
 void IntrMotion();  // interrupt handler Motion sensor
 void IntrIOT();     // interrupt handler IOT
@@ -121,7 +121,8 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen);
 /*              makePicture                                                   */   
 /*              go                                                            */  
 
-int robot_main(); 
+
 int robot_IOT();    
 int robot_Send_Picture (uint8_t n);
+void robot_main(); 
 #endif

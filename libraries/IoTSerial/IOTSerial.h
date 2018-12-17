@@ -19,7 +19,7 @@
 
 #define CMD_START         0x01
 #define CMD_STOP          0x02
-#define CMD_INFOS         0x03
+#define CMD_GET_INFOS     0x03
 #define CMD_PICTURE       0x04
 #define CMD_TURN          0x05
 #define CMD_CHECK_AROUND  0x06

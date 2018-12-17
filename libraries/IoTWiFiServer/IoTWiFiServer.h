@@ -25,12 +25,6 @@ class IoTWiFiServerClass
   void IoTWShandleNotFound(void);
   /* Do nothing                                          */
   
-  unsigned long IoTWSgetfreqInfos(void);     
-  /* return freqInfos                                   */
-  
-  
-  int  IoTWSRobotInfos (void);
-  
   int  IoTWSRobotCmd(String command);
   /* interrupt the Robot                                        */
   /* send the command to the Robot using IOTSerial.IOTSsend     */
@@ -38,10 +32,10 @@ class IoTWiFiServerClass
   /* get tags using IOTSerial.IOTSgetTags                       */
  
  private:
-   unsigned long _freqInfos; 
    uint8_t _cmdId;
+   int16_t  _result;
+   uint16_t  _AlertStatus,_PictureNumber,_MotorState,_Direction,_Distance,_Temperature,_Brightness,_Noise;
    char infos [700];
-   char result [700];
    
 };
 
