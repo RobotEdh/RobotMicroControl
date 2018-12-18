@@ -34,7 +34,7 @@ class IoTWiFiServerClass
  private:
    uint8_t _cmdId;
    int16_t  _result;
-   uint16_t  _AlertStatus,_PictureNumber,_MotorState,_Direction,_Distance,_Temperature,_Brightness,_Noise;
+   uint16_t  _AlertStatus,_PictureNumber,_MotorState,_Direction,_ObstacleStatus,_Distance,_Temperature,_Brightness,_Noise;
    char infos [700];
    
 };

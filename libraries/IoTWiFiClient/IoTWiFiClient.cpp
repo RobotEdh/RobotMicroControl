@@ -46,7 +46,7 @@ int IoTWiFiClientClass::IoTWCbegin()
     // MAC address 
     byte mac[6]; 
     WiFi.macAddress(mac);
-    Serial.print("MAC: ");
+    /*Serial.print("MAC: ");
     Serial.print(mac[0],HEX);
     Serial.print(":");
     Serial.print(mac[1],HEX);
@@ -58,8 +58,8 @@ int IoTWiFiClientClass::IoTWCbegin()
     Serial.print(mac[4],HEX);
     Serial.print(":");
     Serial.println(mac[5],HEX);
-    
-   // ret = IOTSerial.IOTSbegin(0); // Serial
+    */
+    ret = IOTSerial.IOTSbegin(0); // Serial
     
     digitalWrite(5, LOW); // Led off
     return ret;                   

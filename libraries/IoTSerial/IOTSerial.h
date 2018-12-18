@@ -33,26 +33,29 @@
 // 1: picture number
 // 2: motor_state
 // 3: direction
-// 4: distance
-// 5: temperature
-// 6: brightness
-// 7: noise
+// 4: obstacle status
+// 5: distance
+// 6: temperature
+// 7: brightness
+// 8: noise
 #define ALERT_STATUS           0
 #define NO_PICTURE             1
 #define MOTOR_STATE            2
 #define DIRECTION              3
-#define DISTANCE               4
-#define TEMPERATURE            5
-#define BRIGHTNESS             6
-#define NOISE                  7
+#define OBSTACLE_STATUS        4
+#define DISTANCE               5
+#define TEMPERATURE            6
+#define BRIGHTNESS             7
+#define NOISE                  8
 
-#define RESP_SIZE 8
+#define RESP_SIZE 9
     
 const char szField[RESP_SIZE][30]={    
 "alert_status",
 "no_picture",
 "motor_state",
 "direction",
+"obstacle_status",
 "distance",
 "temperature",
 "brightness",

@@ -232,39 +232,43 @@ int robot_begin()
 int infos (uint16_t *resp, uint8_t *resplen)
 {    
      // alert status
-     resp[ALERT_STATUS] = alert_status;
+     resp[ALERT_STATUS] = (uint16_t)alert_status;
      Serial.print("alert status: ");Serial.println((int)resp[ALERT_STATUS]);
      
      // picture number
-     resp[NO_PICTURE] = no_picture;
+     resp[NO_PICTURE] = (uint16_t)no_picture;
      Serial.print("no_picture: ");Serial.println((int)resp[NO_PICTURE]);
      
      // motor_state
-     resp[MOTOR_STATE] = motor_state;
+     resp[MOTOR_STATE] = (uint16_t)motor_state;
      Serial.print("motor_state: ");Serial.println((int)resp[MOTOR_STATE]);
      
+     // obstacle_status
+     resp[OBSTACLE_STATUS] = (uint16_t)check_around();
+     Serial.print("obstacle_status: ");Serial.println((int)resp[OBSTACLE_STATUS]);
+          
      // direction
-     resp[DIRECTION] = CMPS03.CMPS03_read();
+     resp[DIRECTION] = (uint16_t)CMPS03.CMPS03_read();
      Serial.print("direction: ");Serial.println((int)resp[DIRECTION]);
      
      // distance
      int dist = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter();
-     if (dist > 0) resp[DISTANCE] = dist;
+     if (dist > 0) resp[DISTANCE] = (uint16_t)dist;
      else          resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);
      
      // temperature
      double temperature = TMP102.TMP102_read();
-     resp[TEMPERATURE] = (int16_t)(100.0 * temperature);
+     resp[TEMPERATURE] = (uint16_t)(100.0 * temperature);
      Serial.print("temperature: ");Serial.println((int)resp[TEMPERATURE]);
      
      // brightness
-     resp[BRIGHTNESS] = TEMT6000.TEMT6000_getLight();
+     resp[BRIGHTNESS] = (uint16_t)TEMT6000.TEMT6000_getLight();
      Serial.print("brightness: ");Serial.println((int)resp[BRIGHTNESS]);
      
      // noise
      //resp[7] = Micro.Micro_getNoise();
-     resp[NOISE] = 0;
+     resp[NOISE] = (uint16_t)0;
      Serial.print("noise: ");Serial.println((int)resp[NOISE]);
      
 
@@ -335,7 +339,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
 {    
  unsigned long start = 0;
  uint8_t infolen = 0;
- int checkdir;
+ int checkdir = SUCCESS;
  int motor_state_save;
  int error = -1;
  int ret = SUCCESS;
@@ -380,7 +384,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      else if (checkdir == OBSTACLE)        lcd.print("OBSTACLE");
      else                                  lcd.print("?");
 
-     resp[0] = checkdir;
+     resp[0] = (uint16_t)checkdir;
      *resplen = 0+1;
      break;
      
@@ -1089,4 +1093,3 @@ int robot_Send_Picture (uint8_t n)
  Serial.println("End OK robot_IOT"); 
  return SUCCESS;                     
 }			 
-
