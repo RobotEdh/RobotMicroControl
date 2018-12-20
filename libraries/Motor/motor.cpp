@@ -22,7 +22,6 @@ Servo IRServo;                // The Servo class used for IR sensor
 
 int motor_begin()
 {
-  int ret = SUCCESS;
   int ivalue = 0;
  
   Serial.println("Begin Motor Init");
@@ -403,10 +402,7 @@ void change_speed(int speed)
 
 int go(unsigned long timeout)
 {
- int ret = SUCCESS;
- int pid;
  int distance = 0;
- int direction = 0; /* direction between 0-254, 0: North */
  int inputpin = HIGH; 
 
 #ifdef PID  
@@ -419,6 +415,8 @@ int go(unsigned long timeout)
  while (millis() - start < timeout*1000) {  // go during maximum timeout seconds  
     
 #ifdef PID 
+       int ret = SUCCESS;
+       int pid;
        if (TickLeft > TickRight) {
              pid = computePID (TickLeft - TickRight); // compute PID
              ret = adjustMotor (LEFT_MOTOR, pid);     // Adjust according PID

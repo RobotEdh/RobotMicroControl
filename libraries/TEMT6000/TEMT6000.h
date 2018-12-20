@@ -33,7 +33,6 @@ class TEMT6000Class
   
   int TEMT6000_getLight();
   /* Description: Get light using Ambient Light Sensor TEMT6000                 */
-  /*              connected to 5V                                               */
   /* input:       none                                                          */ 
   /* output:      return                                                        */                            
   /*                  = value between 0 (very dark ) and 1023 (very bright)     */

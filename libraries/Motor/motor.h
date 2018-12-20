@@ -9,7 +9,10 @@
 #define MOTOR_h
 
 #include <Arduino.h> // used for pin definition
+
+#ifdef PID
 #include <PID.h>
+#endif
 
 #define SUCCESS 0
 #define SPEED_ERROR -1

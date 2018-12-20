@@ -13,7 +13,7 @@
 #include <LiquidCrystal_I2C.h> // LCD
 #include <Motion.h>            // Motion
 #include <TEMT6000.h>          // Lux
-#include <Micro.h>             // Micro
+#include <Sound.h>             // Sound
 
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
  
@@ -25,9 +25,10 @@ void setup()
   
   Serial.begin(9600); // initialize serial port
   ret = robot_begin(); 
-  if (ret != SUCCESS) exit;
+  if (ret == SUCCESS)  Serial.println("robot begin OK");
+  else                 Serial.println("robot begin KO");
 
-  Serial.println("robot begin OK");
+
  
  }
 

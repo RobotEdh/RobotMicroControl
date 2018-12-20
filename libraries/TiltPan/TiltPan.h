@@ -24,7 +24,7 @@ void TiltPan_begin(int Hpin, int Vpin);
 /*              delay                                                         */                                
 
 
-void TiltPan_move(uint8_t HPos, uint8_t VPos);
+void TiltPan_move(int HPos, int VPos);
 /* Description: move the Tilt&Pan depending on the                            */
 /*              Horizontal and Vertical position                              */
 /* input:       HPos                                                          */ 

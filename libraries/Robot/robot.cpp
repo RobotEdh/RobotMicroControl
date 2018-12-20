@@ -9,7 +9,7 @@
 #include <LSY201.h>            // Camera
 #include <LiquidCrystal_I2C.h> // LCD
 #include <Motion.h>            // Motion
-#include <Micro.h>             // Micro
+#include <Sound.h>             // Sound
 #include <sdcard.h>            // SD Card
 #include <SD.h> 
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
@@ -21,8 +21,8 @@ extern CMPS03Class CMPS03;          // The Compass class
 
        TMP102Class TMP102;          // The Temperature class  
        TEMT6000Class TEMT6000;      // The Brightness class
+       SoundClass Sound;            // The Sound class       
        MotionClass Motion;          // The Motion class
-       MicroClass Micro;            // The Micro class
        JPEGCameraClass JPEGCamera;  // The Camera class 
        IOTSerialClass IOTSerial;    // The IOT serial
 
@@ -54,6 +54,8 @@ double avg_temperature = 0;
 int tab_lux[NB_LUX] = {0};
 unsigned long avg_lux = 0;
 
+int tab_noise[NB_NOISE] = {0};
+unsigned long avg_noise = 0;
 
 void IntrIOT()  // IOT interrupt
 {
@@ -177,8 +179,8 @@ int robot_begin()
   delay(5*1000);lcd.clear();  
     
     
-  // initialize the brightness sensor   
-  TEMT6000.TEMT6000_init(TEMT6000_Pin); // initialize the pin connected to the sensor
+  // initialize the Brightness sensor   
+  TEMT6000.TEMT6000_init(TEMT6000_PIN); // initialize the pin connected to the sensor
   Serial.println("Init Brightness sensor OK");
   
   ivalue = TEMT6000.TEMT6000_getLight();
@@ -186,7 +188,18 @@ int robot_begin()
   Serial.println(ivalue); 
   lcd.print("Lux:");lcd.print(ivalue);lcd.printByte(lcd_pipe);
   
-  // initialize the temperature sensor   
+   
+  // initialize the Sound detector 
+  Sound.Sound_init(SOUND_PIN); // initialize the pin connected to the detector
+  Serial.println("Init Sound Detector  OK");
+  
+  ivalue = Sound.Sound_getNoise();
+  Serial.print("Value between 0 (no noise) and 1023 (huge noise): ");
+  Serial.println(ivalue); 
+  lcd.print("Noise:");lcd.print(ivalue);
+
+   
+  // initialize the Temperature sensor 
   TMP102.TMP102_init();
   Serial.println("Init Temperature sensor OK");
   
@@ -196,9 +209,7 @@ int robot_begin()
   Serial.println(ivalue); 
   lcd.print("T:");lcd.print(ivalue);lcd.printByte(lcd_celcius);lcd.printByte(lcd_pipe);   
   
-  // initialize the electret micro   
-  //Micro.Micro_init(MICRO_Pin); // initialize the pin connected to the micro
-  //Serial.println("Init Micro OK");
+
 
   // initialize the motion sensor
   pinMode(MOTION_PIN, INPUT);
@@ -267,8 +278,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      Serial.print("brightness: ");Serial.println((int)resp[BRIGHTNESS]);
      
      // noise
-     //resp[7] = Micro.Micro_getNoise();
-     resp[NOISE] = (uint16_t)0;
+     resp[NOISE] = (uint16_t)Sound.Sound_getNoise();
      Serial.print("noise: ");Serial.println((int)resp[NOISE]);
      
 
@@ -292,9 +302,21 @@ int check ()
        return ALERT_MOTION;
   }
   // Check Noise
-  //Serial.print("noise: "); Serial.print(noise);Serial.print(" -- THR_NOISE: "); Serial.println(THR_NOISE);
-  //if (noise > THR_NOISE) return ALERT_NOISE;
-
+  int noise = Sound.Sound_getNoise();
+  Serial.print("noise: "); Serial.print(noise);Serial.print(" -- previous_noise: "); Serial.print(tab_noise[0]);Serial.print(" -- MAX_VAR_NOISE: "); Serial.println(MAX_VAR_NOISE);
+  if (noise != tab_noise[0]) {
+      if (MAX_VAR_NOISE < abs(avg_noise - noise) && tab_noise[NB_NOISE-1] != 0) {
+          return ALERT_NOISE;
+      }    
+ 
+      avg_noise = 0;
+      for (i=NB_NOISE;i<2;i--) { 
+          tab_noise[i-1] = tab_noise[i-2];
+          avg_noise += tab_noise[i-1];
+      }
+      tab_noise[0]=noise;
+      avg_noise = (avg_noise+noise)/NB_NOISE;
+  }
    
   // Check Temperature Variation
   double temperature = TMP102.TMP102_read();

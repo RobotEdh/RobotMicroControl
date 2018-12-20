@@ -28,7 +28,7 @@ void TiltPan_begin(int Hpin, int Vpin)
   return;      
 }
 
-void TiltPan_move(uint8_t HPos, uint8_t VPos)
+void TiltPan_move(int HPos, int VPos)
 {
     if (HPos > 180) HPos = 180; 
     if (HPos < 0) HPos = 0;

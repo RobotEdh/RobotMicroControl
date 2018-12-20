@@ -33,6 +33,8 @@
 
 #define NB_LUX 6
 #define MAX_VAR_LUX 100
+#define NB_NOISE 6
+#define MAX_VAR_NOISE 200
 #define NB_TEMPERATURE 6
 #define MAX_VAR_TEMPERATURE 1.5
 
@@ -42,9 +44,9 @@
 #define Led_Blue    24 
 #define buzzPin     25  
 
-#define TEMT6000_Pin A2   // Brightness Sensor TEMT6000 analogic pin A2 
-#define MICRO_Pin    A3   // Electret micro             
-#define MOTION_PIN  19    // Pin used by the Motion sensor connected to interrupt INT4 on MEGA2560
+#define TEMT6000_PIN A2   // Brightness Sensor TEMT6000 analogic pin A2 
+#define SOUND_PIN    A3   // Sound Detector analogic pin A3            
+#define MOTION_PIN   19    // Pin used by the Motion sensor connected to interrupt INT4 on MEGA2560
 
 #define IOT_PIN     3    // Pin used by the IOT connected to interrupt INT1 on MEGA2560
 
