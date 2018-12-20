@@ -1,6 +1,6 @@
 #include <robot.h>         
 #include <motor.h>             // Motor
-#include <GP2Y0A21YK.h>        // IR sensor
+#include <SharpIR.h>           // IR sensor
 #include <CMPS03.h>            // Compas
 #include <TMP102.h>            // Temperature
 #include <TEMT6000.h>          // Brightness
@@ -15,7 +15,7 @@
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
 
 /* classes aleady defined in motor */
-extern GP2Y0A21YKClass GP2Y0A21YK;  // The IR sensor class
+extern SharpIRClass SharpIR;        // The IR sensor class
 extern LiquidCrystal_I2C lcd;       // The LCD class
 extern CMPS03Class CMPS03;          // The Compass class
 
@@ -263,7 +263,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      Serial.print("direction: ");Serial.println((int)resp[DIRECTION]);
      
      // distance
-     int dist = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter();
+     int dist = SharpIR.SharpIR_distance(); 
      if (dist > 0) resp[DISTANCE] = (uint16_t)dist;
      else          resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);

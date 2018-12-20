@@ -22,6 +22,7 @@ void SoundClass::Sound_init (int pin)
 
  this->_Sound_Pin = pin;
  pinMode(this->_Sound_Pin, INPUT);   // define pin as input
+ analogReference(DEFAULT);
  
  return;
 }

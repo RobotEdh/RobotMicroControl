@@ -61,7 +61,7 @@
 #endif
 
 #define IRSERVO_Pin    46        // IR Servo pin connected to digital PWM 46
-#define GP2Y0A21YK_PIN A1        // IR sensor GP2Y0A21YK analogic pin A1
+#define SHARP_IR_PIN   A1        // Sharp IR analogic pin A1
 
 #define ContactLeftPin  26   // Contact sensor Left pin connected to digital 26
 #define ContactRightPin 27   // Contact sensor Right pin connected to digital 27

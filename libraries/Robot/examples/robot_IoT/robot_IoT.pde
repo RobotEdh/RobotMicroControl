@@ -5,7 +5,7 @@
 
 #include <robot.h>
 #include <motor.h>
-#include <GP2Y0A21YK.h>        // IR sensor
+#include <SharpIR.h>           // IR sensor
 #include <CMPS03.h>            // Compass
 #include <TMP102.h>            // Temperature sensor
 #include <TiltPan.h>           // Tilt&Pan

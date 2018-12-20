@@ -1,5 +1,5 @@
 #include <motor.h>
-#include <GP2Y0A21YK.h> // IR sensor
+#include <SharpIR.h> // IR sensor
 #include <CMPS03.h>     // Compas
 #include <Servo.h>      // Servo
 #include <LiquidCrystal_I2C.h> // LCD
@@ -16,7 +16,7 @@ volatile int TickLeft = 0;
 #endif
 
 CMPS03Class CMPS03;           // The Compass class
-GP2Y0A21YKClass GP2Y0A21YK;   // The IR sensor class
+SharpIRClass SharpIR;         // The IR sensor class
 Servo IRServo;                // The Servo class used for IR sensor
 
 
@@ -70,8 +70,8 @@ int motor_begin()
   Serial.println("Init Contact sensors OK");
     
   // initialize the pin connected to the IR sensor 
-  GP2Y0A21YK.GP2Y0A21YK_init(GP2Y0A21YK_PIN); 
-  ivalue = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter();
+  SharpIR.SharpIR_init(SHARP_IR_PIN); 
+  ivalue = SharpIR.SharpIR_distance();
   Serial.print("Distance: ");
   Serial.println(ivalue); 
   lcd.print("IR:");lcd.print(ivalue);lcd.print(" cm");lcd.printByte(lcd_pipe);   
@@ -443,7 +443,7 @@ int go(unsigned long timeout)
             
        if (millis() - current > 1*1000) { // check every 1 second
              current = millis();
-             distance = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter(); // Check distance minimum
+             distance = SharpIR.SharpIR_distance(); // Check distance minimum
 
              Serial.print("-->distance: ");
              Serial.println(distance);
@@ -479,12 +479,12 @@ int check_around()
        
     IRServo.write(0);    // turn servo left
     delay(15*90);        // waits the servo to reach the position 
-    distance_left = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter(); // Check distance on right side
+    distance_left = SharpIR.SharpIR_distance(); // Check distance on right side
     if ((distance_left > 0) && (distance_left < DISTANCE_MIN)) distance_left = 0;  // Robot need a min distance to turn
        
     IRServo.write(180);  // turn servo right
     delay(15*180);       // waits the servo to reach the position 
-    distance_right = GP2Y0A21YK.GP2Y0A21YK_getDistanceCentimeter(); // Check distance on left side
+    distance_right = SharpIR.SharpIR_distance(); // Check distance on left side
     if ((distance_right > 0) && (distance_right < DISTANCE_MIN)) distance_right = 0;  // Robot need a min distance to turn
   
     IRServo.write(90);   // reset servo position

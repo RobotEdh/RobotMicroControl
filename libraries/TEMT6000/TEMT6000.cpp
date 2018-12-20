@@ -22,6 +22,7 @@ void TEMT6000Class::TEMT6000_init (int pin)
 
  this->_TEMT6000_Pin = pin;
  pinMode(this->_TEMT6000_Pin, INPUT);   // define pin as input
+ analogReference(DEFAULT);
  
  return;
 }
