@@ -22,7 +22,7 @@ void CMPS03Class::CMPS03_init ()
     
 int CMPS03Class::CMPS03_revision ()
 {
-    uint8_t ret = 0;
+    byte ret = 0;
     
     Wire.beginTransmission(CMPS03_ADDRESS); 
 	Wire.write((uint8_t)0);                            // use register 0: revision
@@ -38,7 +38,7 @@ int CMPS03Class::CMPS03_revision ()
 
 int CMPS03Class::CMPS03_read ()
 {   
-    uint8_t ret = 0;
+    byte ret = 0;
  
     Wire.beginTransmission(CMPS03_ADDRESS);  
 	Wire.write((uint8_t)1);                            // use register 1 : direction

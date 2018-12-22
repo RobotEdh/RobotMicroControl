@@ -65,17 +65,16 @@ void IOTSerialClass::IOTSgetTags(uint8_t *buf, uint8_t *tag, uint16_t *value, ui
 
 int IOTSerialClass::IOTSflush(int snum)
 {
-    int ibuf =-1;
     
 	switch (snum) {
     case 0:
-      while(Serial.available() > 0) ibuf = Serial.read();
+      while(Serial.available() > 0) int ibuf = Serial.read();
       break;
     case 1:
-      while(Serial1.available() > 0) ibuf = Serial1.read();
+      while(Serial1.available() > 0) int ibuf = Serial1.read();
       break;          
     case 2:
-      while(Serial2.available() > 0) ibuf = Serial2.read();
+      while(Serial2.available() > 0) int ibuf = Serial2.read();
       break;
     default: 
       return -1;

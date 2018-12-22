@@ -67,10 +67,18 @@ int motor_begin()
   // initialize the pin connected to the Contact sensors 
   pinMode(ContactRightPin, INPUT);
   pinMode(ContactLeftPin, INPUT);
+        
+  ivalue = digitalRead(ContactRightPin);  // read input value
+  if (ivalue == LOW) Serial.println("-->obstacle right");
+  else Serial.println("-->No obstacle right");
+  ivalue = digitalRead(ContactLeftPin);  // read input value
+  if (ivalue == LOW) Serial.println("-->obstacle left");
+  else Serial.println("-->No obstacle left");
+     
   Serial.println("Init Contact sensors OK");
     
   // initialize the pin connected to the IR sensor 
-  SharpIR.SharpIR_init(SHARP_IR_PIN); 
+  SharpIR.SharpIR_init(SHARP_IR_PIN,(long)SHARP_MODEL); 
   ivalue = SharpIR.SharpIR_distance();
   Serial.print("Distance: ");
   Serial.println(ivalue); 

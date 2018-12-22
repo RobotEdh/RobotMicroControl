@@ -112,7 +112,7 @@ void load_custom_character(uint8_t char_num, uint8_t *rows);	// alias for create
 void printstr(const char[]);
 
 ////Unsupported API functions (not implemented in this library)
-uint8_t status();
+/*uint8_t status();
 void setContrast(uint8_t new_val);
 uint8_t keypad();
 void setDelay(int,int);
@@ -121,7 +121,7 @@ void off();
 uint8_t init_bargraph(uint8_t graphtype);
 void draw_horizontal_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end);
 void draw_vertical_graph(uint8_t row, uint8_t column, uint8_t len,  uint8_t pixel_col_end);
-	 
+	*/ 
 
 private:
   void init_priv();

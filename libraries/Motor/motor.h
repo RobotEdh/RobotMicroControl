@@ -62,6 +62,9 @@
 
 #define IRSERVO_Pin    46        // IR Servo pin connected to digital PWM 46
 #define SHARP_IR_PIN   A1        // Sharp IR analogic pin A1
+#define SHARP_MODEL    1080      // Sharp IR model  > 1080 is the int for the GP2Y0A21Y and 
+                                 //                 > 20150 is the int for GP2Y0A02YK and 
+                                 //                 > 100500 is the long for GP2Y0A710K0F
 
 #define ContactLeftPin  26   // Contact sensor Left pin connected to digital 26
 #define ContactRightPin 27   // Contact sensor Right pin connected to digital 27

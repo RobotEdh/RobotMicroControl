@@ -22,7 +22,7 @@ void TMP102Class::TMP102_init()
 
 double TMP102Class::TMP102_read ()
 {   
-    uint8_t ret = 0;
+    byte ret = 0;
     
     Wire.beginTransmission(TMP102_ADDRESS);  
 	Wire.write((uint8_t)0);                       // use register 0 : temperature

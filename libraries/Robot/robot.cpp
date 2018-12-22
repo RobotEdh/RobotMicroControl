@@ -13,6 +13,7 @@
 #include <sdcard.h>            // SD Card
 #include <SD.h> 
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
+#include <I2C_Scanner.h>       // used to scan I2C
 
 /* classes aleady defined in motor */
 extern SharpIRClass SharpIR;        // The IR sensor class
@@ -25,6 +26,7 @@ extern CMPS03Class CMPS03;          // The Compass class
        MotionClass Motion;          // The Motion class
        JPEGCameraClass JPEGCamera;  // The Camera class 
        IOTSerialClass IOTSerial;    // The IOT serial
+       I2C_ScannerClass I2C_Scanner;// used to scan I2C
 
 // SD variables
 extern SdFile root;          // SD Root
@@ -209,8 +211,6 @@ int robot_begin()
   Serial.println(ivalue); 
   lcd.print("T:");lcd.print(ivalue);lcd.printByte(lcd_celcius);lcd.printByte(lcd_pipe);   
   
-
-
   // initialize the motion sensor
   pinMode(MOTION_PIN, INPUT);
   Serial.println("Init Motion sensor OK");
@@ -227,6 +227,11 @@ int robot_begin()
  
   interrupts(); // enable all interrupts
   Serial.print("Init Interrupts OK, IntIOT: "); Serial.println(IntIOT);
+  
+  // Check I2C
+  Serial.print("Check I2C"); 
+  I2C_Scanner.I2C_Scanner_init(); 
+  I2C_Scanner.I2C_Scanner_scan(); 
   
   lcd.setCursor(0,1); 
   lcd.print("End   Robot Init");

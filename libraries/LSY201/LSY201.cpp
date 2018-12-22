@@ -148,7 +148,7 @@ int JPEGCameraClass::reset()
 	if (uint8Compare(response,RESET_CAMERA_OK,4) != 0) return -2;   
   
     // Wait for Init end
-    for (int k = 0; k < strlen(PWR_ON_MSG); k++) {
+    for (int k = 0; k < (int)strlen(PWR_ON_MSG); k++) {
           int cnt = 0;
 
           do {
@@ -158,7 +158,7 @@ int JPEGCameraClass::reset()
 		    Serial.write(byte(ibuf));    // display the init message
             cnt++;
             if (cnt > 128) return -5;
-          } while (ibuf != PWR_ON_MSG[k]);
+          } while (ibuf != (int)PWR_ON_MSG[k]);
     }    
 	    
 	delay(3000); // wait 3s after a reset
