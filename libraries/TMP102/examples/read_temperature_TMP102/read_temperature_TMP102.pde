@@ -4,8 +4,8 @@
  
 /* I2C interface is provided on pins:                                          */
 /*         1 = Power +5V                                                       */
-/*         2 = SCL1 in standard but SCL2 on MAX32 following change made by EDH */
-/*         3 = SDA  in standard but SDA2 on MAX32 following change made by EDH */
+/*         2 = SCL                                                             */
+/*         3 = SDA                                                             */
 /*         9 = Ground                                                          */
 
 
@@ -24,17 +24,24 @@ void setup()
 
 void loop()
 {
-
+  int  value;
+  long startTime, stopTime, elapsedTime;
   
-  Serial.print(" --> read temperature in Celsius from TMP102"); 
-
-  temperature = TMP102.TMP102_read();
+  Serial.println(" --> read temperature in Celsius from TMP102"); 
   
-  Serial.print("\ttemperature: ");
+  startTime = micros();
+  
+  temperature = TMP102.TMP102_read();  
+
+  stopTime = micros();
+  elapsedTime = stopTime - startTime; // take 5 us
+  
+  Serial.print("temperature: ");
   Serial.println(temperature); 
+  Serial.print(" - elapsedTime: ");
+  Serial.println(elapsedTime); 
  
-  delay(5000); //make it readable
-  
-  return;
+  delay(1000); //make it readable
+
 }
 

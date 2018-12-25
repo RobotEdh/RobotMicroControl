@@ -19,14 +19,14 @@ void setup()
   
   Serial.begin(9600); // initialize serial port
   
- CMPS03.CMPS03_init();
+  CMPS03.CMPS03_init();
   
   revision = CMPS03.CMPS03_revision();
  
   Serial.print("Revision: ");
   Serial.println(revision);
   
-  delay(500); //make it readable 
+  delay(1000); //make it readable 
 }
 
 
@@ -34,14 +34,14 @@ void loop()
 {
 
   
-  Serial.print(" --> read direction from CMPS03"); 
+  Serial.println(" --> read direction from CMPS03"); 
 
   direction = CMPS03.CMPS03_read();
  
-  Serial.print("\nDirection: ");
-  Serial.print(direction); 
+  Serial.print("Direction: ");
+  Serial.println(direction); 
  
-  delay(500); //make it readable
+  delay(1000); //make it readable
   
   return;
 }

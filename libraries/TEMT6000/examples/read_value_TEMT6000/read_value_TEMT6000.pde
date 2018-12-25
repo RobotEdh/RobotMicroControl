@@ -26,13 +26,9 @@ void loop()
   
   Serial.print("value between 0 (dark) and 1023 (bright): ");
   Serial.print(value); 
-  Serial.print(" - startTime: ");
-  Serial.print(startTime); 
-  Serial.print(" - stopTime: ");
-  Serial.print(stopTime); 
   Serial.print(" - elapsedTime: ");
   Serial.println(elapsedTime); 
  
-  delay(500); //make it readable
+  delay(1000); //make it readable
   
 }
