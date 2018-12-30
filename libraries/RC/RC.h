@@ -1,10 +1,11 @@
 #ifndef RC_h
 #define RC_h
 
-#define NBCHANNELS 4 
-#define MAXPPM      2000 
-#define MINPPM      1000 
-#define MIDRC       MAXPPM/MINPPM 
+#define NBCHANNELS     6 
+#define MAXPPM      1920
+#define MAXPPMAUX2  1520 
+#define MINPPM      1100 
+#define MIDPPM      MAXPPM/MINPPM 
 
 class RCClass
 {
