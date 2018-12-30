@@ -2,7 +2,9 @@
 #define RC_h
 
 #define NBCHANNELS 4 
-#define MIDRC      1500 /* neutral point */
+#define MAXPPM      2000 
+#define MINPPM      1000 
+#define MIDRC       MAXPPM/MINPPM 
 
 class RCClass
 {

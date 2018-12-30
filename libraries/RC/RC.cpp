@@ -2,7 +2,7 @@
 #include <RC.h>
 
 //RAW RC values will be store here
-volatile uint16_t rcValue[3] = {1500, 1500, 1500}; // interval [1000;2000]
+volatile uint16_t rcValue[NBCHANNELS] = {MIDRC, MIDRC, MIDRC, MIDRC}; // interval [1000;2000]
 
 RCClass::RCClass(void)
 {
@@ -12,15 +12,15 @@ ISR (PCINT0_vect)
 {
     static volatile uint32_t edgeTime[NBCHANNELS];
     static volatile uint8_t lastb; // previous PORTB
-    uint8_t thisb; // current PORTB
-    uint32_t currTime, dTime; // current time, delta time
+    uint8_t thisb;                 // current PORTB
+    uint32_t currTime, dTime;      // current time, delta time
 
     
-    thisb = PORTB;          // read PORT B   
+    thisb = PINB;          // read PORT B   
     currTime = micros();
 
-    if ((thisb ^ lastb) & 0x02) {  // RB1 changed (0x02= 10)  ROLLPIN    
-      if (!(thisb & 0x02)) {       // RB1 is low                        
+    if ((thisb ^ lastb) & 0b00000001) {  // RB1 changed ROLL   
+      if (!(thisb & 0b00000001)) {       // RB1 is low                        
         dTime = currTime-edgeTime[0];                            
         if (900<dTime && dTime<2200) {  // filter erroneous values                             
           rcValue[0] = (uint16_t)dTime;                             
@@ -30,8 +30,8 @@ ISR (PCINT0_vect)
         edgeTime[0] = currTime; // RB1 is high                            
     }        
         
-    if ((thisb ^ lastb) & 0x04) {  // RB2 changed (0x04= 100)  PITCHPIN     
-      if (!(thisb & 0x04)) {       // RB2 is low                        
+    if ((thisb ^ lastb) & 0b00000010) {  // RB2 changed PITCH    
+      if (!(thisb & 0b00000010)) {       // RB2 is low                        
         dTime = currTime-edgeTime[1];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
           rcValue[1] = (uint16_t)dTime;                             
@@ -41,8 +41,8 @@ ISR (PCINT0_vect)
         edgeTime[1] = currTime; // RB2 is high                            
     }        
 
-    if ((thisb ^ lastb) & 0x08) {  // RB3 changed (0x08= 1000)   YAWPIN    
-      if (!(thisb & 0x08)) {       // RB3 is low                        
+    if ((thisb ^ lastb) & 0b00000100) {  // RB3 changed YAW    
+      if (!(thisb & 0b00000100)) {       // RB3 is low                        
         dTime = currTime-edgeTime[2];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
           rcValue[2] = (uint16_t)dTime;                             
@@ -52,8 +52,8 @@ ISR (PCINT0_vect)
         edgeTime[2] = currTime; // RB3 is high                            
     } 
     
-    if ((thisb ^ lastb) & 0x10) {  // RB4 changed (0x10= 10000)   THROTTLE    
-      if (!(thisb & 0x10)) {       // RB4 is low                        
+    if ((thisb ^ lastb) & 0b00001000) {  // RB4 changed THROTTLE    
+      if (!(thisb & 0b00001000)) {       // RB4 is low                        
         dTime = currTime-edgeTime[3];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
           rcValue[3] = (uint16_t)dTime;                             
@@ -103,7 +103,7 @@ A5	  PCINT13 (PCMSK1 / PCIF1 / PCIE1)
   PCIFR  |= bit (PCIF0);   // clear any outstanding interrupts
   PCICR  |= bit (PCIE0);   // enable pin change interrupts for D8 to D13
   DDRB = DDRB & 0b11000000;   // Set pins 8 à 13 of PORTB as input
-  PORTB;                      //read PortB to clear any mismatch
+  PINB;                      //read PortB to clear any mismatch
 }
 
 
@@ -120,11 +120,7 @@ uint16_t RCClass::RC_readRaw(uint8_t chan)
 
 void RCClass::RC_getCommands(int16_t RC_command[NBCHANNELS])
 {
-  uint16_t rcData[NBCHANNELS];
- 
-  for (int i = 0; i < NBCHANNELS; i++) { // read data from all channels
-        rcData[i] = RC_readRaw(i);
-        RC_command[i] = min(abs(rcData[i]-MIDRC),500);         // interval [#1000;#2000] ...
-        if (rcData[i]<MIDRC) RC_command[i] = -RC_command[i]; // ...translated to interval [-500; +500]
+  for (int i = 0; i < NBCHANNELS; i++) {         // read data from all channels
+        RC_command[i] = RC_readRaw(i)- MIDRC;    // interval [#1000;#2000]translated to interval [-500; +500]
   }
 }
