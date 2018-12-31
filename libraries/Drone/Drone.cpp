@@ -7,9 +7,7 @@ MPU6050Class  MPU6050;
 RCClass       RC; 
 MotorESCClass MotorESC;  
 
-uint32_t currentTime = 0;
-uint32_t previousTime = 0;
-uint32_t cycleTime = 0;
+
 
 DroneClass::DroneClass(void) {
 }
@@ -35,58 +33,56 @@ void DroneClass::Drone_init() {
 
 
 void DroneClass::Drone_main() {
-
+  
+  uint32_t currentTime ;
+  static uint32_t rcTime = 0;
+ 
   int16_t RC_command[NBCHANNELS];
-  double angle[2];
-  double axisPID[3];
-  
-
-  static int16_t last_error[3] = {0,0,0};
-  static int32_t sum_error[3] = {0,0,0};
-
-  
-  int16_t error = 0;
+  double angle[3];
+  int16_t ESC_command[4];
+    
+  int16_t RC_commandRP[2]; 
+  double anglePID[2];
+  int16_t error       = 0;
   int16_t delta_error = 0;
-  static uint32_t rcTime  = 0;
-  const char* sz_axis[] = {"ROLL","PITCH","YAW","THROTTLE"};
+  static int16_t last_error[2] = {0,0};
+  static int32_t sum_error[2]  = {0,0};
+  const char szAngles[2][20]={"Roll","Pitch"};
   
-  
+  currentTime = micros(); 
   if ((currentTime > rcTime )|| (rcTime  == 0)) { // 50Hz: PPM frequency of the RC, no change happen within 20ms except first time
     rcTime = currentTime + 20000;
     
-    RC.RC_getCommands(RC_command);
+    RC.RC_getCommands(RC_command); // int16_t range [-180;+180]          for ROLL, PITCH, YAW
+                                   //               0 or [MINPPM;MAXPPM] for THROTTLE
+                                   //               0/1                  for AUX1, AUX2
   }
-  currentTime = micros();
-  cycleTime = currentTime - previousTime;
-  previousTime = currentTime ;
   
   //**** Read IMU ****   
-  MPU6050.MPU6050_get_roll_pitch_yaw(angle);
+  MPU6050.MPU6050_get_roll_pitch_yaw(angle);  // double range [-180;+180] ROLL, PITCH, YAW
+
    
   // ROLL & PITCH
-  for(int i=0;i<2;i++) {
-  	
-    error =  RC_command[i] - (int16_t)(angle[i]*159.0); // convert c_angle from -pi;+pi to -500;+500
-    sum_error[i] += (int32_t) (error * cycleTime);
-    
-    delta_error = (error - last_error[i])/cycleTime;
-    delta_error = ((int32_t) delta_error * ((uint16_t)0xFFFF / (cycleTime>>4)))>>6;
-    
-    axisPID[i] =  (Kp[i]*error) + (Ki[i]*sum_error[i]) + (Kd[i]*delta_error);
-    
+  RC_commandRP[0]=RC_command[ROLL];
+  RC_commandRP[1]=RC_command[PITCH];
+  for(int i=0;i<2;i++) {	
+    error =  RC_commandRP[i] - (int16_t)(angle[i]);
+    sum_error[i] += (int32_t) error; 
+    delta_error = (error - last_error[i]);
     last_error[i] = error;
-  
-    Serial.print(">MultiWii_loop: c_angle[");Serial.print(sz_axis[i]);Serial.print("]:");Serial.println(angle[i]);
-    Serial.print(">MultiWii_loop: rcCommand[");Serial.print(sz_axis[i]);Serial.print("]:");Serial.println(RC_command[i]);
-    Serial.print(">MultiWii_loop: sum_error[");Serial.print(sz_axis[i]);Serial.print("]:");Serial.println(sum_error[i]);
-    Serial.print(">MultiWii_loop: error:");Serial.println(error);
-    Serial.print(">MultiWii_loop: axisPID[");Serial.print(sz_axis[i]);Serial.print("]:");Serial.println(axisPID[i]);
-     
+    
+    anglePID[i] = (Kp[i]*(double)error) + (Ki[i]*(double)sum_error[i]) + (Kd[i]*(double)delta_error);
+   
+    Serial.print("angle[");Serial.print(szAngles[i]);Serial.print("]:");Serial.println(angle[i]);
+    Serial.print("rcCommand[");Serial.print(szAngles[i]);Serial.print("]:");Serial.println(RC_commandRP[i]);
+    Serial.print("sum_error[");Serial.print(szAngles[i]);Serial.print("]:");Serial.println(sum_error[i]);
+    Serial.print("error:");Serial.println(error);
+    Serial.print("anglePID[");Serial.print(szAngles[i]);Serial.print("]:");Serial.println(anglePID[i]);
   }
 
-  //YAW
-  axisPID[YAW] = 0;
-  Serial.print(">MultiWii_loop: axisPID[");Serial.print((int)YAW);Serial.print("]:");Serial.println(axisPID[YAW]);
-
-  MotorESC.MotorESC_RunMotors(axisPID[ROLL],axisPID[PITCH],axisPID[YAW],RC_command[THROTTLE]);
+  ESC_command[THROTTLE] = RC_command[THROTTLE];
+  ESC_command[ROLL]     = (int16_t)anglePID[0];
+  ESC_command[PITCH]    = (int16_t)anglePID[1];
+  ESC_command[YAW]      = 0; 
+  MotorESC.MotorESC_RunMotors(ESC_command);
 }

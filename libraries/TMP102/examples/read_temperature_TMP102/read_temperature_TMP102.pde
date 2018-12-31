@@ -3,7 +3,7 @@
 #include <TMP102.h>
  
 /* I2C interface is provided on pins:                                          */
-/*         1 = Power +5V                                                       */
+/*         1 = Power +3V                                                       */
 /*         2 = SCL                                                             */
 /*         3 = SDA                                                             */
 /*         9 = Ground                                                          */

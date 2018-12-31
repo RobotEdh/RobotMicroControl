@@ -19,7 +19,7 @@ ISR (PCINT0_vect)
     thisb = PINB;          // read PORT B   
     currTime = micros();
 
-    if ((thisb ^ lastb) & 0b000001) {  // RB1 changed ROLL   
+    if ((thisb ^ lastb) & 0b000001) {  // RB1 changed 
       if (!(thisb & 0b000001)) {       // RB1 is low                        
         dTime = currTime-edgeTime[0];                            
         if (900<dTime && dTime<2200) {  // filter erroneous values                             
@@ -30,7 +30,7 @@ ISR (PCINT0_vect)
         edgeTime[0] = currTime; // RB1 is high                            
     }        
         
-    if ((thisb ^ lastb) & 0b000010) {  // RB2 changed PITCH    
+    if ((thisb ^ lastb) & 0b000010) {  // RB2 changed 
       if (!(thisb & 0b000010)) {       // RB2 is low                        
         dTime = currTime-edgeTime[1];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
@@ -41,7 +41,7 @@ ISR (PCINT0_vect)
         edgeTime[1] = currTime; // RB2 is high                            
     }        
 
-    if ((thisb ^ lastb) & 0b000100) {  // RB3 changed YAW    
+    if ((thisb ^ lastb) & 0b000100) {  // RB3 changed  
       if (!(thisb & 0b000100)) {       // RB3 is low                        
         dTime = currTime-edgeTime[2];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
@@ -52,7 +52,7 @@ ISR (PCINT0_vect)
         edgeTime[2] = currTime; // RB3 is high                            
     } 
     
-    if ((thisb ^ lastb) & 0b001000) {  // RB4 changed THROTTLE    
+    if ((thisb ^ lastb) & 0b001000) {  // RB4 changed
       if (!(thisb & 0b001000)) {       // RB4 is low                        
         dTime = currTime-edgeTime[3];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
@@ -63,7 +63,7 @@ ISR (PCINT0_vect)
         edgeTime[3] = currTime; // RB4 is high                            
     }            
      
-    if ((thisb ^ lastb) & 0b010000) {  // RB5 changed AUX1    
+    if ((thisb ^ lastb) & 0b010000) {  // RB5 changed   
       if (!(thisb & 0b010000)) {       // RB5 is low                        
         dTime = currTime-edgeTime[4];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
@@ -74,7 +74,7 @@ ISR (PCINT0_vect)
         edgeTime[4] = currTime; // RB5 is high                            
     }
     
-    if ((thisb ^ lastb) & 0b100000) {  // RB6 changed AUX2    
+    if ((thisb ^ lastb) & 0b100000) {  // RB6 changed    
       if (!(thisb & 0b100000)) {       // RB6 is low                        
         dTime = currTime-edgeTime[5];                             
         if (900<dTime && dTime<2200) {  // filter erroneous values                              
@@ -126,8 +126,8 @@ A5	  PCINT13 (PCMSK1 / PCIF1 / PCIE1)
   PCMSK0 |= bit (PCINT5);  // want pin 13
   PCIFR  |= bit (PCIF0);   // clear any outstanding interrupts
   PCICR  |= bit (PCIE0);   // enable pin change interrupts for D8 to D13
-  DDRB = DDRB & 0b11000000;   // Set pins 8 à 13 of PORTB as input
-  PINB;                      //read PortB to clear any mismatch
+  DDRB = DDRB & 0b11000000;   // set pins 8 à 13 of PORTB as input
+  PINB;                       // read PortB to clear any mismatch
 }
 
 
@@ -145,12 +145,13 @@ uint16_t RCClass::RC_readRaw(uint8_t chan)
 void RCClass::RC_getCommands(int16_t RC_command[NBCHANNELS])
 {
   uint16_t RC_data;
+  
   for (int i = 0; i < NBCHANNELS; i++) {         // read data from all channels
         RC_data = RC_readRaw(i);
-        if (i < 3) RC_command[i] = RC_data - MIDPPM;                                                   // roll, pitch, yaw
-        else if (i == 3) { if (RC_data < 1.1*MINPPM)     RC_command[i] = 0; else RC_command[i] = RC_data;} // throttle 
-        else if (i == 4) { if (RC_data > 0.9*MAXPPM)     RC_command[i] = 1; else RC_command[i] = 0;}       // aux1
-        else if (i == 5) { if (RC_data > 0.9*MAXPPMAUX2) RC_command[i] = 1; else RC_command[i] = 0;}       // aux2    
+        if ((i == ROLL) || (i == PITCH) ||(i == YAW)) RC_command[i] = (RC_data - MIDPPM)* 180 * 2 /(MAXPPM -MINPPM); // roll, pitch, yaw convert to range [-180;+180]
+        else if (i == THROTTLE) { if (RC_data < 1.1*MINPPM) RC_command[i] = 0; else RC_command[i] = RC_data;}        // throttle 
+        else if (i == AUX1) { if (RC_data > 0.9*MAXPPM)     RC_command[i] = 1; else RC_command[i] = 0;}              // aux1
+        else if (i == AUX2) { if (RC_data > 0.9*MAXPPMAUX2) RC_command[i] = 1; else RC_command[i] = 0;}              // aux2    
   } // end for
 
 }

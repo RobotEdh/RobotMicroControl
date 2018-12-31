@@ -2,12 +2,18 @@
 #define MotorESC_h
 
 #include <Arduino.h>
+#include <RC.h>
 
-/* this is the value for the ESCs when they are not armed */
-#define MINCOMMAND  936
-#define MAXCOMMAND 1875
+#define MINPWM   0
+#define MAXPWM 255
 
-#define MINCHECK 1200
+#define NBMOTORS 4
+const char szMotors[NBMOTORS][20]={    
+"REAR_RIGHT",
+"FRONT_RIGHT",
+"REAR_LEFT",
+"FRONT_LEFT"
+};
 
 #define Motor1Pin 1
 #define Motor2Pin 1
@@ -17,24 +23,17 @@
 class MotorESCClass
 {
   public:
-
-  enum rc {
-     ROLL,
-     PITCH,
-     YAW,
-     THROTTLE
-   };
    
    MotorESCClass();
    
    void MotorESC_init(void);
    void MotorESC_writeOneMotor(uint8_t no, int16_t value);   
    void MotorESC_writeAllMotors(int16_t value);
-   void MotorESC_RunMotors(int16_t roll, int16_t pitch, int16_t yaw, int16_t throttle);
+   void MotorESC_RunMotors(int16_t ESC_command[4]);
     
   private:
   void MotorESC_writeMotors(void);
-  int16_t _motor[4];  // 4 motors
+  int16_t _motor[NBMOTORS];
 };
 
 #endif

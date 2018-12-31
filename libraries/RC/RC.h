@@ -1,11 +1,28 @@
 #ifndef RC_h
 #define RC_h
 
-#define NBCHANNELS     6 
+#include <Arduino.h>
+
+#define NBCHANNELS 6 
+#define THROTTLE   0
+#define ROLL       1
+#define PITCH      2
+#define YAW        3
+#define AUX1       4
+#define AUX2       5
+const char szChannels[NBCHANNELS][20]={    
+"Throttle",
+"Roll",
+"Pitch",
+"Yaw",
+"AUX1",
+"AUX2"
+};
+
 #define MAXPPM      1920
 #define MAXPPMAUX2  1520 
 #define MINPPM      1100 
-#define MIDPPM      MAXPPM/MINPPM 
+#define MIDPPM      (MINPPM+MAXPPM)/2 
 
 class RCClass
 {

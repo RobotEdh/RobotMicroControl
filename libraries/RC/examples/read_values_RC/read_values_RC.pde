@@ -1,6 +1,5 @@
 #include <RC.h>
 
-
 RCClass RC;     
 
 void setup()
@@ -21,7 +20,6 @@ void loop()
 {
   long starttime;
   int16_t RC_command[NBCHANNELS];
-  const char* sz_axis[] = {"ROLL","PITCH","YAW","THROTTLE","AUX1","AUX2"};
   
   Serial.println("move tick for 5s to get RC Commands"); 
   delay(5*1000);
@@ -31,6 +29,6 @@ void loop()
  
   Serial.print("elasptime: "); Serial.println(millis() - starttime);
   for (int i = 0; i < NBCHANNELS; i++) { // read data from all channels
-     Serial.print("RC_command[");Serial.print(i); Serial.print("] - ");Serial.print(sz_axis[i]);Serial.print(": ");Serial.println(RC_command[i]);
+     Serial.print("RC_command[");Serial.print(i); Serial.print("] - ");Serial.print(szChannels[i]);Serial.print(": ");Serial.println(RC_command[i]);
   }
- }
+}
