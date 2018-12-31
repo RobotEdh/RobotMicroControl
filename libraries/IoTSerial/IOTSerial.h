@@ -29,15 +29,6 @@
 #define CMD_CHECK         0x0A
 #define CMD_PI            0x0B
 
-// 0: alert status
-// 1: picture number
-// 2: motor_state
-// 3: direction
-// 4: obstacle status
-// 5: distance
-// 6: temperature
-// 7: brightness
-// 8: noise
 #define ALERT_STATUS           0
 #define NO_PICTURE             1
 #define MOTOR_STATE            2
@@ -45,10 +36,11 @@
 #define OBSTACLE_STATUS        4
 #define DISTANCE               5
 #define TEMPERATURE            6
-#define BRIGHTNESS             7
-#define NOISE                  8
+#define HUMIDITY               7
+#define BRIGHTNESS             8
+#define NOISE                  9
 
-#define RESP_SIZE 9
+#define RESP_SIZE 10
     
 const char szField[RESP_SIZE][30]={    
 "alert_status",
@@ -58,6 +50,7 @@ const char szField[RESP_SIZE][30]={
 "obstacle_status",
 "distance",
 "temperature",
+"humidity",
 "brightness",
 "noise"
 };

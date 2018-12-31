@@ -7,7 +7,7 @@
 #include <motor.h>
 #include <SharpIR.h>           // IR sensor
 #include <CMPS03.h>            // Compass
-#include <TMP102.h>            // Temperature sensor
+#include <DHT22.h>             // Temperature & Humidity sensor
 #include <TiltPan.h>           // Tilt&Pan
 #include <LSY201.h>            // Camera
 #include <LiquidCrystal_I2C.h> // LCD

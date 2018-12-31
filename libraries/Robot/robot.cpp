@@ -2,7 +2,7 @@
 #include <motor.h>             // Motor
 #include <SharpIR.h>           // IR sensor
 #include <CMPS03.h>            // Compas
-#include <TMP102.h>            // Temperature
+#include <DHT22.h>             // Temperature& Humidity
 #include <TEMT6000.h>          // Brightness
 #include <Servo.h>             // Servo
 #include <TiltPan.h>           // Tilt&Pan
@@ -20,7 +20,7 @@ extern SharpIRClass SharpIR;        // The IR sensor class
 extern LiquidCrystal_I2C lcd;       // The LCD class
 extern CMPS03Class CMPS03;          // The Compass class
 
-       TMP102Class TMP102;          // The Temperature class  
+       DHT22Class DHT22;            // The Temperature&Humidity class  
        TEMT6000Class TEMT6000;      // The Brightness class
        SoundClass Sound;            // The Sound class       
        MotionClass Motion;          // The Motion class
@@ -50,8 +50,11 @@ unsigned long previousTimeCheck = 0;
 
 unsigned long GOtimeout = 10;
  
-double tab_temperature[NB_TEMPERATURE] = {0};
-double avg_temperature = 0;
+double tab_temperature[NB_TEMPERATURE] = {0.0};
+double avg_temperature = 0.0;
+
+double tab_humidity[NB_HUMIDITY] = {0.0};
+double avg_humidity = 0.0;
 
 int tab_lux[NB_LUX] = {0};
 unsigned long avg_lux = 0;
@@ -90,9 +93,9 @@ void blink(int led)
 void buzz(int buzzNb)
 {  
   for (int i=0;i<buzzNb;i++){
-      digitalWrite(buzzPin, HIGH);
+      digitalWrite(BUZZ_PIN, HIGH);
       delay(1);
-      digitalWrite(buzzPin, LOW); 
+      digitalWrite(BUZZ_PIN, LOW); 
       delay(200);
    }            
 }
@@ -120,7 +123,7 @@ int robot_begin()
   Serial.println("Init Leds OK");
     
   // initialize the buzzer
-  pinMode(buzzPin, OUTPUT); 
+  pinMode(BUZZ_PIN, OUTPUT); 
   buzz(3);       
   Serial.println("Init Buzzer OK");
    
@@ -201,19 +204,27 @@ int robot_begin()
   lcd.print("Noise:");lcd.print(ivalue);
 
    
-  // initialize the Temperature sensor 
-  TMP102.TMP102_init();
-  Serial.println("Init Temperature sensor OK");
+  // initialize the Temperature&Humidity sensor 
+  DHT22.DHT22_init(DHT22_PIN);
+  Serial.println("Init Temperature&Humidity sensor OK");
+  DHT22_ERROR_t errorCode = DHT22.readData();
+  if (errorCode == DHT_ERROR_NONE)
+  {
+      Serial.print(DHT22.getTemperatureC());
+      Serial.print("C ");
+      Serial.print(DHT22.getHumidity());
+      Serial.println("%");  
+  }
+  else
+  {
+      Serial.println( szDHT_errors[errorCode]);
+  }
   
-  double temperature = TMP102.TMP102_read();
-  ivalue = (int)(100.0 * temperature);
-  Serial.print("Temperature: ");
-  Serial.println(ivalue); 
-  lcd.print("T:");lcd.print(ivalue);lcd.printByte(lcd_celcius);lcd.printByte(lcd_pipe);   
   
   // initialize the motion sensor
   pinMode(MOTION_PIN, INPUT);
   Serial.println("Init Motion sensor OK");
+
 
   // initialize the IOT Serial 1 
   IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
@@ -225,8 +236,10 @@ int robot_begin()
   pinMode(IOT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
  
+ 
   interrupts(); // enable all interrupts
   Serial.print("Init Interrupts OK, IntIOT: "); Serial.println(IntIOT);
+  
   
   // Check I2C
   Serial.print("Check I2C"); 
@@ -273,10 +286,21 @@ int infos (uint16_t *resp, uint8_t *resplen)
      else          resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);
      
-     // temperature
-     double temperature = TMP102.TMP102_read();
-     resp[TEMPERATURE] = (uint16_t)(100.0 * temperature);
-     Serial.print("temperature: ");Serial.println((int)resp[TEMPERATURE]);
+     // temperature&humidity
+     DHT22_ERROR_t errorCode = DHT22.readData();
+     if (errorCode == DHT_ERROR_NONE)
+     {
+         resp[TEMPERATURE] = (uint16_t)(100.0 * DHT22.getTemperatureC());
+         Serial.print("temperature: ");Serial.println((int)resp[TEMPERATURE]);
+         resp[HUMIDITY]    = (uint16_t)(100.0 * DHT22.getHumidity());
+         Serial.print("humidity: ");Serial.println((int)resp[HUMIDITY]);  
+     }
+     else
+     {
+        Serial.println( szDHT_errors[errorCode]);
+        resp[TEMPERATURE] = 0;
+        resp[HUMIDITY]    = 0;
+     }     
      
      // brightness
      resp[BRIGHTNESS] = (uint16_t)TEMT6000.TEMT6000_getLight();
@@ -302,10 +326,11 @@ int check ()
   // Check Motion
   int status = Motion.Motion_status();
   if (status) {
-        blink(Led_Red);   
+       blink(Led_Red);   
        Serial.print("Alert Motion");	
        return ALERT_MOTION;
   }
+  
   // Check Noise
   int noise = Sound.Sound_getNoise();
   Serial.print("noise: "); Serial.print(noise);Serial.print(" -- previous_noise: "); Serial.print(tab_noise[0]);Serial.print(" -- MAX_VAR_NOISE: "); Serial.println(MAX_VAR_NOISE);
@@ -313,31 +338,52 @@ int check ()
       if (MAX_VAR_NOISE < abs(avg_noise - noise) && tab_noise[NB_NOISE-1] != 0) {
           return ALERT_NOISE;
       }    
- 
       avg_noise = 0;
-      for (i=NB_NOISE;i<2;i--) { 
-          tab_noise[i-1] = tab_noise[i-2];
-          avg_noise += tab_noise[i-1];
+      for (i=NB_NOISE-1;i>0;i--) { 
+          tab_noise[i] = tab_noise[i-1];
+          avg_noise += tab_noise[i];
       }
       tab_noise[0]=noise;
       avg_noise = (avg_noise+noise)/NB_NOISE;
   }
    
-  // Check Temperature Variation
-  double temperature = TMP102.TMP102_read();
-  Serial.print("temperature: "); Serial.print(temperature);Serial.print(" -- previous_temperature: "); Serial.print(tab_temperature[0]);Serial.print(" -- MAX_VAR_TEMPERATURE: "); Serial.println(MAX_VAR_TEMPERATURE);
-  if (temperature != tab_temperature[0]) {
-      if (MAX_VAR_TEMPERATURE < abs(avg_temperature - temperature) && tab_temperature[NB_TEMPERATURE-1] != 0) {
-          return ALERT_TEMPERATURE;
-      }    
- 
-      avg_temperature = 0;
-      for (i=NB_TEMPERATURE;i<2;i--) { 
-          tab_temperature[i-1] = tab_temperature[i-2];
-          avg_temperature += tab_temperature[i-1];
-      }
-      tab_temperature[0]=temperature;
-      avg_temperature = (avg_temperature+temperature)/NB_TEMPERATURE;
+  // Check Temperature & Humidity  Variation
+  DHT22_ERROR_t errorCode = DHT22.readData();
+  if (errorCode == DHT_ERROR_NONE)
+  {
+      double temperature = DHT22.getTemperatureC();
+      double humidity    = DHT22.getHumidity();
+      Serial.print("temperature: "); Serial.print(temperature);Serial.print(" -- previous_temperature: "); Serial.print(tab_temperature[0]);Serial.print(" -- MAX_VAR_TEMPERATURE: "); Serial.println(MAX_VAR_TEMPERATURE);
+      Serial.print("humidity: ");    Serial.print(humidity);   Serial.print(" -- previous_humidity: ");    Serial.print(tab_humidity[0]);   Serial.print(" -- MAX_VAR_HUMIDITY: ");    Serial.println(MAX_VAR_HUMIDITY);
+  
+      if (temperature != tab_temperature[0]) {
+         if (MAX_VAR_TEMPERATURE < abs(avg_temperature - temperature) && tab_temperature[NB_TEMPERATURE-1] != 0.0) {
+             return ALERT_TEMPERATURE;
+         }    
+         avg_temperature = 0.0;
+         for (i=NB_TEMPERATURE-1;i>0;i--) { 
+             tab_temperature[i] = tab_temperature[i-1];
+             avg_temperature += tab_temperature[i];
+         }
+         tab_temperature[0]=temperature;
+         avg_temperature = (avg_temperature+temperature)/NB_TEMPERATURE;
+     }
+     if (humidity != tab_humidity[0]) {
+         if (MAX_VAR_HUMIDITY < abs(avg_humidity - humidity) && tab_humidity[NB_HUMIDITY-1] != 0.0) {
+             return ALERT_HUMIDITY;
+         }    
+         avg_humidity = 0.0;
+         for (i=NB_HUMIDITY-1;i>0;i--) { 
+             tab_humidity[i] = tab_humidity[i-1];
+             avg_humidity += tab_humidity[i];
+         }
+         tab_humidity[0]=humidity;
+         avg_humidity = (avg_humidity+humidity)/NB_HUMIDITY;
+     }
+  }
+  else
+  {
+        Serial.println( szDHT_errors[errorCode]);
   }
          
   // Check Lux Variation
@@ -347,11 +393,10 @@ int check ()
       if (MAX_VAR_LUX < abs(avg_lux - lux) && tab_lux[NB_LUX-1] != 0) {
           return ALERT_LUX;
       }    
- 
       avg_lux = 0;
-      for (i=NB_LUX;i<2;i--) { 
-          tab_lux[i-1] = tab_lux[i-2];
-          avg_lux += tab_lux[i-1];
+      for (i=NB_LUX-1;i>0;i--) { 
+          tab_lux[i] = tab_lux[i-1];
+          avg_lux += tab_lux[i];
       }
       tab_lux[0]=lux;
       avg_lux = (avg_lux+lux)/NB_LUX;

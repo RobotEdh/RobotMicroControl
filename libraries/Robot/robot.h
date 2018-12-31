@@ -29,29 +29,29 @@
 #define ALERT_MOTION      1
 #define ALERT_LUX         2
 #define ALERT_TEMPERATURE 3
-#define ALERT_NOISE       4
+#define ALERT_HUMIDITY    4
+#define ALERT_NOISE       5
 
 #define NB_LUX 6
 #define MAX_VAR_LUX 100
+#define NB_TEMPERATURE 3
+#define MAX_VAR_TEMPERATURE 1.5
+#define NB_HUMIDITY 3
+#define MAX_VAR_HUMIDITY 10
 #define NB_NOISE 6
 #define MAX_VAR_NOISE 200
-#define NB_TEMPERATURE 6
-#define MAX_VAR_TEMPERATURE 1.5
-
-
-#define Led_Green   22  
-#define Led_Red     23  
-#define Led_Blue    24 
-#define buzzPin     25  
 
 #define TEMT6000_PIN A2   // Brightness Sensor TEMT6000 analogic pin A2 
-#define SOUND_PIN    A3   // Sound Detector analogic pin A3            
-#define MOTION_PIN   19    // Pin used by the Motion sensor connected to interrupt INT4 on MEGA2560
+#define SOUND_PIN    A3   // Sound Detector analogic pin A3 
+#define Led_Green    22  
+#define Led_Red      23  
+#define Led_Blue     24 
+#define BUZZ_PIN     25          
+#define MOTION_PIN   28   // Pin used by the Motion sensor pin 28
+#define DHT22_PIN    29   // Pin used by the Temperature&Humidity sensor pin 29
 
-#define IOT_PIN     3    // Pin used by the IOT connected to interrupt INT1 on MEGA2560
-
-void IntrMotion();  // interrupt handler Motion sensor
-void IntrIOT();     // interrupt handler IOT
+#define IOT_PIN       3   // Pin used by the IOT connected to interrupt INT1 on MEGA2560
+void IntrIOT();           // interrupt handler IOT
 
 
 void blink(int led);
