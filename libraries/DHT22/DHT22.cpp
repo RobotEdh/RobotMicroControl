@@ -72,7 +72,7 @@ void DHT22Class::DHT22_init(uint8_t pin)
     _lastReadTime = millis();
     _lastHumidity = DHT22_ERROR_VALUE;
     _lastTemperature = DHT22_ERROR_VALUE;
-    delay(2000);
+    delay(5000);
 }
 
 //
@@ -119,7 +119,7 @@ DHT22_ERROR_t DHT22Class::readData()
       return DHT_BUS_HUNG;
     }
     retryCount++;
-    delayMicroseconds(2);
+    delayMicroseconds(5);
   } while(!DIRECT_READ(reg, bitmask));
   // Send the activate pulse
   cli();
@@ -139,7 +139,7 @@ DHT22_ERROR_t DHT22Class::readData()
       return DHT_ERROR_NOT_PRESENT;
     }
     retryCount++;
-    delayMicroseconds(2);
+    delayMicroseconds(5);
   } while(!DIRECT_READ(reg, bitmask));
   // Find the end of the ACK Pulse
   retryCount = 0;
@@ -150,7 +150,7 @@ DHT22_ERROR_t DHT22Class::readData()
       return DHT_ERROR_ACK_TOO_LONG;
     }
     retryCount++;
-    delayMicroseconds(2);
+    delayMicroseconds(5);
   } while(DIRECT_READ(reg, bitmask));
   // Read the 40 bit data stream
   for(i = 0; i < DHT22_DATA_BIT_COUNT; i++)
@@ -164,7 +164,7 @@ DHT22_ERROR_t DHT22Class::readData()
         return DHT_ERROR_SYNC_TIMEOUT;
       }
       retryCount++;
-      delayMicroseconds(2);
+      delayMicroseconds(5);
     } while(!DIRECT_READ(reg, bitmask));
     // Measure the width of the data pulse
     retryCount = 0;
@@ -175,7 +175,7 @@ DHT22_ERROR_t DHT22Class::readData()
         return DHT_ERROR_DATA_TIMEOUT;
       }
       retryCount++;
-      delayMicroseconds(2);
+      delayMicroseconds(5);
     } while(DIRECT_READ(reg, bitmask));
     bitTimes[i] = retryCount;
   }
