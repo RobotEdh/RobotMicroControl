@@ -14,13 +14,17 @@ void MotorESCClass::MotorESC_init()
   pinMode(Motor2Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor3Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor4Pin, OUTPUT);  // set the analogig pin as output for PWM
-  
-  Serial.println(">Start Init ESC");
-  Serial.println(">10 s to connect the ESC to power");
   MotorESC_writeAllMotors(MINPWM);
-  delay(10*1000); /* 10 s to connect the ESC to power */
+    
+  Serial.println(">Start Init ESC");
+  Serial.println(">15 s to connect the ESC to power");
+  delay(15*1000); /* 15 s to connect the ESC to power */
+  
+  Serial.println(">10s Run all motors");  
   MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
-  delay(5*1000);
+  delay(10*1000);
+  
+  Serial.println(">Stop all motors");  
   MotorESC_writeAllMotors(MINPWM);
 
   Serial.println("<End MotorESC_init");
@@ -29,6 +33,7 @@ void MotorESCClass::MotorESC_init()
 void MotorESCClass::MotorESC_test()
 {
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
+  MotorESC_writeAllMotors(MINPWM);   // stop
   Serial.println("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way");
 
   for(int i=0; i< NBMOTORS; i++)
@@ -37,8 +42,7 @@ void MotorESCClass::MotorESC_test()
       MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
       delay(5*1000);
   }
-  MotorESC_writeAllMotors(MINPWM);
-  
+  MotorESC_writeAllMotors(MINPWM);  // stop
   Serial.println("END TESTCASE 1");
 
 /* END TESTCASE 1 */
@@ -49,9 +53,9 @@ void MotorESCClass::MotorESC_test()
 
   MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
   delay(5*1000); 
-  MotorESC_writeAllMotors(MINPWM);
-
-  Serial.println("END TESTCASE 2");
+ 
+ MotorESC_writeAllMotors(MINPWM); // stop
+ Serial.println("END TESTCASE 2");
  
 /* END TESTCASE 2 */
 
@@ -73,7 +77,7 @@ void MotorESCClass::MotorESC_writeMotors ()
 /**************************************************************************************/
 void MotorESCClass::MotorESC_writeOneMotor(uint8_t no, int16_t value) {   // Sends commands to one motor
   for (int i=0;i<NBMOTORS;i++) {
-    _motor[i]=0;  // reset speed for all motors...
+    _motor[i]=MINPWM;  // stop all motors...
   }
   _motor[no]=value; // ...except for the motor selected
    

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <RC.h>
 
-#define MINPWM   0
+#define MINPWM 127
 #define MAXPWM 255
 
 #define NBMOTORS 4
