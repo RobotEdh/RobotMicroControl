@@ -8,7 +8,7 @@ MotorESCClass::MotorESCClass()
         
 void MotorESCClass::MotorESC_init()
 { 
-  Serial.println("Start ESC Init");
+  Serial.println("Start MotorESC_init");
 
   pinMode(Motor1Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor2Pin, OUTPUT);  // set the analogig pin as output for PWM
@@ -23,8 +23,11 @@ void MotorESCClass::MotorESC_init()
   delay(5*1000);
   MotorESC_writeAllMotors(MINPWM);
 
-  Serial.println("<End Init ESC");
+  Serial.println("<End MotorESC_init");
+}
 
+void MotorESCClass::MotorESC_test()
+{
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
   Serial.println("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way");
 

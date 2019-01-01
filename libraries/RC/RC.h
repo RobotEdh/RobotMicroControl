@@ -19,10 +19,10 @@ const char szChannels[NBCHANNELS][20]={
 "AUX2"
 };
 
-#define MAXPPM      1920
-#define MAXPPMAUX2  1520 
-#define MINPPM      1100 
-#define MIDPPM      (MINPPM+MAXPPM)/2 
+#define MAXPPM      1920.0
+#define MAXPPMAUX2  1520.0 
+#define MINPPM      1100.0 
+#define MIDPPM      1510.0 //(MINPPM+MAXPPM)/2 
 
 class RCClass
 {
