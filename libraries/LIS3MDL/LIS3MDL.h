@@ -2,6 +2,14 @@
 #define LIS3MDL_h
 
 #include <Arduino.h>
+#include <Wire.h>
+
+// The Arduino two-wire interface uses a 7-bit number for the address,
+// and sets the last bit correctly based on reads and writes
+#define LIS3MDL_HIGH_ADDRESS  0b0011110
+#define LIS3MDL_LOW_ADDRESS   0b0011100
+
+#define LIS3MDL_ID  0x3D
 
 class LIS3MDLClass
 {
@@ -35,11 +43,11 @@ class LIS3MDLClass
 
     LIS3MDLClass();
 
-    int8_t LIS3MDL_init(void);
+    uint8_t LIS3MDL_init(void);
 
-    int8_t  LIS3MDL_writeReg(uint8_t reg, uint8_t value);
-    int8_t  LIS3MDL_readReg(uint8_t reg);
-    int16_t LIS3MDL_readReg16Bit(uint8_t reg);
+    void    LIS3MDL_writeReg(uint8_t reg, uint8_t value);
+    uint8_t LIS3MDL_readReg(uint8_t reg);
+    int16_t LIS3MDL_readReg16BitLH(uint8_t reg);
 
     double LIS3MDL_getMag_x(void);
     double LIS3MDL_getMag_y(void);
@@ -47,12 +55,15 @@ class LIS3MDLClass
     double LIS3MDL_getTemperature(void);
     
     double LIS3MDL_getMagnitude(double x, double y,double z);
+    uint8_t LIS3MDL_getStatus(void);
+    uint8_t LIS3MDL_getAddress(void);
     
   private:
-    uint8_t address;
+    uint8_t _address;
+    uint8_t _last_status;
     double _mx_zero, _my_zero, _mz_zero;
 
-    int16_t LIS3MDL_testReg(uint8_t address, regAddr reg);
+    uint8_t LIS3MDL_testReg(uint8_t address);
 };
 
 #endif

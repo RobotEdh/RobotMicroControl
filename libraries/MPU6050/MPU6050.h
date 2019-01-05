@@ -2,6 +2,9 @@
 #define MPU6050_h
 
 #include <Arduino.h>
+#include <Wire.h>
+
+#define MPU6050_ID 0x68
 
 class MPU6050Class
 {
@@ -26,15 +29,13 @@ class MPU6050Class
 
     MPU6050Class();
     
-    int8_t MPU6050_init(void);
-    int8_t MPU6050_getDeviceID(void);
-    int8_t MPU6050_getSampleDivider(void);
+    uint8_t MPU6050_init(void);
+    uint8_t MPU6050_CheckDeviceID(void);
             
-    int8_t MPU6050_writeReg(uint8_t reg, uint8_t value);
+    void MPU6050_writeReg(uint8_t reg, uint8_t value);
 
-    int8_t  MPU6050_readReg(uint8_t reg);
+    uint8_t  MPU6050_readReg(uint8_t reg);
     int16_t MPU6050_readReg16Bit(uint8_t reg);
-    int32_t MPU6050_readReg32Bit(uint8_t reg);
     
     double MPU6050_getTemperature(void);
     double MPU6050_getAccel_x(void);
@@ -44,12 +45,16 @@ class MPU6050Class
     double MPU6050_getGyro_y(void);
     double MPU6050_getGyro_z(void);
     
-    void MPU6050_calibrate(void);
+    uint8_t MPU6050_calibrate(void);
     
-    void MPU6050_get_roll_pitch_yaw(double angle[3]);
+    uint8_t MPU6050_get_roll_pitch_yaw(double angle[3]);
+    
+    uint8_t MPU6050_getStatus(void);
+    uint8_t MPU6050_getAddress(void);
     
   private:
     uint8_t _address;
+    uint8_t _last_status;
     long _previousTime, _currentTime;
     double _ax_zero, _ay_zero, _az_zero;
     double _gyrox_zero, _gyroy_zero, _gyroz_zero;
