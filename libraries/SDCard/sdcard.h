@@ -9,11 +9,7 @@
 #define FILE_OPEN_ERROR  -1000
 #define FILE_CLOSE_ERROR -1001
 
-#define SS_CS_Pin  8   // Serial Select pin connected to digital pin J6-09 (RF1)
-/* SD-Card                                                                                          */
-/* SPI interface is provided on pins:                                                               */                    
-/*         SPI/SD-Card Master Output (MOSI) connected to J5-07(SDO2/PMA3/CN10/RG8) selected by JP5  */
-/*         SPI/SD-Card Master Input  (MISO) connected to J5-09(SDI2/PMA5/CN8/RG7) selected by JP7   */
+#define SS_CS_Pin  10   
 
 int initSDCard(void);
 /* Description: Initialization of the SD-Card                                 */                                            
