@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-class VL53L0X
+class VL53L0XClass
 {
   public:
     // register addresses from API vl53l0x_device.h (ordered as listed there)
@@ -96,7 +96,7 @@ class VL53L0X
 
     uint8_t last_status; // status of last I2C transmission
 
-    VL53L0X(void);
+    VL53L0XClass(void);
 
     void setAddress(uint8_t new_addr);
     inline uint8_t getAddress(void) { return address; }

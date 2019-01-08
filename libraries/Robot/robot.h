@@ -48,7 +48,7 @@
 #define Led_Blue     24 
 #define BUZZ_PIN     25          
 #define MOTION_PIN   28   // Pin used by the Motion sensor pin 28
-#define DHT22_PIN    29   // Pin used by the Temperature&Humidity sensor pin 29
+#define DHT22_PIN    34   // Pin used by the Temperature&Humidity sensor pin 34
 
 #define IOT_PIN       3   // Pin used by the IOT connected to interrupt INT1 on MEGA2560
 void IntrIOT();           // interrupt handler IOT

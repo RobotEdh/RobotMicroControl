@@ -3,6 +3,7 @@
 #include <CMPS03.h>     // Compas
 #include <Servo.h>      // Servo
 #include <LiquidCrystal_I2C.h> // LCD
+#include <VL53L0X.h>     // TOF
 
 LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
 
@@ -18,6 +19,7 @@ volatile int TickLeft = 0;
 CMPS03Class CMPS03;           // The Compass class
 SharpIRClass SharpIR;         // The IR sensor class
 Servo IRServo;                // The Servo class used for IR sensor
+VL53L0XClass VL53L0X;         // The ToF class
 
 
 int motor_begin()
@@ -67,26 +69,30 @@ int motor_begin()
   // initialize the pin connected to the Contact sensors 
   pinMode(ContactRightPin, INPUT);
   pinMode(ContactLeftPin, INPUT);
-        
+  
+  Serial.println(" ");
+  Serial.println("Test Contact sensors in 5s"); 
+  delay(5*1000);     
   ivalue = digitalRead(ContactRightPin);  // read input value
   if (ivalue == LOW) Serial.println("-->obstacle right");
   else Serial.println("-->No obstacle right");
   ivalue = digitalRead(ContactLeftPin);  // read input value
   if (ivalue == LOW) Serial.println("-->obstacle left");
   else Serial.println("-->No obstacle left");
-     
   Serial.println("Init Contact sensors OK");
     
   // initialize the pin connected to the IR sensor 
   SharpIR.SharpIR_init(SHARP_IR_PIN,(long)SHARP_MODEL); 
   ivalue = SharpIR.SharpIR_distance();
-  Serial.print("Distance: ");
-  Serial.println(ivalue); 
+  Serial.println(" ");
+  Serial.print("SharpIR sensor, Distance: "); Serial.print(ivalue); Serial.println("cm");
   lcd.print("IR:");lcd.print(ivalue);lcd.print(" cm");lcd.printByte(lcd_pipe);   
-  Serial.println("Init IR sensor OK");
+  Serial.println("Init SharpIR sensor OK");
   delay(5*1000);lcd.clear(); 
 
   // initialize the PWM pin connected to the servo used for the IR sensor and initialize the associate Timer interrupt
+  Serial.println(" ");
+  Serial.println("Move IR Servo");
   IRServo.attach(IRSERVO_Pin);  
  
   // test the servo position
@@ -98,10 +104,34 @@ int motor_begin()
   
   IRServo.write(90);   // reset servo position
   delay(15*90);        // waits the servo to reach the position 
-  Serial.println("Init IR servo OK");  
+  Serial.println("Init IR Servo OK");  
+
+
+  // initialize the Time Of Flight VL53LOX
+  Serial.println (" ");
+  Serial.println("Init ToF VL53L0X");
+  VL53L0X.init();
+  VL53L0X.setTimeout(500);
+  VL53L0X.setMeasurementTimingBudget(200000);
+  
+  uint16_t reg16 = VL53L0X.getModelId();
+  uint8_t reg8   = VL53L0X.getRevisionId();
+  Serial.print ("ModelId: 0x"); Serial.println (reg16,HEX);
+  Serial.print ("RevisionId: 0x"); Serial.println (reg8,HEX);
+  delay(2000);
+  
+  uint16_t d = VL53L0X.readRangeSingleMillimeters();
+  if (VL53L0X.timeoutOccurred()) Serial.print(" TIMEOUT");
+  else
+  { 
+     Serial.print("Distance: "); Serial.print(d); Serial.println("mm");  
+  } 
+  Serial.println("Init ToF VL53L0X OK");
+    
     
   // Get the revision number of the compass 
   int revision = CMPS03.CMPS03_revision();
+  Serial.println(" ");
   if (revision < 0) {
      Serial.print("Init compass K0 ->Error I2C: ");
      Serial.println(revision);   
@@ -410,7 +440,7 @@ void change_speed(int speed)
 
 int go(unsigned long timeout)
 {
- int distance = 0;
+ uint16_t distance = 0;
  int inputpin = HIGH; 
 
 #ifdef PID  
@@ -451,16 +481,21 @@ int go(unsigned long timeout)
             
        if (millis() - current > 1*1000) { // check every 1 second
              current = millis();
-             distance = SharpIR.SharpIR_distance(); // Check distance minimum
+             
+             distance = VL53L0X.readRangeSingleMillimeters(); // Check distance minimum
+             if (VL53L0X.timeoutOccurred()) Serial.print(" TIMEOUT");
+             else
+             { 
+                Serial.print("-->distance: ");
+                Serial.print(distance); 
+                Serial.println("mm");    
 
-             Serial.print("-->distance: ");
-             Serial.println(distance);
-
-             if ((distance > 0) && (distance < DISTANCE_MIN))
-             {
+                if ((distance > 0) && (distance < (10 *DISTANCE_MIN))) 
+                {
                    return OBSTACLE;       
+                }                                  
              }
-        }     
+        }  // end check every 1 second  
        
  }  // end while (millis() - start < timeout)
  

@@ -7,20 +7,29 @@ LIS3MDLClass LIS3MDL;
 void setup()
 {
   uint8_t status = 0;
+  uint8_t devid= 0;
   
   Serial.begin(9600); // initialize serial port
   
   Wire.begin(); // initialize I2C
 
-  status = LIS3MDL.LIS3MDL_init();
-  if (status > 0)
+  devid = LIS3MDL.LIS3MDL_init();
+  if (devid > 0)
   {
-    Serial.print("Failed to detect and initialize magnetometer  error:");Serial.println(status);
+    status = LIS3MDL.LIS3MDL_getStatus();
+    if (status > 0)
+    {
+       Serial.print("Failed to detect and initialize magnetometer, error:");Serial.println(status);
+    } 
+    else
+    {
+       Serial.print("Baddevice ID: 0x"); Serial.print(devid);Serial.print(" should be: 0x"); Serial.println(LIS3MDL_ID);
+    } 
   }
   else
   {
     uint8_t address = LIS3MDL.LIS3MDL_getAddress();
-    Serial.print("Init OK, Address: "); Serial.println(address,HEX);
+    Serial.print("Init OK, Address: 0x"); Serial.println(address,HEX);
   }
 
 }

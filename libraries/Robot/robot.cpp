@@ -12,6 +12,7 @@
 #include <Sound.h>             // Sound
 #include <sdcard.h>            // SD Card
 #include <SD.h> 
+#include <DS1307.h>            // RTC
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
 #include <I2C_Scanner.h>       // used to scan I2C
 
@@ -25,6 +26,7 @@ extern CMPS03Class CMPS03;          // The Compass class
        SoundClass Sound;            // The Sound class       
        MotionClass Motion;          // The Motion class
        JPEGCameraClass JPEGCamera;  // The Camera class 
+       DS1307Class DS1307;          // The RTC class       
        IOTSerialClass IOTSerial;    // The IOT serial
        I2C_ScannerClass I2C_Scanner;// used to scan I2C
 
@@ -104,6 +106,8 @@ int robot_begin()
 {
   int ret = SUCCESS;
   int ivalue = 0;
+  uint8_t status = 0;
+  DateTime_t now;
   
   ret = motor_begin(); 
   if (ret != SUCCESS) return ret;
@@ -113,21 +117,29 @@ int robot_begin()
   
   lcd.clear();
   lcd.print("Begin Robot Init");
-   
-  pinMode(Led_Green, OUTPUT);      // set the pin as output
+  
+  Serial.println("");
+  Serial.println("Led Green");
+  pinMode(Led_Green, OUTPUT);    // set the pin as output
   blink(Led_Green); 
+  Serial.println("Led Red");
   pinMode(Led_Red, OUTPUT);      // set the pin as output
-  blink(Led_Red);  
+  blink(Led_Red);
+  Serial.println("Led Blue");  
   pinMode(Led_Blue, OUTPUT);     // set the pin as output
   blink(Led_Blue);
   Serial.println("Init Leds OK");
     
   // initialize the buzzer
+  Serial.println("");    
+  Serial.println("Buzz");
   pinMode(BUZZ_PIN, OUTPUT); 
-  buzz(3);       
+  buzz(3);   
   Serial.println("Init Buzzer OK");
    
-  // initialize the Tilt&Pan servos  
+  // initialize the Tilt&Pan servos 
+  Serial.println("");    
+  Serial.println("Move Tilt&Pan "); 
   TiltPan_begin(HSERVO_Pin, VSERVO_Pin);
   Serial.println("Init Tilt&Pan servos OK");
 
@@ -150,7 +162,8 @@ int robot_begin()
   } 
   delay(5*1000);lcd.clear();    
   
-  // initialize the SD-Card    
+  // initialize the SD-Card 
+  Serial.println(" ");    
   ret = initSDCard();
   if (ret != SUCCESS)
   {  
@@ -184,7 +197,8 @@ int robot_begin()
   delay(5*1000);lcd.clear();  
     
     
-  // initialize the Brightness sensor   
+  // initialize the Brightness sensor 
+  Serial.println(" ");  
   TEMT6000.TEMT6000_init(TEMT6000_PIN); // initialize the pin connected to the sensor
   Serial.println("Init Brightness sensor OK");
   
@@ -195,6 +209,7 @@ int robot_begin()
   
    
   // initialize the Sound detector 
+  Serial.println(" ");
   Sound.Sound_init(SOUND_PIN); // initialize the pin connected to the detector
   Serial.println("Init Sound Detector  OK");
   
@@ -205,6 +220,7 @@ int robot_begin()
 
    
   // initialize the Temperature&Humidity sensor 
+  Serial.println(" ");
   DHT22.DHT22_init(DHT22_PIN);
   Serial.println("Init Temperature&Humidity sensor OK");
   DHT22_ERROR_t errorCode = DHT22.readData();
@@ -222,15 +238,62 @@ int robot_begin()
   
   
   // initialize the motion sensor
+  Serial.println(" ");
+  Serial.println("Test Motion sensor in 5s"); 
+  delay(5*1000);  
   pinMode(MOTION_PIN, INPUT);
+  
+  status = Motion.Motion_status();
+  if (status) Serial.println("Motion detected"); 
+  else        Serial.println(" No Motion detected"); 
   Serial.println("Init Motion sensor OK");
 
-
+  // initialize RTC
+  Serial.println(" ");
+  status = DS1307.DS1307_init();
+  if (status == ERROR_RTC_STOPPED)
+  {
+    Serial.println("RTC stopped");
+  }  
+  else if (status > 0)
+  {   
+      Serial.print("Failed to init DS1307, error:"); Serial.println(status);   
+  }
+  else
+  {
+    uint8_t address = DS1307.DS1307_getAddress();
+    Serial.print("Init RTC DS1307 OK, Address: 0x"); Serial.println(address,HEX);
+ 
+    status = DS1307.DS1307_read_current_datetime(&now);
+    if (status > 0)
+    {
+       Serial.print("Error DS1307_read_current_datetime: ");Serial.println(status);
+    }
+    else
+    {
+       Serial.print("Date: ");
+       Serial.print(now.days);
+       Serial.print("/");
+       Serial.print(now.months);
+       Serial.print("/");
+       Serial.print(now.year + 2000);
+       Serial.print("  Time: ");
+       Serial.print(now.hours);
+       Serial.print(":");
+       Serial.print(now.minutes);
+       Serial.print(":");
+       Serial.println(now.seconds);
+    }    
+  }
+  
+  
   // initialize the IOT Serial 1 
+  Serial.println(" ");
   IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
   Serial.println ("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK");
   
   // initialize the IOT Serial 2, interrupt setting
+  Serial.println(" ");
   IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT WIFServer ESP8266
   Serial.println ("Init IOT Serial 2 to communicate with IOT WIFServer ESP8266 OK");
   pinMode(IOT_PIN, INPUT_PULLUP);
@@ -242,6 +305,7 @@ int robot_begin()
   
   
   // Check I2C
+  Serial.println(" ");
   Serial.print("Check I2C"); 
   I2C_Scanner.I2C_Scanner_init(); 
   I2C_Scanner.I2C_Scanner_scan(); 
