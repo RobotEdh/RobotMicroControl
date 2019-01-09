@@ -1,15 +1,13 @@
 #include <robot.h>         
 #include <motor.h>             // Motor
-#include <SharpIR.h>           // IR sensor
-#include <CMPS03.h>            // Compas
+#include <VL53L0X.h>           // TOF
+#include <CMPS12.h>            // Compas
 #include <DHT22.h>             // Temperature& Humidity
-#include <TEMT6000.h>          // Brightness
 #include <Servo.h>             // Servo
 #include <TiltPan.h>           // Tilt&Pan
 #include <LSY201.h>            // Camera
 #include <LiquidCrystal_I2C.h> // LCD
 #include <Motion.h>            // Motion
-#include <Sound.h>             // Sound
 #include <sdcard.h>            // SD Card
 #include <SD.h> 
 #include <DS1307.h>            // RTC
@@ -17,13 +15,11 @@
 #include <I2C_Scanner.h>       // used to scan I2C
 
 /* classes aleady defined in motor */
-extern SharpIRClass SharpIR;        // The IR sensor class
+extern VL53L0XClass VL53L0X;         // The ToF class
 extern LiquidCrystal_I2C lcd;       // The LCD class
-extern CMPS03Class CMPS03;          // The Compass class
+extern CMPS12Class CMPS12;          // The Compass class
 
-       DHT22Class DHT22;            // The Temperature&Humidity class  
-       TEMT6000Class TEMT6000;      // The Brightness class
-       SoundClass Sound;            // The Sound class       
+       DHT22Class DHT22;            // The Temperature&Humidity class      
        MotionClass Motion;          // The Motion class
        JPEGCameraClass JPEGCamera;  // The Camera class 
        DS1307Class DS1307;          // The RTC class       
@@ -199,10 +195,10 @@ int robot_begin()
     
   // initialize the Brightness sensor 
   Serial.println(" ");  
-  TEMT6000.TEMT6000_init(TEMT6000_PIN); // initialize the pin connected to the sensor
+  //TEMT6000.TEMT6000_init(TEMT6000_PIN); // initialize the pin connected to the sensor
   Serial.println("Init Brightness sensor OK");
   
-  ivalue = TEMT6000.TEMT6000_getLight();
+  ivalue = 0; // TODO
   Serial.print("Value between 0 (dark) and 1023 (bright): ");
   Serial.println(ivalue); 
   lcd.print("Lux:");lcd.print(ivalue);lcd.printByte(lcd_pipe);
@@ -210,11 +206,11 @@ int robot_begin()
    
   // initialize the Sound detector 
   Serial.println(" ");
-  Sound.Sound_init(SOUND_PIN); // initialize the pin connected to the detector
+  //Sound.Sound_init(SOUND_PIN); // initialize the pin connected to the detector
   Serial.println("Init Sound Detector  OK");
   
-  ivalue = Sound.Sound_getNoise();
-  Serial.print("Value between 0 (no noise) and 1023 (huge noise): ");
+  ivalue = 0; //TODO
+  //Serial.print("Value between 0 (no noise) and 1023 (huge noise): ");
   Serial.println(ivalue); 
   lcd.print("Noise:");lcd.print(ivalue);
 
@@ -341,13 +337,13 @@ int infos (uint16_t *resp, uint8_t *resplen)
      Serial.print("obstacle_status: ");Serial.println((int)resp[OBSTACLE_STATUS]);
           
      // direction
-     resp[DIRECTION] = (uint16_t)CMPS03.CMPS03_read();
+     resp[DIRECTION] = (uint16_t)CMPS12.CMPS12_getCompassHighResolution();
      Serial.print("direction: ");Serial.println((int)resp[DIRECTION]);
      
      // distance
-     int dist = SharpIR.SharpIR_distance(); 
-     if (dist > 0) resp[DISTANCE] = (uint16_t)dist;
-     else          resp[DISTANCE] = 0;
+     uint16_t distance = VL53L0X.readRangeSingleMillimeters(); 
+     if (distance > 0) resp[DISTANCE] = distance;
+     else              resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);
      
      // temperature&humidity
@@ -367,14 +363,13 @@ int infos (uint16_t *resp, uint8_t *resplen)
      }     
      
      // brightness
-     resp[BRIGHTNESS] = (uint16_t)TEMT6000.TEMT6000_getLight();
+     resp[BRIGHTNESS] = 0;  //TODO
      Serial.print("brightness: ");Serial.println((int)resp[BRIGHTNESS]);
      
      // noise
-     resp[NOISE] = (uint16_t)Sound.Sound_getNoise();
+     resp[NOISE] =  0;  //TODO
      Serial.print("noise: ");Serial.println((int)resp[NOISE]);
      
-
 
      *resplen = RESP_SIZE;
  
@@ -396,7 +391,7 @@ int check ()
   }
   
   // Check Noise
-  int noise = Sound.Sound_getNoise();
+  int noise = 0; //TODO
   Serial.print("noise: "); Serial.print(noise);Serial.print(" -- previous_noise: "); Serial.print(tab_noise[0]);Serial.print(" -- MAX_VAR_NOISE: "); Serial.println(MAX_VAR_NOISE);
   if (noise != tab_noise[0]) {
       if (MAX_VAR_NOISE < abs(avg_noise - noise) && tab_noise[NB_NOISE-1] != 0) {
@@ -451,7 +446,7 @@ int check ()
   }
          
   // Check Lux Variation
-  int lux = TEMT6000.TEMT6000_getLight();
+  int lux = 0; // TODO
   Serial.print("lux: "); Serial.print(lux);Serial.print(" -- previous_lux: "); Serial.print(tab_lux[0]);Serial.print(" -- MAX_VAR_LUX: "); Serial.println(MAX_VAR_LUX);
   if (lux != tab_lux[0]) {
       if (MAX_VAR_LUX < abs(avg_lux - lux) && tab_lux[NB_LUX-1] != 0) {

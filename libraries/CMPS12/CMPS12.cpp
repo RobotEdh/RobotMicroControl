@@ -8,7 +8,7 @@ CMPS12Class::CMPS12Class()
 }
 
 
-void CMPS12Class::CMPS12_init()
+bool CMPS12Class::CMPS12_init()
 {
     _last_status = 0;
     _last_nb_receive = 0;
@@ -27,6 +27,7 @@ void CMPS12Class::CMPS12_init()
     uint8_t revision = CMPS12_getRevision();
     if (_last_status >0) {
          Serial.print("CMPS12_getRevision KO, error: ");Serial.println(_last_status);
+         return false;
     }      
     else {
          Serial.print("Revision: 0x");Serial.println(revision,HEX);
@@ -39,6 +40,7 @@ void CMPS12Class::CMPS12_init()
     uint8_t calibrate = CMPS12_getCalibrate();
     if (_last_status >0) {
          Serial.print("CMPS12_getCalibrate KO, error: ");Serial.println(_last_status);
+         return false;
     }      
     else {
          if ((calibrate&0x03)==0x03)  Serial.println("Magnetometer calibration OK");
@@ -52,7 +54,7 @@ void CMPS12Class::CMPS12_init()
     }
 
 
-    return;  
+    return true;  
 }
 
 // Write an 8-bit register

@@ -41,8 +41,6 @@
 #define NB_NOISE 6
 #define MAX_VAR_NOISE 200
 
-#define TEMT6000_PIN A2   // Brightness Sensor TEMT6000 analogic pin A2 
-#define SOUND_PIN    A3   // Sound Detector analogic pin A3 
 #define Led_Green    22  
 #define Led_Red      23  
 #define Led_Blue     24 

@@ -10,7 +10,7 @@ void setup()
   
   Wire.begin(); // initialize I2C
 
-  CMPS12.CMPS12_init();
+  bool b = CMPS12.CMPS12_init();
 }
 
 void loop()

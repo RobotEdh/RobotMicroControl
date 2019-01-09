@@ -1,6 +1,6 @@
 #include <motor.h>
 #include <SharpIR.h> // IR sensor
-#include <CMPS03.h>     // Compas
+#include <CMPS12.h>     // Compas
 #include <Servo.h>      // Servo
 #include <LiquidCrystal_I2C.h> // LCD
 #include <VL53L0X.h>     // TOF
@@ -16,7 +16,7 @@ volatile int TickRight = 0;
 volatile int TickLeft = 0;
 #endif
 
-CMPS03Class CMPS03;           // The Compass class
+CMPS12Class CMPS12;           // The Compass class
 SharpIRClass SharpIR;         // The IR sensor class
 Servo IRServo;                // The Servo class used for IR sensor
 VL53L0XClass VL53L0X;         // The ToF class
@@ -129,26 +129,23 @@ int motor_begin()
   Serial.println("Init ToF VL53L0X OK");
     
     
-  // Get the revision number of the compass 
-  int revision = CMPS03.CMPS03_revision();
+  // initialize the Compass CMPS12
   Serial.println(" ");
-  if (revision < 0) {
-     Serial.print("Init compass K0 ->Error I2C: ");
-     Serial.println(revision);   
+  if(CMPS12.CMPS12_init()) 
+  { 
+     ivalue = (int)CMPS12.CMPS12_getCompassHighResolution();
+     Serial.print("Direction: ");
+     Serial.println(ivalue); 
+     lcd.print(ivalue);lcd.print((char)223);lcd.printByte(lcd_pipe);
      lcd.setCursor(0,1); 
-     lcd.print("Init Compass KO "); 
+     lcd.print("Init Compass OK ");    
+     Serial.println("Init compass OK");        
   }
   else
   {  
-     Serial.print("Compass Revision: ");
-     Serial.println(revision);
-     ivalue = CMPS03.CMPS03_read();
-     Serial.print("Direction: ");
-     Serial.println(ivalue); 
-     lcd.print("CRev:");lcd.print(revision);lcd.printByte(lcd_pipe);lcd.print(ivalue);lcd.print((char)223);lcd.printByte(lcd_pipe);
+     Serial.print("Init compass K0"); 
      lcd.setCursor(0,1); 
-     lcd.print("Init Compass OK ");    
-     Serial.println("Init compass OK");    
+     lcd.print("Init Compass KO "); 
   }
   delay(5*1000);lcd.clear();
   
@@ -609,20 +606,21 @@ int adjustMotor (int motor, int pid)
  
 int turn(double alpha, unsigned long timeout)
 {
-  int direction = 0;        /* direction between 0-254, 0: North */
-  int direction_target = 0; /* direction between 0-254, 0: North */
+  double direction = 0.0;  // direction between 0 and 360    
+  double direction_target = 0.0; 
   int end_turn = 0;
   
-  if ((alpha == 0) || (alpha < -180) || (alpha > 180)) return BAD_ANGLE; // alpha between -180 and +180 and <> 0
+  if ((alpha == 0.0) || (alpha < -180.0) || (alpha > 180.0)) return BAD_ANGLE; // alpha between -180 and +180 and <> 0
+  if (alpha < 0.0) alpha = alpha + 360.0;  
   
   change_speed(SPEEDTURN);
   
-  direction = CMPS03.CMPS03_read(); // get initial direction
-  if (direction < 0)  return COMPASS_ERROR;
+  direction = CMPS12.CMPS12_getCompassHighResolution(); // get initial direction between 0 and 360 
+  if (direction < 0.0)  return COMPASS_ERROR;
   
-  direction_target = direction + (int)(254.0*alpha/360.0); // compute target direction 
+  direction_target = direction + alpha; // compute target direction between 0 and 360 
   
-  if (alpha > 0 ) {
+  if (alpha < 180.0 ) {
         backward (RIGHT_MOTOR);
   }
   else
@@ -632,12 +630,11 @@ int turn(double alpha, unsigned long timeout)
   
   unsigned long start = millis();
   while ((millis() - start < timeout*1000) && end_turn == 0) {  // turn during maximum timeout milliseconds   
-        direction = CMPS03.CMPS03_read(); // get current direction
-        if (direction < 0) end_turn = 1;
-        if ( ((alpha > 0) && (direction > direction_target)) || ((alpha < 0) && (direction < direction_target)) ) end_turn = 1;
+        direction = CMPS12.CMPS12_getCompassHighResolution(); // get current direction between 0 and 360 
+        if ( ((alpha < 180.0 ) && (direction > direction_target)) || ((alpha > 180.0 ) && (direction < direction_target)) ) end_turn = 1;
   } 
   
-  if (alpha > 0)
+  if (alpha < 180.0 )
   {
           forward (RIGHT_MOTOR); // stop turns right  
   }

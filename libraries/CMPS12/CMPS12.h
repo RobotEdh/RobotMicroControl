@@ -45,7 +45,7 @@ class CMPS12Class
 
     CMPS12Class();
 
-    void    CMPS12_init(void);
+    bool    CMPS12_init(void);
     void    CMPS12_writeReg(uint8_t reg, uint8_t value);         
     uint8_t CMPS12_readReg(uint8_t reg);
     int16_t CMPS12_readReg16BitHL(uint8_t reg);
