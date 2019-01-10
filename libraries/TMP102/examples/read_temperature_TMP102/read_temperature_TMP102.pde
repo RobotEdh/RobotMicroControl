@@ -17,7 +17,8 @@ void setup()
 {
   
   Serial.begin(9600); // initialize serial port
-  TMP102.TMP102_init();
+   
+   Wire.begin(); // initialize I2C
   
 }
 

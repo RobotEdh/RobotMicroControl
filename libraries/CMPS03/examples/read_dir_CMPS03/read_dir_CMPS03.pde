@@ -19,7 +19,7 @@ void setup()
   
   Serial.begin(9600); // initialize serial port
   
-  CMPS03.CMPS03_init();
+  Wire.begin(); // initialize I2C
   
   revision = CMPS03.CMPS03_revision();
  

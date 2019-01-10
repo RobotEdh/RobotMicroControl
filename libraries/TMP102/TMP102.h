@@ -21,10 +21,10 @@ class TMP102Class
   TMP102Class();
   
   void TMP102_init (void); 
- /* initialize I2C, must NOT be called if I2C is already initialized           */                                            
+ /* nothing                                                                    */                                            
  /* input:       none                                                          */
  /* output:      none                                                          */                             
- /* lib:         Wire.begin                                                    */                                
+ /* lib:         none                                                          */                                
 
   double TMP102_read (void);
  /* return temperature in Celsius                                              */                                            

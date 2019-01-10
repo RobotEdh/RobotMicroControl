@@ -28,10 +28,10 @@ class CMPS03Class
   CMPS03Class();
   
   void CMPS03_init (void); 
- /* initialize I2C, must NOT be called if I2C is already initialized           */                                            
+ /* nothin                                                                     */                                            
  /* input:       none                                                          */
  /* output:      none                                                          */                             
- /* lib:         Wire.begin                                                    */                       
+ /* lib:         none                                                          */                       
 
   int CMPS03_revision (void);
  /* return Software Revision Number                                            */                                            

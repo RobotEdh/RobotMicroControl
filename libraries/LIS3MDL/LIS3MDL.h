@@ -64,6 +64,7 @@ class LIS3MDLClass
     
     double LIS3MDL_getMagnitude(double x, double y,double z);
     uint8_t LIS3MDL_getStatus(void);
+    uint8_t LIS3MDL_getLast_nb_receive(void);
     uint8_t LIS3MDL_getAddress(void);
     
   private:

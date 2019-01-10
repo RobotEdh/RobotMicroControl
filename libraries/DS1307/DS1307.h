@@ -6,8 +6,15 @@
 
 #define DS1307_ADDRESS  0x68
 
-#define ERROR_RTC_STOPPED      100
-#define ERROR_ADDRESS_TOO_HIGH 110
+
+#define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
+#define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
+#define WIRE_ERROR_TRANSMIT_ADR_NACK  0x02 // Wire.endTransmission()- 2:received NACK on transmit of address
+#define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
+#define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
+#define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+#define ERROR_RTC_STOPPED             0x64
+#define ERROR_ADDRESS_TOO_HIGH        0x65
 
 
 /** Adress time register */
@@ -43,11 +50,13 @@ class DS1307Class
     uint8_t DS1307_write_nvram_memory(uint8_t address, uint8_t data);
     
     uint8_t DS1307_getStatus(void);
+    uint8_t DS1307_getLast_nb_receive(void);    
     uint8_t DS1307_getAddress(void);
   
   private:
     uint8_t _address;
     uint8_t _last_status;
+    uint8_t _last_nb_receive;
 
     uint8_t DS1307_bcd_to_decimal(uint8_t bcd);
     uint8_t DS1307_decimal_to_bcd(uint8_t decimal);

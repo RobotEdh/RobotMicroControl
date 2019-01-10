@@ -3,6 +3,14 @@
 
 #include <Arduino.h>
 
+#define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
+#define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
+#define WIRE_ERROR_TRANSMIT_ADR_NACK  0x02 // Wire.endTransmission()- 2:received NACK on transmit of address
+#define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
+#define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
+#define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+
+
 class VL53L0XClass
 {
   public:
@@ -94,8 +102,8 @@ class VL53L0XClass
 
     enum vcselPeriodType { VcselPeriodPreRange, VcselPeriodFinalRange };
 
-    uint8_t last_status; // status of last I2C transmission
-
+    uint8_t _last_status; // status of last I2C transmission
+    uint8_t _last_nb_receive; // status of last I2C transmission
     VL53L0XClass(void);
 
     void setAddress(uint8_t new_addr);
@@ -107,11 +115,10 @@ class VL53L0XClass
     void writeReg16Bit(uint8_t reg, uint16_t value);
     void writeReg32Bit(uint8_t reg, uint32_t value);
     uint8_t readReg(uint8_t reg);
-    uint16_t readReg16Bit(uint8_t reg);
-    uint32_t readReg32Bit(uint8_t reg);
+    uint16_t readReg16BitHL(uint8_t reg);
 
     void writeMulti(uint8_t reg, uint8_t const * src, uint8_t count);
-    void readMulti(uint8_t reg, uint8_t * dst, uint8_t count);
+    uint8_t readMulti(uint8_t reg, uint8_t * dst, uint8_t count);
 
     bool setSignalRateLimit(float limit_Mcps);
     float getSignalRateLimit(void);

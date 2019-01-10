@@ -1,9 +1,23 @@
 #ifndef ROBOT_h
 #define ROBOT_h
 
-#include <Arduino.h> // used for pin definition
-#include <inttypes.h> // used for uint8_t type
+#include <Arduino.h> 
+#include <Wire.h>       // I2C protocol
+
 #include <motor.h>
+#include <VL53L0X.h>           // TOF
+#include <CMPS12.h>            // Compas
+#include <DHT22.h>             // Temperature& Humidity
+#include <Servo.h>             // Servo
+#include <TiltPan.h>           // Tilt&Pan
+#include <LSY201.h>            // Camera
+#include <LiquidCrystal_I2C.h> // LCD
+#include <Motion.h>            // Motion
+#include <sdcard.h>            // SD Card
+#include <SD.h> 
+#include <DS1307.h>            // RTC
+#include <IOTSerial.h>         // Serial lib to communicate with IOT
+#include <I2C_Scanner.h>       // used to scan I2C
 
 #define CMD_START         0x01
 #define CMD_STOP          0x02

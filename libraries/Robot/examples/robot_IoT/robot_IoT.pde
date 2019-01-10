@@ -1,21 +1,8 @@
+#include <Arduino.h> 
 #include <Wire.h>       // I2C protocol
-#include <Servo.h>      // Servo
-#include <SD.h>         // SD-Card
-#include <sdcard.h>     // SD-Card
 
 #include <robot.h>
-#include <motor.h>
-#include <SharpIR.h>           // IR sensor
-#include <CMPS03.h>            // Compass
-#include <DHT22.h>             // Temperature & Humidity sensor
-#include <TiltPan.h>           // Tilt&Pan
-#include <LSY201.h>            // Camera
-#include <LiquidCrystal_I2C.h> // LCD
-#include <Motion.h>            // Motion
-#include <TEMT6000.h>          // Lux
-#include <Sound.h>             // Sound
 
-#include <IOTSerial.h>         // Serial lib to communicate with IOT
  
 
  

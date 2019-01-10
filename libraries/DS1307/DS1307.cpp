@@ -2,15 +2,10 @@
 #include <Wire.h>
 
 
-
-// Constructors ////////////////////////////////////////////////////////////////
-
 DS1307Class::DS1307Class(void)
 {
 
 }
-
-// Public Methods //////////////////////////////////////////////////////////////
 
 uint8_t DS1307Class::DS1307_init()
 {
@@ -29,10 +24,12 @@ uint8_t DS1307Class::DS1307_isRunning()
   _last_status = Wire.endTransmission();
   if (_last_status > 0) return _last_status;
     
-  Wire.requestFrom(_address, (uint8_t)1);
+  _last_nb_receive = Wire.requestFrom(_address, (uint8_t)1);
+  if (_last_nb_receive != 1) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
+    
   value = Wire.read() & 0x80; // get CH bit : 0 : runing; 1 not running
   if (value) return ERROR_RTC_STOPPED;
-  else return 0;  
+  else       return 0;  
 }
 
 
@@ -75,7 +72,8 @@ uint8_t DS1307Class::DS1307_read_current_datetime(DateTime_t *datetime)
   _last_status = Wire.endTransmission();
   if (_last_status > 0) return _last_status;
 
-  Wire.requestFrom(_address, (uint8_t)7);  // ask for 7 bytes
+  _last_nb_receive = Wire.requestFrom(_address, (uint8_t)7);  // ask for 7 bytes
+  if (_last_nb_receive != 7) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
   
   uint8_t raw_seconds = Wire.read();
   /* if bit 7 of second = 1 : RTC is stopped */
@@ -119,7 +117,8 @@ uint8_t DS1307Class::DS1307_read_nvram_memory(uint8_t address)
   if (_last_status > 0) return _last_status;
  
   /* Lit un octet depuis la mémoire du module RTC */
-  Wire.requestFrom(_address, (uint8_t)1);
+  _last_nb_receive = Wire.requestFrom(_address, (uint8_t)1);
+  if (_last_nb_receive != 1) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
   return Wire.read();
 }
 
@@ -149,12 +148,16 @@ uint8_t DS1307Class::DS1307_getStatus()
   return _last_status;
 }
 
+uint8_t DS1307Class::DS1307_getLast_nb_receive()
+{
+  return _last_nb_receive;
+}
+
 uint8_t DS1307Class::DS1307_getAddress()
 {
   return _address;
 }
 
-// Private Methods //////////////////////////////////////////////////////////////
 
 /** conversion BCD -> decimal */
 uint8_t DS1307Class::DS1307_bcd_to_decimal(uint8_t bcd) {

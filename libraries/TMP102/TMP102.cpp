@@ -16,7 +16,6 @@ TMP102Class::TMP102Class ()
  
 void TMP102Class::TMP102_init()
 {
-    Wire.begin(); // setup I2C
 } 
  
 

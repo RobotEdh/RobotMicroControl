@@ -8,26 +8,16 @@ CMPS12Class::CMPS12Class()
 }
 
 
-bool CMPS12Class::CMPS12_init()
+uint8_t CMPS12Class::CMPS12_init()
 {
     _last_status = 0;
     _last_nb_receive = 0;
     _address = CMPS12_ADDRESS;
-    
-    _mx_zero = 0;
-    _my_zero = 0;
-    _mz_zero = 0;
-    _ax_zero = 0;
-    _ay_zero = 0;
-    _az_zero = 0;
-    _gx_zero = 0;
-    _gy_zero = 0;
-    _gz_zero = 0;        
-    
+     
     uint8_t revision = CMPS12_getRevision();
     if (_last_status >0) {
          Serial.print("CMPS12_getRevision KO, error: ");Serial.println(_last_status);
-         return false;
+         return _last_status;
     }      
     else {
          Serial.print("Revision: 0x");Serial.println(revision,HEX);
@@ -40,21 +30,21 @@ bool CMPS12Class::CMPS12_init()
     uint8_t calibrate = CMPS12_getCalibrate();
     if (_last_status >0) {
          Serial.print("CMPS12_getCalibrate KO, error: ");Serial.println(_last_status);
-         return false;
+         return _last_status;
     }      
     else {
          if ((calibrate&0x03)==0x03)  Serial.println("Magnetometer calibration OK");
-         else                         Serial.println("Magnetometer calibration KO");
+         else {                       Serial.println("Magnetometer calibration KO"); _last_status = CALIB_MAGNET0_KO; return _last_status;}
          if ((calibrate&0x0C)==0x0C)  Serial.println("Accelerometer calibration  OK");
-         else                         Serial.println("Accelerometer calibration  KO");    
+         else {                       Serial.println("Accelerometer calibration  KO"); _last_status = CALIB_ACCEL_KO; return _last_status;}   
          if ((calibrate&0x30)==0x30)  Serial.println("Gyro calibration OK");
-         else                         Serial.println("Gyro calibration KO");    
+         else {                       Serial.println("Gyro calibration KO"); _last_status = CALIB_GYRO_KO; return _last_status;}    
          if ((calibrate&0xC0)==0xC0)  Serial.println("System calibration OK");  
-         else                         Serial.println("System calibration KO");          
+         else {                       Serial.println("System calibration KO"); _last_status = CALIB_SYSTEM_KO; return _last_status;}         
     }
 
 
-    return true;  
+    return 0;  
 }
 
 // Write an 8-bit register
@@ -160,7 +150,7 @@ int16_t CMPS12Class::CMPS12_getMag_x()
 {
   int16_t mag_x = CMPS12_readReg16BitHL(OUT_MAG_X_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (mag_x - _mx_zero);
+  return mag_x;
 }
 
 int16_t CMPS12Class::CMPS12_getMag_y()
@@ -168,21 +158,21 @@ int16_t CMPS12Class::CMPS12_getMag_y()
   
   int16_t mag_y = CMPS12_readReg16BitHL(OUT_MAG_Y_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (((double)mag_y / 2281.0) - _my_zero);  
+  return mag_y;  
 }
 
 int16_t CMPS12Class::CMPS12_getMag_z()
 {
   int16_t mag_z = CMPS12_readReg16BitHL(OUT_MAG_Z_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (mag_z - _mz_zero);  
+  return mag_z;  
 }
 
 int16_t CMPS12Class::CMPS12_getAccel_x()
 {
   int16_t accel_x = CMPS12_readReg16BitHL(OUT_ACCEL_X_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (accel_x - _ax_zero); 
+  return accel_x; 
 }
 
 int16_t CMPS12Class::CMPS12_getAccel_y()
@@ -190,21 +180,21 @@ int16_t CMPS12Class::CMPS12_getAccel_y()
   
   int16_t accel_y = CMPS12_readReg16BitHL(OUT_ACCEL_Y_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (accel_y - _ay_zero);  
+  return accel_y;  
 }
 
 int16_t CMPS12Class::CMPS12_getAccel_z()
 {
   int16_t accel_z = CMPS12_readReg16BitHL(OUT_ACCEL_Z_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (accel_z - _az_zero); 
+  return accel_z; 
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_x()
 {
   int16_t gyro_x = CMPS12_readReg16BitHL(OUT_GYRO_X_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (gyro_x - _gx_zero);  
+  return gyro_x;  
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_y()
@@ -212,14 +202,14 @@ int16_t CMPS12Class::CMPS12_getGyro_y()
   
   int16_t gyro_y = CMPS12_readReg16BitHL(OUT_GYRO_Y_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (gyro_y - _gy_zero);  
+  return gyro_y;  
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_z()
 {
   int16_t gyro_z = CMPS12_readReg16BitHL(OUT_GYRO_Z_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return (gyro_z - _gz_zero);  
+  return gyro_z;  
 }
 
 

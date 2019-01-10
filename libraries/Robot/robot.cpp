@@ -1,18 +1,4 @@
 #include <robot.h>         
-#include <motor.h>             // Motor
-#include <VL53L0X.h>           // TOF
-#include <CMPS12.h>            // Compas
-#include <DHT22.h>             // Temperature& Humidity
-#include <Servo.h>             // Servo
-#include <TiltPan.h>           // Tilt&Pan
-#include <LSY201.h>            // Camera
-#include <LiquidCrystal_I2C.h> // LCD
-#include <Motion.h>            // Motion
-#include <sdcard.h>            // SD Card
-#include <SD.h> 
-#include <DS1307.h>            // RTC
-#include <IOTSerial.h>         // Serial lib to communicate with IOT
-#include <I2C_Scanner.h>       // used to scan I2C
 
 /* classes aleady defined in motor */
 extern VL53L0XClass VL53L0X;         // The ToF class

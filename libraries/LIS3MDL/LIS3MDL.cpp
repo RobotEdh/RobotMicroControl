@@ -2,14 +2,12 @@
 #include <LIS3MDL.h>
 
 
-// Constructors ////////////////////////////////////////////////////////////////
 
 LIS3MDLClass::LIS3MDLClass(void)
 {
 
 }
 
-// Public Methods //////////////////////////////////////////////////////////////
 
 uint8_t LIS3MDLClass::LIS3MDL_init()
 {
@@ -146,8 +144,7 @@ int16_t LIS3MDLClass::LIS3MDL_readReg16BitLH(uint8_t reg)
     
   uint8_t lsb = Wire.read(); // value low byte
   uint8_t msb = Wire.read(); // value high byte
-    Serial.print("msb: ");Serial.println(msb,BIN);
-      Serial.print("lsb: ");Serial.println(lsb,BIN);
+
   value  = (((int16_t)msb) << 8) | lsb;
   
   return value;
@@ -157,7 +154,6 @@ double LIS3MDLClass::LIS3MDL_getMag_x()
 {
   int16_t mag_x = LIS3MDL_readReg16BitLH(OUT_X_L);
   if (_last_status >0) return (double)_last_status;
-  Serial.print("mag_x: ");Serial.println(mag_x);
   return (((double)mag_x / 2281.0) - _mx_zero);  // Full Scale Range ?12 gauss => 2281 LSB/gauss
 }
 
@@ -166,7 +162,6 @@ double LIS3MDLClass::LIS3MDL_getMag_y()
   
   int16_t mag_y = LIS3MDL_readReg16BitLH(OUT_Y_L);
   if (_last_status >0) return (double)_last_status;
-  Serial.print("mag_y: ");Serial.println(mag_y);
   return (((double)mag_y / 2281.0) - _my_zero);  // Full Scale Range ?12 gauss => 2281 LSB/gauss
 }
 
@@ -174,7 +169,6 @@ double LIS3MDLClass::LIS3MDL_getMag_z()
 {
   int16_t mag_z = LIS3MDL_readReg16BitLH(OUT_Z_L);
   if (_last_status >0) return (double)_last_status;
-  Serial.print("mag_z: ");Serial.println(mag_z);
   return (((double)mag_z / 2281.0) - _mz_zero);  // Full Scale Range ?12 gauss => 2281 LSB/gauss
 }
 
@@ -182,7 +176,6 @@ double LIS3MDLClass::LIS3MDL_getTemperature()
 {
   int16_t temperature = LIS3MDL_readReg16BitLH(TEMP_OUT_L);
   if (_last_status >0) return (double)_last_status;
-  Serial.print("temperature: ");Serial.println(temperature);
   return ((double)temperature / 256.0 + 25.0);  // The nominal sensitivity is 8 LSB/?C and 0 output means T=25 ?C
 }
 
@@ -196,12 +189,16 @@ uint8_t LIS3MDLClass::LIS3MDL_getStatus()
   return _last_status;
 }
 
+uint8_t LIS3MDLClass::LIS3MDL_getLast_nb_receive()
+{
+  return _last_nb_receive;
+}
+
 uint8_t LIS3MDLClass::LIS3MDL_getAddress()
 {
   return _address;
 }
 
-// Private Methods //////////////////////////////////////////////////////////////
 
 uint8_t LIS3MDLClass::LIS3MDL_testReg(uint8_t address)
 {
@@ -218,5 +215,5 @@ uint8_t LIS3MDLClass::LIS3MDL_testReg(uint8_t address)
   value = Wire.read();
   
   if (value == LIS3MDL_ID) return 0;
-  else return 1;
+  else                     return 1;
 }

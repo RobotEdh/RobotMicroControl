@@ -111,14 +111,16 @@ uint8_t MPU6050Class::MPU6050_readReg(uint8_t reg)
   _last_status = Wire.endTransmission();
   if (_last_status > 0) return _last_status;
 
-  Wire.requestFrom(_address, (uint8_t)1);
+  _last_nb_receive = Wire.requestFrom(_address, (uint8_t)1);
+  if (_last_nb_receive != 1) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}  
+  
   value = Wire.read();
 
   return value;
 }
 
-// Read a 16-bit register
-int16_t MPU6050Class::MPU6050_readReg16Bit(uint8_t reg)
+// Read a 16-bit register high byte first and then low byte
+int16_t MPU6050Class::MPU6050_readReg16BitHL(uint8_t reg)
 {
   int16_t value;
 
@@ -127,10 +129,13 @@ int16_t MPU6050Class::MPU6050_readReg16Bit(uint8_t reg)
   _last_status = Wire.endTransmission();
   if (_last_status > 0) return _last_status;
   
-  Wire.requestFrom(_address, (uint8_t)2);
+  _last_nb_receive = Wire.requestFrom(_address, (uint8_t)2);
+  if (_last_nb_receive != 7) {_last_status=WIRE_REQUEST_ERROR; return _last_status;} 
+  
   uint8_t msb = Wire.read(); // value high byte
   uint8_t lsb = Wire.read(); // value low byte
-  value  = (int16_t)(msb << 8 | lsb);
+  
+  value  = (((int16_t)msb) << 8) | lsb;
 
   return value;
 }

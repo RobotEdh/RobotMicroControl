@@ -12,6 +12,10 @@
 #define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+#define CALIB_MAGNET0_KO              0xF0
+#define CALIB_ACCEL_KO                0xF1
+#define CALIB_GYRO_KO                 0xF2
+#define CALIB_SYSTEM_KO               0xF3
 
 class CMPS12Class
 {
@@ -77,10 +81,7 @@ class CMPS12Class
   private:
     uint8_t _address;
     uint8_t _last_status;
-    uint8_t _last_nb_receive;
-    int16_t _mx_zero, _my_zero, _mz_zero;
-    int16_t _ax_zero, _ay_zero, _az_zero;
-    int16_t _gx_zero, _gy_zero, _gz_zero;      
+    uint8_t _last_nb_receive;     
 };
 
 #endif

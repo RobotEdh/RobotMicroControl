@@ -99,8 +99,9 @@ bool VL53L0XClass::init(bool io_2v8)
   // the API, but the same data seems to be more easily readable from
   // GLOBAL_CONFIG_SPAD_ENABLES_REF_0 through _6, so read it from there
   uint8_t ref_spad_map[6];
-  readMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
-
+  uint8_t status = readMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
+  if (status > 0) return false;
+    
   // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
 
   writeReg(0xFF, 0x01);
@@ -284,7 +285,7 @@ void VL53L0XClass::writeReg(uint8_t reg, uint8_t value)
   Wire.beginTransmission(address);
   Wire.write(reg);
   Wire.write(value);
-  last_status = Wire.endTransmission();
+  _last_status = Wire.endTransmission();
 }
 
 // Write a 16-bit register
@@ -294,7 +295,7 @@ void VL53L0XClass::writeReg16Bit(uint8_t reg, uint16_t value)
   Wire.write(reg);
   Wire.write((value >> 8) & 0xFF); // value high byte
   Wire.write( value       & 0xFF); // value low byte
-  last_status = Wire.endTransmission();
+  _last_status = Wire.endTransmission();
 }
 
 // Write a 32-bit register
@@ -306,7 +307,7 @@ void VL53L0XClass::writeReg32Bit(uint8_t reg, uint32_t value)
   Wire.write((value >> 16) & 0xFF);
   Wire.write((value >>  8) & 0xFF);
   Wire.write( value        & 0xFF); // value lowest byte
-  last_status = Wire.endTransmission();
+  _last_status = Wire.endTransmission();
 }
 
 // Read an 8-bit register
@@ -316,45 +317,34 @@ uint8_t VL53L0XClass::readReg(uint8_t reg)
 
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
-  if (last_status >0) return (0xF0+last_status);
+  _last_status = Wire.endTransmission();
+  if (_last_status >0) return _last_status;
 
-  Wire.requestFrom(address, (uint8_t)1);
+  _last_nb_receive = Wire.requestFrom(address, (uint8_t)1);
+  if (_last_nb_receive != 1) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
+
   value = Wire.read();
 
   return value;
 }
 
-// Read a 16-bit register
-uint16_t VL53L0XClass::readReg16Bit(uint8_t reg)
+// Read a 16-bit unsigned register high byte first and then low byte
+uint16_t VL53L0XClass::readReg16BitHL(uint8_t reg)
 {
   uint16_t value;
 
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
+  _last_status = Wire.endTransmission();
+  if (_last_status > 0) return _last_status;  
 
-  Wire.requestFrom(address, (uint8_t)2);
-  value  = (uint16_t)Wire.read() << 8; // value high byte
-  value |=           Wire.read();      // value low byte
-
-  return value;
-}
-
-// Read a 32-bit register
-uint32_t VL53L0XClass::readReg32Bit(uint8_t reg)
-{
-  uint32_t value;
-
-  Wire.beginTransmission(address);
-  Wire.write(reg);
-  last_status = Wire.endTransmission();
-
-  Wire.requestFrom(address, (uint8_t)4);
-  value  = (uint32_t)Wire.read() << 24; // value highest byte
-  value |= (uint32_t)Wire.read() << 16;
-  value |= (uint16_t)Wire.read() <<  8;
-  value |=           Wire.read();       // value lowest byte
+  _last_nb_receive = Wire.requestFrom(address, (uint8_t)2);
+  if (_last_nb_receive != 2) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
+  
+  uint8_t msb = Wire.read(); // value high byte
+  uint8_t lsb = Wire.read(); // value low byte
+  
+  value  = (((uint16_t)msb) << 8) | lsb;
 
   return value;
 }
@@ -371,23 +361,26 @@ void VL53L0XClass::writeMulti(uint8_t reg, uint8_t const * src, uint8_t count)
     Wire.write(*(src++));
   }
 
-  last_status = Wire.endTransmission();
+  _last_status = Wire.endTransmission();
 }
 
 // Read an arbitrary number of bytes from the sensor, starting at the given
 // register, into the given array
-void VL53L0XClass::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
+uint8_t VL53L0XClass::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 {
   Wire.beginTransmission(address);
   Wire.write(reg);
-  last_status = Wire.endTransmission();
-
-  Wire.requestFrom(address, count);
+  _last_status = Wire.endTransmission();
+  if (_last_status >0) return _last_status;
+    
+  _last_nb_receive = Wire.requestFrom(address, count);
+  if (_last_nb_receive != count) {_last_status=WIRE_REQUEST_ERROR; return _last_status;}
 
   while (count-- > 0)
   {
     *(dst++) = Wire.read();
   }
+  return 0;
 }
 
 // Set the return signal rate limit check value in units of MCPS (mega counts
@@ -410,7 +403,7 @@ bool VL53L0XClass::setSignalRateLimit(float limit_Mcps)
 // Get the return signal rate limit check value in MCPS
 float VL53L0XClass::getSignalRateLimit(void)
 {
-  return (float)readReg16Bit(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT) / (1 << 7);
+  return (float)readReg16BitHL(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT) / (1 << 7);
 }
 
 // Set the measurement timing budget in microseconds, which is the time allowed
@@ -775,7 +768,7 @@ void VL53L0XClass::startContinuous(uint32_t period_ms)
 
     // VL53L0X_SetInterMeasurementPeriodMilliSeconds() begin
 
-    uint16_t osc_calibrate_val = readReg16Bit(OSC_CALIBRATE_VAL);
+    uint16_t osc_calibrate_val = readReg16BitHL(OSC_CALIBRATE_VAL);
 
     if (osc_calibrate_val != 0)
     {
@@ -825,7 +818,7 @@ uint16_t VL53L0XClass::readRangeContinuousMillimeters(void)
 
   // assumptions: Linearity Corrective Gain is 1000 (default);
   // fractional ranging is not enabled
-  uint16_t range = readReg16Bit(RESULT_RANGE_STATUS + 10);
+  uint16_t range = readReg16BitHL(RESULT_RANGE_STATUS + 10);
 
   writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
 
@@ -942,7 +935,7 @@ void VL53L0XClass::getSequenceStepTimeouts(SequenceStepEnables const * enables, 
                                timeouts->pre_range_vcsel_period_pclks);
 
   timeouts->pre_range_mclks =
-    decodeTimeout(readReg16Bit(PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI));
+    decodeTimeout(readReg16BitHL(PRE_RANGE_CONFIG_TIMEOUT_MACROP_HI));
   timeouts->pre_range_us =
     timeoutMclksToMicroseconds(timeouts->pre_range_mclks,
                                timeouts->pre_range_vcsel_period_pclks);
@@ -950,7 +943,7 @@ void VL53L0XClass::getSequenceStepTimeouts(SequenceStepEnables const * enables, 
   timeouts->final_range_vcsel_period_pclks = getVcselPulsePeriod(VcselPeriodFinalRange);
 
   timeouts->final_range_mclks =
-    decodeTimeout(readReg16Bit(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI));
+    decodeTimeout(readReg16BitHL(FINAL_RANGE_CONFIG_TIMEOUT_MACROP_HI));
 
   if (enables->pre_range)
   {
@@ -1040,7 +1033,7 @@ bool VL53L0XClass::performSingleRefCalibration(uint8_t vhv_init_byte)
 // Get Model ID, should be 0xEE 0xAA
 uint16_t VL53L0XClass::getModelId()
 {
-    return readReg16Bit(IDENTIFICATION_MODEL_ID);
+    return readReg16BitHL(IDENTIFICATION_MODEL_ID);
 }
 
 // Get Revision ID, should be 0x10
