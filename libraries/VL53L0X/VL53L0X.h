@@ -139,6 +139,9 @@ class VL53L0XClass
     bool timeoutOccurred(void);
     uint16_t getModelId(void);
     uint8_t getRevisionId(void);
+    uint8_t VL53L0X_getStatus(void);
+    uint8_t VL53L0X_getLast_nb_receive(void);
+    uint8_t VL53L0X_getAddress(void);
 
   private:
     // TCC: Target CentreCheck

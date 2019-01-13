@@ -25,6 +25,7 @@ VL53L0XClass VL53L0X;         // The ToF class
 int motor_begin()
 {
   int ivalue = 0;
+  uint8_t status = 0;
  
   Serial.println("Begin Motor Init");
   Serial.println("****************");
@@ -115,37 +116,84 @@ int motor_begin()
   VL53L0X.setMeasurementTimingBudget(200000);
   
   uint16_t reg16 = VL53L0X.getModelId();
+  status = VL53L0X.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     Serial.print("getModelId KO, I2C error: ");Serial.println(status);
+  }
+  else
+  {
+     Serial.print ("ModelId: 0x"); Serial.println (reg16,HEX);
+  }   
   uint8_t reg8   = VL53L0X.getRevisionId();
-  Serial.print ("ModelId: 0x"); Serial.println (reg16,HEX);
-  Serial.print ("RevisionId: 0x"); Serial.println (reg8,HEX);
+  status = VL53L0X.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     Serial.print("getRevisionId KO, I2C error: ");Serial.println(status);
+  }
+  else
+  {
+     Serial.print ("RevisionId: 0x"); Serial.println (reg8,HEX);
+  }
   delay(2000);
   
   uint16_t d = VL53L0X.readRangeSingleMillimeters();
   if (VL53L0X.timeoutOccurred()) Serial.print(" TIMEOUT");
   else
   { 
-     Serial.print("Distance: "); Serial.print(d); Serial.println("mm");  
+     status = VL53L0X.VL53L0X_getStatus();
+     if (status > 0)
+     {
+        Serial.print("readRangeSingleMillimeters KO, I2C error: ");Serial.println(status);
+        Serial.println("Init ToF VL53L0X KO");
+     }
+     else
+     {    
+        Serial.print("Distance: "); Serial.print(d); Serial.println("mm"); 
+        Serial.println("Init ToF VL53L0X OK");
+     }    
   } 
-  Serial.println("Init ToF VL53L0X OK");
-    
+   
     
   // initialize the Compass CMPS12
-  Serial.println(" ");
-  if(CMPS12.CMPS12_init()) 
+  Serial.println (" ");
+  Serial.println("Init Compass CMPS12");
+  uint8_t calib = CMPS12.CMPS12_init();
+  if(calib == 0) 
   { 
      ivalue = (int)CMPS12.CMPS12_getCompassHighResolution();
-     Serial.print("Direction: ");
-     Serial.println(ivalue); 
-     lcd.print(ivalue);lcd.print((char)223);lcd.printByte(lcd_pipe);
-     lcd.setCursor(0,1); 
-     lcd.print("Init Compass OK ");    
-     Serial.println("Init compass OK");        
+     status = CMPS12.CMPS12_getStatus();
+     if (status == 0)
+     {
+        Serial.print("Direction: ");
+        Serial.println(ivalue); 
+        lcd.print(ivalue);lcd.print((char)223);lcd.printByte(lcd_pipe);
+        lcd.setCursor(0,1); 
+        lcd.print("Init Compass OK ");    
+        Serial.println("Init compass OK");
+     }
+     else
+     { 
+        Serial.print("Init CMPS12 KO, I2C error: ");Serial.println(status); 
+        lcd.setCursor(0,1); 
+        lcd.print("Init Compass KO ");       
+     }        
   }
   else
   {  
-     Serial.print("Init compass K0"); 
-     lcd.setCursor(0,1); 
-     lcd.print("Init Compass KO "); 
+     status = CMPS12.CMPS12_getStatus();
+     if (status == 0)
+     {
+        Serial.print("Calibrate CMPS12 KO, calibrate status: 0b");Serial.println(calib,BIN); 
+        lcd.setCursor(0,1); 
+        lcd.print("Init Compass KO ");    
+     }
+     else 
+     {           
+        Serial.print("Init CMPS12 KO, I2C error: ");Serial.println(status); 
+        lcd.setCursor(0,1); 
+        lcd.print("Init Compass KO ");  
+     }    
   }
   delay(5*1000);lcd.clear();
   

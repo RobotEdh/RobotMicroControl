@@ -10,7 +10,24 @@ void setup()
   
   Wire.begin(); // initialize I2C
 
-  bool b = CMPS12.CMPS12_init();
+  uint8_t calib = CMPS12.CMPS12_init(false); // initialize CMPS12, Do not calibration
+  
+  if (calib == 0)
+  {
+       Serial.println("Init OK");
+  }
+  else 
+  {           
+     uint8_t status = CMPS12.CMPS12_getStatus();
+     if (status == 0)
+     {
+        Serial.print("Calibrate KO, calibrate status: 0b");Serial.println(calib,BIN);    
+     }
+     else 
+     {           
+        Serial.print("Init KO, I2C error: ");Serial.println(status);  
+     }
+  }    
 }
 
 void loop()
@@ -111,26 +128,28 @@ void loop()
        Serial.print("Error CMPS12_getTemperature: ");Serial.println(status);
     }    
     
-    Serial.print("compass: ");Serial.println(compass);
-    Serial.print("compassHighResolution: ");Serial.println(compassHighResolution);  
+    // display from Flash mem to avoir SRAM overload
+    Serial.println(F("________________________________________________________________________"));
+    Serial.print(F("compass 0-359.9 degrees: "));Serial.println(compass);
+    Serial.print(F("compassHighResolution 0-359.9 degrees: "));Serial.println(compassHighResolution);  
     
-    Serial.print("pitch: ");Serial.println(pitch);
-    Serial.print("pitch180: ");Serial.println(pitch180);
-    Serial.print("roll: ");Serial.println(roll);
+    Serial.print(F("pitch in degrees from the horizontal plane (+/- 90 degrees): "));Serial.println(pitch);
+    Serial.print(F("pitch180 in degrees from the horizontal plane (+/-180 degrees): "));Serial.println(pitch180);
+    Serial.print(F("roll in degrees from the horizontal plane (+/- 90 degrees): "));Serial.println(roll);
                 
-    Serial.print("mag_x: ");Serial.println(mag_x);
-    Serial.print("mag_y: ");Serial.println(mag_y);
-    Serial.print("mag_z: ");Serial.println(mag_z);
+    Serial.print(F("mag_x: "));Serial.println(mag_x);
+    Serial.print(F("mag_y: "));Serial.println(mag_y);
+    Serial.print(F("mag_z: "));Serial.println(mag_z);
     
-    Serial.print("accel_x: ");Serial.println(accel_x);
-    Serial.print("accel_y: ");Serial.println(accel_y);
-    Serial.print("accel_z: ");Serial.println(accel_z);
+    Serial.print(F("accel_x: "));Serial.println(accel_x);
+    Serial.print(F("accel_y: "));Serial.println(accel_y);
+    Serial.print(F("accel_z: "));Serial.println(accel_z);
     
-    Serial.print("gyro_x: ");Serial.println(gyro_x);
-    Serial.print("gyro_y: ");Serial.println(gyro_y);
-    Serial.print("gyro_z: ");Serial.println(gyro_z); 
+    Serial.print(F("gyro_x: "));Serial.println(gyro_x);
+    Serial.print(F("gyro_y: "));Serial.println(gyro_y);
+    Serial.print(F("gyro_z: "));Serial.println(gyro_z); 
         
-    Serial.print("temperature: ");Serial.println(temperature);
+    Serial.print(F("temperature: "));Serial.println(temperature);
 
     delay(5000);
 }

@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-#define CMPS12_ADDRESS   0xC0
+#define CMPS12_ADDRESS   0x60
 
 #define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
 #define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
@@ -12,10 +12,6 @@
 #define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
-#define CALIB_MAGNET0_KO              0xF0
-#define CALIB_ACCEL_KO                0xF1
-#define CALIB_GYRO_KO                 0xF2
-#define CALIB_SYSTEM_KO               0xF3
 
 class CMPS12Class
 {
@@ -24,7 +20,7 @@ class CMPS12Class
     // register addresses
     enum regAddr
     {
-      CMD_REVISION     = 0x00,
+      CMD_REVISION      = 0x00,
 
       OUT_COMPASS       = 0x01,
       OUT_COMPASS_H     = 0x02,
@@ -49,11 +45,16 @@ class CMPS12Class
 
     CMPS12Class();
 
-    bool    CMPS12_init(void);
+    uint8_t CMPS12_init(void);
+    uint8_t CMPS12_init(bool calibration);
+    uint8_t CMPS12_calibrate(void);
+    uint8_t CMPS12_checkCalibrate(void);
     void    CMPS12_writeReg(uint8_t reg, uint8_t value);         
     uint8_t CMPS12_readReg(uint8_t reg);
     int16_t CMPS12_readReg16BitHL(uint8_t reg);
-
+    
+    void    CMPS12_storeProfil(void);
+    void    CMPS12_eraseProfil(void);   
     uint8_t CMPS12_getRevision(void);
     uint8_t CMPS12_getCalibrate(void);
 

@@ -1041,3 +1041,18 @@ uint8_t VL53L0XClass::getRevisionId()
 {
     return readReg(IDENTIFICATION_REVISION_ID);
 }
+
+uint8_t VL53L0XClass::VL53L0X_getStatus()
+{
+  return _last_status;
+}
+
+uint8_t VL53L0XClass::VL53L0X_getLast_nb_receive()
+{
+  return _last_nb_receive;
+}
+
+uint8_t VL53L0XClass::VL53L0X_getAddress()
+{
+  return address;
+}
