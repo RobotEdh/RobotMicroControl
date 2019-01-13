@@ -89,6 +89,7 @@ int robot_begin()
   int ret = SUCCESS;
   int ivalue = 0;
   uint8_t status = 0;
+  int nberror = 0;
   DateTime_t now;
   
   ret = motor_begin(); 
@@ -135,6 +136,7 @@ int robot_begin()
         Serial.println(ret);
         lcd.setCursor(0,1); 
         lcd.print("Init Camera KO  ");
+        nberror++;
   }        
   else
   {
@@ -152,6 +154,7 @@ int robot_begin()
         Serial.print("Error Init SD-Card, error: ");
         Serial.println(ret);
         lcd.print("Init SD-Card KO ");
+        nberror++;
   }                                                                    
   else
   {
@@ -216,6 +219,7 @@ int robot_begin()
   else
   {
       Serial.println( szDHT_errors[errorCode]);
+      nberror++;   
   }
   
   
@@ -239,7 +243,8 @@ int robot_begin()
   }  
   else if (status > 0)
   {   
-      Serial.print("Failed to init DS1307, error:"); Serial.println(status);   
+      Serial.print("Init DS1307 KO, I2C error:"); Serial.println(status); 
+      nberror++;  
   }
   else
   {
@@ -249,7 +254,7 @@ int robot_begin()
     status = DS1307.DS1307_read_current_datetime(&now);
     if (status > 0)
     {
-       Serial.print("Error DS1307_read_current_datetime: ");Serial.println(status);
+       Serial.print("DS1307_read_current_datetime KO, I2C error: ");Serial.println(status);
     }
     else
     {
@@ -296,8 +301,10 @@ int robot_begin()
   lcd.print("End   Robot Init");
   delay(5*1000);lcd.clear();  
  
-  Serial.println("End Robot Init");
-  Serial.println("**************");
+  Serial.print("End Robot Init ");
+  if (!nberror) Serial.println("OK");
+  else          Serial.println("KO");
+  Serial.println("*****************");
   Serial.println("");
  
   return SUCCESS;

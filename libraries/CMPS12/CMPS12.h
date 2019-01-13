@@ -53,8 +53,8 @@ class CMPS12Class
     uint8_t CMPS12_readReg(uint8_t reg);
     int16_t CMPS12_readReg16BitHL(uint8_t reg);
     
-    void    CMPS12_storeProfil(void);
-    void    CMPS12_eraseProfil(void);   
+    uint8_t CMPS12_storeProfil(void);
+    uint8_t CMPS12_eraseProfil(void);   
     uint8_t CMPS12_getRevision(void);
     uint8_t CMPS12_getCalibrate(void);
 

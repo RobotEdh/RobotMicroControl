@@ -78,34 +78,38 @@ uint8_t CMPS12Class::CMPS12_checkCalibrate()
     
  }    
 
-void CMPS12Class::CMPS12_storeProfil()
+uint8_t CMPS12Class::CMPS12_storeProfil()
 {
-  Wire.beginTransmission(_address);
-  Wire.write(CMD_REVISION);
+  CMPS12_writeReg(CMD_REVISION, 0xF0);
+  if (_last_status > 0) return _last_status;
+  delay(20); //  20ms delay after each of the three bytes send
+      
+  CMPS12_writeReg(CMD_REVISION, 0xF5);
+  if (_last_status > 0) return _last_status;
+  delay(20); //  20ms delay after each of the three bytes send
+      
+  CMPS12_writeReg(CMD_REVISION, 0xF6);
+  if (_last_status > 0) return _last_status; 
+  delay(20); //  20ms delay after each of the three bytes send
   
-  Wire.write(0xF0);
-  delay(20); //  20ms delay after each of the three bytes send
-  Wire.write(0xF5);
-  delay(20); //  20ms delay after each of the three bytes send
-  Wire.write(0xF6);
-  delay(20); //  20ms delay after each of the three bytes send
-    
-  _last_status = Wire.endTransmission();
+  return 0;
 }
 
-void CMPS12Class::CMPS12_eraseProfil()
+uint8_t CMPS12Class::CMPS12_eraseProfil()
 {
-  Wire.beginTransmission(_address);
-  Wire.write(CMD_REVISION);
+  CMPS12_writeReg(CMD_REVISION, 0xE0);
+  if (_last_status > 0) return _last_status;
+  delay(20); //  20ms delay after each of the three bytes send
+      
+  CMPS12_writeReg(CMD_REVISION, 0xE5);
+  if (_last_status > 0) return _last_status;
+  delay(20); //  20ms delay after each of the three bytes send
+      
+  CMPS12_writeReg(CMD_REVISION, 0xE2);
+  if (_last_status > 0) return _last_status; 
+  delay(20); //  20ms delay after each of the three bytes send
   
-  Wire.write(0xE0);
-  delay(20); //  20ms delay after each of the three bytes send
-  Wire.write(0xE5);
-  delay(20); //  20ms delay after each of the three bytes send
-  Wire.write(0xE2);
-  delay(20); //  20ms delay after each of the three bytes send
-    
-  _last_status = Wire.endTransmission();
+  return 0;
 }
 
 // Write an 8-bit register

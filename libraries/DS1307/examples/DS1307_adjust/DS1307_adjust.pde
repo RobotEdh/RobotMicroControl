@@ -20,7 +20,7 @@ void setup()
   }  
   else if (status > 0)
   {   
-      Serial.print("Failed to init DS1307, error:"); Serial.println(status);   
+      Serial.print("Init DS1307 KO, I2C error:"); Serial.println(status);  
   }
   else
   {
@@ -30,18 +30,18 @@ void setup()
   
   Serial.println("Adjust RTC");
   now.seconds = 0;
-  now.minutes = 16;
-  now.hours = 19; 
+  now.minutes = 13;
+  now.hours = 22; 
   now.is_pm = 0; 
-  now.day_of_week = 5;
-  now.days = 5; 
+  now.day_of_week = 6;
+  now.days = 13; 
   now.months = 1;
   now.year = 19; 
   
   status = DS1307.DS1307_adjust_current_datetime(&now); 
   if (status > 0)
   {   
-      Serial.print("Failed to adjust DS1307, error:"); Serial.println(status);   
+       Serial.print("DS1307_adjust_current_datetime KO, I2C error: ");Serial.println(status);
   }
   else
   {
@@ -59,7 +59,7 @@ void loop()
     status = DS1307.DS1307_read_current_datetime(&now);
     if (status > 0)
     {
-       Serial.print("Error DS1307_read_current_datetime: ");Serial.println(status);
+       Serial.print("DS1307_read_current_datetime KO, I2C error: ");Serial.println(status);
     }
     else
     {

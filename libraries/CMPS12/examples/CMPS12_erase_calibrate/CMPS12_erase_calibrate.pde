@@ -12,15 +12,16 @@ void setup()
   Serial.begin(9600); // initialize serial port
   
   Wire.begin(); // initialize I2C
-
+  
+  Serial.println("Init CMPS12");
   calib = CMPS12.CMPS12_init(false); // Do not calibration
   
   status = CMPS12.CMPS12_getStatus();
   if (status == 0)  
   {
-     CMPS12.CMPS12_eraseProfil();
-   
-     status = CMPS12.CMPS12_getStatus();
+     Serial.println(" ");
+     Serial.println("Erase profile CMPS12");
+     status = CMPS12.CMPS12_eraseProfil();
      if (status == 0)
      {
         Serial.println("Erase profile OK");   
@@ -34,18 +35,6 @@ void setup()
   {           
      Serial.print("Init KO, I2C error: ");Serial.println(status);  
   }       
-   
-  calib = CMPS12.CMPS12_checkCalibrate();
-  
-  status = CMPS12.CMPS12_getStatus();     
-  if (status == 0)
-  {           
-     Serial.print("calibrate status : 0b");Serial.println(calib); 
-  }
-  else 
-  {           
-     Serial.print("Check calibrate KO, I2C error: ");Serial.println(status);   
-  }  
           
 }
 
