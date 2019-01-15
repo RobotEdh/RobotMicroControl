@@ -86,8 +86,8 @@ int motor_begin()
   SharpIR.SharpIR_init(SHARP_IR_PIN,(long)SHARP_MODEL); 
   ivalue = SharpIR.SharpIR_distance();
   Serial.println(" ");
-  Serial.print("SharpIR sensor, Distance: "); Serial.print(ivalue); Serial.println("cm");
-  lcd.print("IR:");lcd.print(ivalue);lcd.print(" cm");lcd.printByte(lcd_pipe);   
+  Serial.print("SharpIR sensor, Distance: "); Serial.print(ivalue); Serial.println("mm");
+  lcd.print("IR:");lcd.print(ivalue);lcd.print(" mm");lcd.printByte(lcd_pipe);   
   Serial.println("Init SharpIR sensor OK");
   delay(5*1000);lcd.clear(); 
 
@@ -167,7 +167,7 @@ int motor_begin()
      {
         Serial.print("Direction: ");
         Serial.println(ivalue); 
-        lcd.print(ivalue);lcd.print((char)223);lcd.printByte(lcd_pipe);
+        lcd.print(ivalue);lcd.printByte((char)223);lcd.printByte(lcd_pipe);
         lcd.setCursor(0,1); 
         lcd.print("Init Compass OK ");    
         Serial.println("Init compass OK");
@@ -535,7 +535,7 @@ int go(unsigned long timeout)
                 Serial.print(distance); 
                 Serial.println("mm");    
 
-                if ((distance > 0) && (distance < (10 *DISTANCE_MIN))) 
+                if ((distance > 0) && (distance < DISTANCE_MIN)) 
                 {
                    return OBSTACLE;       
                 }                                  
@@ -568,34 +568,24 @@ int check_around()
     IRServo.write(0);    // turn servo left
     delay(15*90);        // waits the servo to reach the position 
     distance_left = SharpIR.SharpIR_distance(); // Check distance on right side
-    if ((distance_left > 0) && (distance_left < DISTANCE_MIN)) distance_left = 0;  // Robot need a min distance to turn
        
     IRServo.write(180);  // turn servo right
     delay(15*180);       // waits the servo to reach the position 
     distance_right = SharpIR.SharpIR_distance(); // Check distance on left side
-    if ((distance_right > 0) && (distance_right < DISTANCE_MIN)) distance_right = 0;  // Robot need a min distance to turn
-  
+   
     IRServo.write(90);   // reset servo position
     delay(15*90);        // waits the servo to reach the position 
 	 
-    if (distance_left == -1) 
-    {
-         return DIRECTION_LEFT;
-    }     
-    else if (distance_right == -1) 
-    {
-         return DIRECTION_RIGHT;
-    }    
-    else if ((distance_left > 0) && (distance_left > distance_right)) {
+    if ((distance_left > DISTANCE_MIN) && (distance_left >= distance_right)) {
          return DIRECTION_LEFT;     
     }
-    else if (distance_right > 0) 
-    {
+    else if ((distance_right > DISTANCE_MIN) && (distance_right >= distance_left)) {
          return DIRECTION_RIGHT; 
     }
-    else
-    {
-         return OBSTACLE; 
+    else {    
+         Serial.print("SharpIR sensor, distance_left: ");  Serial.print(distance_left);  Serial.println("mm");
+         Serial.print("SharpIR sensor, distance_right: "); Serial.print(distance_right); Serial.println("mm");
+         return OBSTACLE_LEFT_RIGHT; 
     }      
 }
 

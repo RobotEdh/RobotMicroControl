@@ -24,7 +24,8 @@ IoTWiFiServerClass::IoTWiFiServerClass()
     _Direction = 0;
     _ObstacleStatus = 0;
     _Distance = 0;
-    _Temperature = 0; 
+    _Temperature = 0;
+    _Humidity = 0;
     _Brightness = 0;
     _Noise = 0;      
 }
@@ -35,7 +36,7 @@ void IoTWiFiServerClass::IoTWShandleRoot() {
     
     int ret = IoTWiFiServerClass::IoTWSRobotCmd(command);
     
-    sprintf(infos,"{\"result\": %d, \"AlertStatus\": %u, \"PictureNumber\": %u, \"MotorState\": %u, \"Direction\": %u, \"ObstacleStatus\": %u, \"Distance\": %u, \"Temperature\": %u, \"Brightness\": %u, \"Noise\": %u}",_result,_AlertStatus,_PictureNumber,_MotorState,_Direction,_ObstacleStatus,_Distance,_Temperature,_Brightness,_Noise);
+    sprintf(infos,"{\"result\": %d, \"AlertStatus\": %u, \"PictureNumber\": %u, \"MotorState\": %u, \"Direction\": %u, \"ObstacleStatus\": %u, \"Distance\": %u, \"Temperature\": %u, \"Humidity\": %u, \"Brightness\": %u, \"Noise\": %u}",_result,_AlertStatus,_PictureNumber,_MotorState,_Direction,_ObstacleStatus,_Distance,_Temperature,_Humidity,_Brightness,_Noise);
     tcpServer.sendHeader("Access-Control-Allow-Origin", "*");
     tcpServer.send(200, "application/json", infos);
    
@@ -245,7 +246,7 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     //Serial.print("tag[0]: ");Serial.println((int)tag[0],HEX); 
     if (tag[0]!= TAG_CMDID)  {_result = -2; return _result;}
     //Serial.print("value[0]: ");Serial.println((int)value[0],HEX);     
-    if (value[0] != _cmdId)  {_result = -3; return _result;}
+    if (value[0] != _cmdId)  {_cmdId = value[0]; _result = -3; return _result;} // align Cmdid for next command
 
     //Serial.print("tag[1]: ");Serial.println((int)tag[1],HEX); 
     if (tag[1]!= TAG_RESP)   {_result = -4; return _result;}
@@ -299,9 +300,10 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
            _Direction = value[5];
            _ObstacleStatus = value[6];           
            _Distance = value[7];
-           _Temperature = value[8]; 
-           _Brightness = value[9];
-           _Noise = value[10];                                              
+           _Temperature = value[8];
+           _Humidity = value[9];  
+           _Brightness = value[10];
+           _Noise = value[11];                                              
            return SUCCESS; 
     } 
     else if (szcmd == "PI")
@@ -316,9 +318,10 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
            _Direction = value[5];
            _ObstacleStatus = value[6];           
            _Distance = value[7];
-           _Temperature = value[8]; 
-           _Brightness = value[9];
-           _Noise = value[10];        
+           _Temperature = value[8];
+           _Humidity = value[9];  
+           _Brightness = value[10];
+           _Noise = value[11];        
            return SUCCESS; 
     }      
 

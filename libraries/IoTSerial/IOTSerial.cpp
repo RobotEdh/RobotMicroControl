@@ -55,7 +55,7 @@ void IOTSerialClass::IOTSgetTags(uint8_t *buf, uint8_t *tag, uint16_t *value, ui
    while ((buf[i] == TAGSYMBOL) && (p < MAX_TAGS))
    {
        tag[p]   = buf[i+1];
-       value[p] = (uint16_t)(buf[i+2]<<8) | buf[i+3];
+       value[p] = (((uint16_t)buf[i+2]) << 8) | buf[i+3];
        p++;
        i=i+4;
    }
@@ -418,7 +418,12 @@ void IOTSerialClass::IOTSsend2(uint8_t msgtype, uint8_t cmdType, uint16_t *param
        Serial2.write(TAGSYMBOL);
        Serial2.write(TAG_PARAM);
        Serial2.write((uint8_t)(param[j]>>8));
+       uint8_t x =(uint8_t)(param[j]>>8);
+                Serial.print("(uint8_t)(param[j]>>8): "); Serial.print(x,HEX); Serial.print("/"); Serial.println(j);
+  uint8_t y =(uint8_t)(param[j]);
        Serial2.write((uint8_t)(param[j]));
+                Serial.print("param: "); Serial.print(y,HEX); Serial.print("/"); Serial.println(j);
+ 
     }
         
     Serial2.write(EBN1);

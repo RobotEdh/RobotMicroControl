@@ -128,7 +128,7 @@ int SharpIRClass::SharpIR_distance() {
         }
     }
 
-    return ir_distCM;
+    return 10*ir_distCM;  //in mm
 }
 
 

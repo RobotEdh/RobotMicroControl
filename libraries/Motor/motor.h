@@ -19,6 +19,7 @@
 #define OBSTACLE 12
 #define OBSTACLE_LEFT 13
 #define OBSTACLE_RIGHT 14
+#define OBSTACLE_LEFT_RIGHT 15
 #define TIMEOUT -5
 #define BAD_ANGLE -6
 #define COMPASS_ERROR -7
@@ -38,8 +39,7 @@
 #define LEFT_MOTOR  1
 #define RIGHT_MOTOR 2
 
-#define DISTANCE_MIN 50 // 50 cm before stopping, must be > 20cm which is lower range of IR sensor and
-                        // must be > 30cm which is the distance run by the motor in 1 second between 2 checks
+#define DISTANCE_MIN 500 // 500 mm before stopping
 
 #define InMotorRight1Pin    30    // In pin of Motor controller #1 for motor right #1 connected to digital pin 30
 #define EnableMotorRight1Pin 4    // Enable pin of Motor controller #1 for motor right #1 connected to PWM pin 4

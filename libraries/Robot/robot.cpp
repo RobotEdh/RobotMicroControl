@@ -56,8 +56,9 @@ void IntrIOT()  // IOT interrupt
 void reset_leds()
 {
   // turn off all leds
-  digitalWrite(Led_Blue, LOW);  
-  digitalWrite(Led_Red  , LOW);  
+  digitalWrite(Led_Green, LOW);
+  digitalWrite(Led_Red, LOW);
+  digitalWrite(Led_Blue, LOW);    
 }
 
 void blink(int led)
@@ -325,17 +326,17 @@ int infos (uint16_t *resp, uint8_t *resplen)
      resp[MOTOR_STATE] = (uint16_t)motor_state;
      Serial.print("motor_state: ");Serial.println((int)resp[MOTOR_STATE]);
      
-     // obstacle_status
-     resp[OBSTACLE_STATUS] = (uint16_t)check_around();
-     Serial.print("obstacle_status: ");Serial.println((int)resp[OBSTACLE_STATUS]);
-          
      // direction
      resp[DIRECTION] = (uint16_t)CMPS12.CMPS12_getCompassHighResolution();
      Serial.print("direction: ");Serial.println((int)resp[DIRECTION]);
      
+     // obstacle_status
+     resp[OBSTACLE_STATUS] = (uint16_t)check_around();
+     Serial.print("obstacle_status: ");Serial.println((int)resp[OBSTACLE_STATUS]);
+      
      // distance
      uint16_t distance = VL53L0X.readRangeSingleMillimeters(); 
-     if (distance > 0) resp[DISTANCE] = distance;
+     if (distance > 0) resp[DISTANCE] = distance; // in mm
      else              resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);
      
@@ -350,7 +351,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      }
      else
      {
-        Serial.println( szDHT_errors[errorCode]);
+        Serial.print("Error DHT22 readData: ");Serial.println( szDHT_errors[errorCode]);
         resp[TEMPERATURE] = 0;
         resp[HUMIDITY]    = 0;
      }     
@@ -470,7 +471,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
  
  lcd.clear();     // clear LCD
  reset_leds();    // turn off all leds
- digitalWrite(Led_Blue, HIGH);  // turn on led blue
+ digitalWrite(Led_Green, HIGH);  // turn on led green
  
  switch (cmd[0]) {
  
@@ -501,12 +502,13 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      checkdir = check_around();
      
      lcd.setCursor(0,1); 
-     if      (checkdir == DIRECTION_LEFT)  lcd.print("LEFT");
-     else if (checkdir == DIRECTION_RIGHT) lcd.print("RIGHT");
-     else if (checkdir == OBSTACLE_LEFT)   lcd.print("OBSTACLE LEFT");
-     else if (checkdir == OBSTACLE_RIGHT)  lcd.print("OBSTACLE RIGHT");
-     else if (checkdir == OBSTACLE)        lcd.print("OBSTACLE");
-     else                                  lcd.print("?");
+     if      (checkdir == DIRECTION_LEFT)     lcd.print("LEFT");
+     else if (checkdir == DIRECTION_RIGHT)    lcd.print("RIGHT");
+     else if (checkdir == OBSTACLE)           lcd.print("OBSTACLE");        
+     else if (checkdir == OBSTACLE_LEFT)      lcd.print("OBSTACLE LEFT");
+     else if (checkdir == OBSTACLE_RIGHT)     lcd.print("OBSTACLE RIGHT");
+     else if (checkdir == OBSTACLE_LEFT_RIGHT)lcd.print("OBSTACLE LEFT RIGHT");
+     else                                     lcd.print("?");
 
      resp[0] = (uint16_t)checkdir;
      *resplen = 0+1;
@@ -1079,6 +1081,7 @@ int robot_IOT ()
  if (ret != SUCCESS) {
        Serial.println("error IOTSread, Call IOTSsend 2 with RESP_KO");  
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       reset_leds();
        return -1;
  }
    
@@ -1088,6 +1091,7 @@ int robot_IOT ()
  if (nbtags < 1) {
        Serial.println("nbtags < 1, Call IOTSsend 2 with RESP_KO");    
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       reset_leds();
        return -2;
  }
  
@@ -1095,6 +1099,7 @@ int robot_IOT ()
  if (tag[0] != TAG_CMDID) {
        Serial.println("TAG_CMDID Missing, Call IOTSsend 2 with RESP_KO");    
        ret = IOTSerial.IOTSsend(2, RESP_KO);
+       reset_leds();
        return -3;
  }
 
@@ -1107,6 +1112,7 @@ int robot_IOT ()
        if (nbtags > MAX_TAGS) {
                Serial.println("nbtags > MAX_TAGS, Call IOTSsend 2 with RESP_KO");    
                ret = IOTSerial.IOTSsend(2, RESP_KO);
+               reset_leds();
                return -4;
        }     
              
@@ -1124,7 +1130,7 @@ int robot_IOT ()
         	 Serial.println("Call IOTSsend 2 with RESP_OK");    
         	 for (uint8_t k=0; k<resplen; k++)
              {
-                Serial.print("resp["); Serial.print((int)k); Serial.print("]: "); Serial.println((int)resp[k]);
+                Serial.print("resp["); Serial.print((int)k); Serial.print("]: "); Serial.println(resp[k]);
              }
              ret = IOTSerial.IOTSsend(2, RESP_OK, resp, resplen, cmdId);
        }
@@ -1132,15 +1138,18 @@ int robot_IOT ()
        {
         	 Serial.println("Call IOTSsend 2 with RESP_KO");    
              ret = IOTSerial.IOTSsend(2, RESP_KO);
+             reset_leds();
              return -5;
        }        
  }
  else {
        Serial.println("Call IOTSsend 2 with RESP_KO");    
        IOTSerial.IOTSsend(2, RESP_KO);
+       reset_leds();
        return -6;
  }
-    
+   
+ reset_leds();   
  Serial.println("End OK robot_IOT"); 
  return SUCCESS;                     
 }			 
