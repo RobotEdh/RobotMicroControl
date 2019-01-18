@@ -17,6 +17,7 @@ IOTSerialClass IOTSerial;
 IoTWiFiServerClass::IoTWiFiServerClass()
 {
     _cmdId = 0;
+    _result = 0;
     
     _AlertStatus = 0;
     _PictureNumber = 0;
@@ -35,7 +36,12 @@ void IoTWiFiServerClass::IoTWShandleRoot() {
     String command=tcpServer.arg(0);
     
     int ret = IoTWiFiServerClass::IoTWSRobotCmd(command);
-    
+    if (ret < 0) {
+       ret = IOTSerial.IOTSend (0); // Close Serial port
+       delay(100);
+       ret = IOTSerial.IOTSbegin(0); // Start Serial port
+       ret = IOTSerial.IOTSflush(0); // start clean
+    }
     sprintf(infos,"{\"result\": %d, \"AlertStatus\": %u, \"PictureNumber\": %u, \"MotorState\": %u, \"Direction\": %u, \"ObstacleStatus\": %u, \"Distance\": %u, \"Temperature\": %u, \"Humidity\": %u, \"Brightness\": %u, \"Noise\": %u}",_result,_AlertStatus,_PictureNumber,_MotorState,_Direction,_ObstacleStatus,_Distance,_Temperature,_Humidity,_Brightness,_Noise);
     tcpServer.sendHeader("Access-Control-Allow-Origin", "*");
     tcpServer.send(200, "application/json", infos);
@@ -108,6 +114,7 @@ void IoTWiFiServerClass::IoTWSbegin()
     //Serial.println ( "HTTP server started" );    
     
     ret = IOTSerial.IOTSbegin(0); // Serial port
+    ret = IOTSerial.IOTSflush(0); // start clean
     
     digitalWrite(4, LOW); // reset interrupt of the Robot
     digitalWrite(5, LOW); // led off
@@ -135,7 +142,6 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
   uint16_t value [MAX_TAGS];
   uint8_t nbtags;
   
-    
    //Serial.print("Start IoTWSRobotCmd, command :"); Serial.println(command);
     _result = 0;
     
@@ -224,36 +230,47 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     else if (szcmd == "TEST")
     {
            //Serial.print("Test OK command with param: "); ;  Serial.println((int)iparam[0]);    
-           return SUCCESS;
+           cmd = CMD_TEST;
+           param[paramlen++] = iparam[0];
+           param[paramlen++] = iparam[1];
+           param[paramlen++] = iparam[2];
+           param[paramlen++] = iparam[3];
+           param[paramlen++] = iparam[4];
+           param[paramlen++] = iparam[5];
+           param[paramlen++] = iparam[6];
+           param[paramlen++] = iparam[7]; 
+           param[paramlen++] = iparam[8];
+           param[paramlen++] = iparam[9];                                            
     }
-  
+    
+    ret = IOTSerial.IOTSflush(0); // clean before serial com 
 
+    digitalWrite(5, HIGH); // led on
     digitalWrite(4, HIGH); // interrupt the Robot
     _cmdId++;
     ret = IOTSerial.IOTSsend(0, CMD, cmd, param, paramlen, _cmdId); // send the command to the Robot
     digitalWrite(4, LOW); // reset interrupt of the Robot
     //Serial.print("Call IOTSsend");Serial.print(", paramlen: "); Serial.print((int)paramlen);Serial.print(", cmdId: "); Serial.println((int)_cmdId);
- 
+    delay(100);
     ret = IOTSerial.IOTSread(0, msg, &msg_len); // read the response from the Robot
     //Serial.print("Call IOTSread, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
-    if (ret < 0) {_result = -99; return _result;}
-        
+    digitalWrite(5, LOW); // led off 
+    if (ret < 0) {_AlertStatus = (uint16_t)msg_len; _result = ret; return _result;}
+     
     IOTSerial.IOTSgetTags(msg, tag, value, &nbtags); // parse the response  
-    //Serial.print("Call IOTSgetTags, nbtags: "); Serial.println((int)nbtags);
     
-    if (nbtags < 1)          {_result = -1; return _result;}
-    
+    //Serial.print("Call IOTSgetTags, nbtags: "); Serial.println((int)nbtags);  
+    if (nbtags < 1)          {_AlertStatus = (uint16_t)nbtags;_result = -1; return _result;} 
     //Serial.print("tag[0]: ");Serial.println((int)tag[0],HEX); 
-    if (tag[0]!= TAG_CMDID)  {_result = -2; return _result;}
-    //Serial.print("value[0]: ");Serial.println((int)value[0],HEX);     
-    if (value[0] != _cmdId)  {_cmdId = value[0]; _result = -3; return _result;} // align Cmdid for next command
-
+    if (tag[0]!= TAG_CMDID)  {_AlertStatus = (uint16_t)tag[0]; _result = -2; return _result;}
     //Serial.print("tag[1]: ");Serial.println((int)tag[1],HEX); 
-    if (tag[1]!= TAG_RESP)   {_result = -4; return _result;}
+    if (tag[1]!= TAG_RESP)   {_AlertStatus = (uint16_t)tag[1]; _result = -3; return _result;}
     //Serial.print("value[1]: ");Serial.println((int)value[1],HEX);          
-    if (value[1] == RESP_KO) {_result = -5; return _result;}
-    if (value[1] != RESP_OK) {_result = -6; return _result;}
-    
+    if (value[1] == RESP_KO) {_AlertStatus = value[1]; _result = -4; return _result;}
+    if (value[1] != RESP_OK) {_AlertStatus = value[1]; _result = -5; return _result;}
+    //Serial.print("value[0]: ");Serial.println((int)value[0],HEX);     
+    if ((uint8_t)value[0] != _cmdId)  {_AlertStatus = value[0]; _PictureNumber = (uint16_t)_cmdId; _result = -6; return _result;}   
+         
     if (szcmd == "START")
     {
            _MotorState = value[2];
@@ -294,16 +311,16 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     }                                    
     else if (szcmd == "GO")
     {
-           _AlertStatus = value[2];
-           _PictureNumber = value[3];
-           _MotorState = value[4];
-           _Direction = value[5];
+           _AlertStatus =    value[2];
+           _PictureNumber =  value[3];
+           _MotorState =     value[4];
+           _Direction =      value[5];
            _ObstacleStatus = value[6];           
-           _Distance = value[7];
-           _Temperature = value[8];
-           _Humidity = value[9];  
-           _Brightness = value[10];
-           _Noise = value[11];                                              
+           _Distance =       value[7];
+           _Temperature =    value[8];
+           _Humidity =       value[9];  
+           _Brightness =     value[10];
+           _Noise =          value[11];                                              
            return SUCCESS; 
     } 
     else if (szcmd == "PI")
@@ -312,19 +329,31 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     }        
     else if (szcmd == "GET_INFOS")
     {
-           _AlertStatus = value[2];
-           _PictureNumber = value[3];
-           _MotorState = value[4];
-           _Direction = value[5];
+           _AlertStatus =    value[2];
+           _PictureNumber =  value[3];
+           _MotorState =     value[4];
+           _Direction =      value[5];
            _ObstacleStatus = value[6];           
-           _Distance = value[7];
-           _Temperature = value[8];
-           _Humidity = value[9];  
-           _Brightness = value[10];
-           _Noise = value[11];        
+           _Distance =       value[7];
+           _Temperature =    value[8];
+           _Humidity =       value[9];  
+           _Brightness =     value[10];
+           _Noise =          value[11];       
            return SUCCESS; 
     }      
-
+    else if (szcmd == "TEST")
+    {
+           _AlertStatus =    value[2];
+           _PictureNumber =  value[3];
+           _MotorState =     value[4];
+           _Direction =      value[5];
+           _ObstacleStatus = value[6];           
+           _Distance =       value[7];
+           _Temperature =    value[8];
+           _Humidity =       value[9];  
+           _Brightness =     value[10];
+           _Noise =          value[11];        
+           return SUCCESS; 
+    }
   
 }
-

@@ -65,6 +65,11 @@
 #define IOT_PIN       3   // Pin used by the IOT connected to interrupt INT1 on MEGA2560
 void IntrIOT();           // interrupt handler IOT
 
+void print_time(void );
+/* Description: print date & time                                             */                                            
+/* input:       none                                                          */
+/* output:      none                                                          */
+/* lib:         DS1307                                                        */
 
 void blink(int led);
 /* Description: blink a led                                                   */                                            

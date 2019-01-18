@@ -17,7 +17,7 @@ IOTSerialClass::IOTSerialClass()
 {
 }
 
-// Initialize the Serial2 port
+// Initialize the Serial port
 int IOTSerialClass::IOTSbegin(int snum)
 {
 	// baud rate is 38400
@@ -38,6 +38,27 @@ int IOTSerialClass::IOTSbegin(int snum)
 
    return SUCCESS;
 	
+}
+
+// Close the Serial port
+int IOTSerialClass::IOTSend(int snum)
+{
+	switch (snum) {
+    case 0:
+      Serial.end();
+      break;
+    case 1:
+      Serial1.end();
+      break;          
+    case 2:
+      Serial2.end();
+      break;
+    default: 
+      return -1;
+      break;      
+   }
+
+   return SUCCESS;
 }
 
 void IOTSerialClass::IOTSgetTags(uint8_t *buf, uint8_t *tag, uint16_t *value, uint8_t *nbtags)
@@ -65,16 +86,41 @@ void IOTSerialClass::IOTSgetTags(uint8_t *buf, uint8_t *tag, uint16_t *value, ui
 
 int IOTSerialClass::IOTSflush(int snum)
 {
+    int ibuf=-9;
+    unsigned long previousTime;
+  
+    previousTime = millis();
     
 	switch (snum) {
     case 0:
-      while(Serial.available() > 0) int ibuf = Serial.read();
+      Serial.flush();  // flush output
+	  while((Serial.available() > 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
+      {
+         ibuf = Serial.read();  // flush input          
+#if defined(ESP8266)            
+         yield();  // to avoid watchdog timer reseting the ESP8266. 
+#endif       
+      }
       break;
     case 1:
-      while(Serial1.available() > 0) int ibuf = Serial1.read();
+      Serial1.flush();  // flush output
+	  while((Serial1.available() > 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
+      {
+         ibuf = Serial1.read();  // flush input         
+#if defined(ESP8266)            
+         yield();  // to avoid watchdog timer reseting the ESP8266. 
+#endif           
+      }
       break;          
     case 2:
-      while(Serial2.available() > 0) int ibuf = Serial2.read();
+      Serial2.flush();  // flush output
+	  while((Serial2.available() > 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
+      {
+         ibuf = Serial2.read();  // flush input            
+#if defined(ESP8266)            
+         yield();  // to avoid watchdog timer reseting the ESP8266. 
+#endif        
+      }
       break;
     default: 
       return -1;
@@ -94,7 +140,7 @@ int IOTSerialClass::IOTSRawread(int snum)
   switch (snum) {
         
         case 0:
-		  while((Serial.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((Serial.available() == 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
           {
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 
@@ -104,7 +150,7 @@ int IOTSerialClass::IOTSRawread(int snum)
           break;
         
         case 1:
-		  while((Serial1.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((Serial1.available() == 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
           {
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 
@@ -116,7 +162,7 @@ int IOTSerialClass::IOTSRawread(int snum)
           break;          
         
         case 2:
-		  while((Serial2.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((Serial2.available() == 0) && ( millis()< previousTime+ (20UL*1000UL))) // waiting for data until 20 seconds in the serial buffer
           {
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 
@@ -132,75 +178,124 @@ int IOTSerialClass::IOTSRawread(int snum)
   } // end switch	    
 }
 
-
-
-
 // Read a structured message
 int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
 {
-	int ibuf =-1;
+	int     byteread = 0;
+    uint8_t buf = 0;
+    int     ibuf = -9;
+    uint8_t len = 0;
 	uint8_t istart = 0;
 	uint8_t istop  = 0;
 	uint8_t i = 0;
-	unsigned long previousTime;
 
+    unsigned long previousTime = millis();;
+
+	*msglen = 0;
+	
 	//Get the response from the IOT and add it to the response string
 	while ((istop != 2) && (i < MSG_SIZE_MAX))
 	{
-	    previousTime = millis();
+        buf = 0;
+        ibuf = -9;
 	    
 	    switch (snum) {
         
         case 0:
-		  while((Serial.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
           {
 #if defined(ESP8266)            
-              yield();  // to avoid watchdog timer reseting the ESP8266. 
+            yield();  // to avoid watchdog timer reseting the ESP8266. 
 #endif              
+             byteread = Serial.available();
           }
-		  ibuf = Serial.read();
+		  if (byteread>0) ibuf = Serial.read();
           break;
         
         case 1:
-		  while((Serial1.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
           {
+              byteread = Serial1.available();
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 
 #endif              
           }
-		  Serial.print("IOTSread, read ");
- 
-		  ibuf = Serial1.read();
-          Serial.print("ibuf: "); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
+		  Serial.print("IOTSread, read ");    
+		  
+		  if (byteread>0) {
+		     ibuf = Serial1.read();
+             Serial.print("snum: ");Serial.print(snum);Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
+          }
+          else Serial.println(byteread);
           break;          
         
         case 2:
-		  while((Serial2.available() == 0) && ( millis()< previousTime+ (30*1000))) // waiting for data until 30 seconds in the serial buffer
+		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
           {
+              byteread = Serial2.available();
+              Serial.println(byteread);
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 
 #endif              
-          }
-		  Serial.print("IOTSread, read ");
+		  }
+		  Serial.print("IOTSread, read ");          
  
-		  ibuf = Serial2.read();
-          Serial.print("ibuf: "); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
-          break;
+		  if (byteread>0) {
+		     ibuf = Serial2.read();
+             Serial.print("snum: ");Serial.print(snum);Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
+          }
+          else Serial.println(byteread);
+          break;  
         default: 
           return -1;
           break;              
        } // end switch	    
 	    
-		if (ibuf == -1) return -10; // serial buffer empty
-		
-		if      (ibuf == SBN1) istart = 1;
-		else if (ibuf == SBN2) istart++;
-		else if (ibuf == EBN1) istop = 1;
-		else if (ibuf == EBN2) istop++;    
-        else if (istart == 2) msg[i++] = (uint8_t)ibuf;
-	}
-    if (i == 0) return -1;
-    if (i == MSG_SIZE_MAX) return -11;
+	   if (byteread == 0) return ERROR_SERIAL_BUFFER_EMPTY_1; // serial buffer empty
+	   if (ibuf == -1)    return ERROR_SERIAL_BUFFER_EMPTY_2; // serial buffer empty		
+	   if (ibuf == -9)    return ERROR_SERIAL_BUFFER_EMPTY_3; // serial buffer empty				
+	   
+	   byteread--;  // one byte read
+	   buf = (uint8_t)ibuf;
+	   
+	   if      (istart == 0) {
+		     if (buf == SBN1) istart = 1;  // start, ignore byte if SBN1 not received
+	   }
+	   else if (istart == 1) {
+		   len = buf;                  // len follows SBN1
+		   istart++;                
+	   }
+	   else if (istart == 2) {
+		   if (buf == SBN2) istart++; // SBN2 should follows len
+		   else {
+		       istart = 0;
+		       len    = 0;                 // bad framing for start, want SBN1-len-SBN2
+           } 
+       }   
+	   else if (istart == 3) {
+		   if (i < len) msg[i++] = buf; // fill message
+		   else if (istop == 0) {
+		      if (buf == EBN1) istop++;  // message end
+		      else {
+       		     istart = 0; // bad framing for stop, want msg-EBN1
+		         len    = 0; 
+		         i      = 0;            
+              }              
+           }
+           else if (istop == 1) {
+		      if (buf == EBN2) istop++;  //message end
+		      else {
+       		     istart = 0; // bad framing for stop, , want EBN1-EBN2
+		         len    = 0; 
+		         i      = 0;            
+              }	               
+           }
+	   }  // end if block
+
+	}  // end while
+	    
+    if (i == 0) return ERROR_SERIAL_NO_MSG;
+    if (i == MSG_SIZE_MAX) return ERROR_SERIAL_MSG_SIZE_MAX;
     
     *msglen = i;
 	return SUCCESS;
@@ -269,6 +364,7 @@ int IOTSerialClass::IOTSsend(int snum, uint8_t msgtype, uint8_t cmdType, uint16_
 void IOTSerialClass::IOTSsend0(uint8_t msgtype, uint8_t cmdType, uint16_t *param, uint8_t paramlen, uint8_t cmdId)
 {
     Serial.write(SBN1);
+    Serial.write(8+(paramlen*4));  // msg len    
     Serial.write(SBN2);
     
     Serial.write(TAGSYMBOL);
@@ -322,6 +418,7 @@ void IOTSerialClass::IOTSsend0(uint8_t msgtype, uint8_t cmdType, uint16_t *param
 void IOTSerialClass::IOTSsend1(uint8_t msgtype, uint8_t cmdType, uint16_t *param, uint8_t paramlen, uint8_t cmdId)
 {
     Serial1.write(SBN1);
+    Serial1.write(8+(paramlen*4));  // msg len    
     Serial1.write(SBN2);
     
     Serial1.write(TAGSYMBOL);
@@ -376,13 +473,13 @@ void IOTSerialClass::IOTSsend1(uint8_t msgtype, uint8_t cmdType, uint16_t *param
 void IOTSerialClass::IOTSsend2(uint8_t msgtype, uint8_t cmdType, uint16_t *param, uint8_t paramlen, uint8_t cmdId)
 {
     Serial2.write(SBN1);
+    Serial2.write(8+(paramlen*4));  // msg len
     Serial2.write(SBN2);
     
     Serial2.write(TAGSYMBOL);
     Serial2.write(TAG_CMDID);
     Serial2.write(uint8_t(0));
     Serial2.write(cmdId);
-    
     Serial2.write(TAGSYMBOL);
     
     switch (msgtype) {
@@ -418,18 +515,10 @@ void IOTSerialClass::IOTSsend2(uint8_t msgtype, uint8_t cmdType, uint16_t *param
        Serial2.write(TAGSYMBOL);
        Serial2.write(TAG_PARAM);
        Serial2.write((uint8_t)(param[j]>>8));
-       uint8_t x =(uint8_t)(param[j]>>8);
-                Serial.print("(uint8_t)(param[j]>>8): "); Serial.print(x,HEX); Serial.print("/"); Serial.println(j);
-  uint8_t y =(uint8_t)(param[j]);
        Serial2.write((uint8_t)(param[j]));
-                Serial.print("param: "); Serial.print(y,HEX); Serial.print("/"); Serial.println(j);
- 
     }
         
     Serial2.write(EBN1);
     Serial2.write(EBN2);
 
 }
-
-
-

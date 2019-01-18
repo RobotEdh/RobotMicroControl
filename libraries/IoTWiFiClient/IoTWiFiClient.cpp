@@ -132,10 +132,10 @@ int IoTWiFiClientClass::IoTWCSendPicture (int n, uint16_t size)
   previousTime = millis();
   int incomingByte = 0;
   uint32_t count = 0;          
-  while ((count < size) && ( millis()< previousTime+ (30*1000))) {
+  while ((incomingByte >= 0) &&(count < size) && ( millis()< previousTime+ (30*1000))) {
       count++;  
       incomingByte = IOTSerial.IOTSRawread(0);
-      tcpClient.write(incomingByte);
+      if (incomingByte >= 0) tcpClient.write(incomingByte);
   }// while count
  
   tcpClient.print(end_request);

@@ -28,6 +28,7 @@
 #define CMD_ALERT         0x09
 #define CMD_CHECK         0x0A
 #define CMD_PI            0x0B
+#define CMD_TEST          0x0C
 
 #define ALERT_STATUS           0
 #define NO_PICTURE             1
@@ -73,6 +74,11 @@ const uint8_t SBN2 = 0xFB;
 const uint8_t EBN1 = 0xFE;
 const uint8_t EBN2 = 0xFF;
 
+#define ERROR_SERIAL_BUFFER_EMPTY_1 -11
+#define ERROR_SERIAL_BUFFER_EMPTY_2 -12
+#define ERROR_SERIAL_BUFFER_EMPTY_3 -13
+#define ERROR_SERIAL_NO_MSG         -14
+#define ERROR_SERIAL_MSG_SIZE_MAX   -15
 
 
 class IOTSerialClass
@@ -86,7 +92,14 @@ class IOTSerialClass
         /*                  = Serial port number: 0, 1 or 2                           */ 
         /* output:      none                                                          */ 
         /* lib:       	Serialx.begin                                                 */
-			
+
+		int IOTSend(int snum);
+        /* Description: Close the serial port snum                                    */                                            
+        /* input:       snum                                                          */ 
+        /*                  = Serial port number: 0, 1 or 2                           */ 
+        /* output:      none                                                          */ 
+        /* lib:       	Serialx.end                                                   */
+        			
         void IOTSgetTags(uint8_t *buf, uint8_t *tag, uint16_t *value, uint8_t *nbtags);
         
         int IOTSflush(int snum);

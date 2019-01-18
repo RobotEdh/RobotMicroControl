@@ -1,7 +1,7 @@
 #include <robot.h>         
 
 /* classes aleady defined in motor */
-extern VL53L0XClass VL53L0X;         // The ToF class
+extern VL53L0XClass VL53L0X;        // The ToF class
 extern LiquidCrystal_I2C lcd;       // The LCD class
 extern CMPS12Class CMPS12;          // The Compass class
 
@@ -52,7 +52,24 @@ void IntrIOT()  // IOT interrupt
     digitalWrite(Led_Blue, HIGH);  // turn on led
 }
 
-
+void print_time()
+{
+  uint8_t status = 0;
+  DateTime_t now; 
+   
+   status = DS1307.DS1307_read_current_datetime(&now);
+   if (status > 0)
+   {
+      Serial.print("DS1307_read_current_datetime KO, I2C error: ");Serial.println(status);
+   }
+   else
+   {
+      Serial.print("Date: ");Serial.print(now.days);Serial.print("/");Serial.print(now.months);Serial.print("/");Serial.println(now.year + 2000);
+      Serial.print("Time: ");Serial.print(now.hours);Serial.print(":");Serial.print(now.minutes);Serial.print(":");Serial.println(now.seconds);
+   } 
+}
+ 
+ 
 void reset_leds()
 {
   // turn off all leds
@@ -252,41 +269,23 @@ int robot_begin()
     uint8_t address = DS1307.DS1307_getAddress();
     Serial.print("Init RTC DS1307 OK, Address: 0x"); Serial.println(address,HEX);
  
-    status = DS1307.DS1307_read_current_datetime(&now);
-    if (status > 0)
-    {
-       Serial.print("DS1307_read_current_datetime KO, I2C error: ");Serial.println(status);
-    }
-    else
-    {
-       Serial.print("Date: ");
-       Serial.print(now.days);
-       Serial.print("/");
-       Serial.print(now.months);
-       Serial.print("/");
-       Serial.print(now.year + 2000);
-       Serial.print("  Time: ");
-       Serial.print(now.hours);
-       Serial.print(":");
-       Serial.print(now.minutes);
-       Serial.print(":");
-       Serial.println(now.seconds);
-    }    
+    print_time();    
   }
   
   
   // initialize the IOT Serial 1 
   Serial.println(" ");
-  IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+  ret = IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+  ret = IOTSerial.IOTSflush(1); // flush to start clean
   Serial.println ("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK");
   
   // initialize the IOT Serial 2, interrupt setting
   Serial.println(" ");
-  IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT WIFServer ESP8266
+  ret = IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT WIFServer ESP8266
+  ret = IOTSerial.IOTSflush(2); // flush to start clean
   Serial.println ("Init IOT Serial 2 to communicate with IOT WIFServer ESP8266 OK");
   pinMode(IOT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
- 
  
   interrupts(); // enable all interrupts
   Serial.print("Init Interrupts OK, IntIOT: "); Serial.println(IntIOT);
@@ -312,42 +311,43 @@ int robot_begin()
   
 } 
 
+
 int infos (uint16_t *resp, uint8_t *resplen)
 {    
      // alert status
      resp[ALERT_STATUS] = (uint16_t)alert_status;
-     Serial.print("alert status: ");Serial.println((int)resp[ALERT_STATUS]);
+     Serial.print("alert status: ");Serial.println(resp[ALERT_STATUS]);
      
      // picture number
      resp[NO_PICTURE] = (uint16_t)no_picture;
-     Serial.print("no_picture: ");Serial.println((int)resp[NO_PICTURE]);
+     Serial.print("no_picture: ");Serial.println(resp[NO_PICTURE]);
      
      // motor_state
      resp[MOTOR_STATE] = (uint16_t)motor_state;
-     Serial.print("motor_state: ");Serial.println((int)resp[MOTOR_STATE]);
+     Serial.print("motor_state: ");Serial.println(resp[MOTOR_STATE]);
      
      // direction
      resp[DIRECTION] = (uint16_t)CMPS12.CMPS12_getCompassHighResolution();
-     Serial.print("direction: ");Serial.println((int)resp[DIRECTION]);
+     Serial.print("direction: ");Serial.println(resp[DIRECTION]);
      
      // obstacle_status
      resp[OBSTACLE_STATUS] = (uint16_t)check_around();
-     Serial.print("obstacle_status: ");Serial.println((int)resp[OBSTACLE_STATUS]);
+     Serial.print("obstacle_status: ");Serial.println(resp[OBSTACLE_STATUS]);
       
      // distance
      uint16_t distance = VL53L0X.readRangeSingleMillimeters(); 
      if (distance > 0) resp[DISTANCE] = distance; // in mm
      else              resp[DISTANCE] = 0;
-     Serial.print("distance: ");Serial.println((int)resp[DISTANCE]);
+     Serial.print("distance: ");Serial.println(resp[DISTANCE]);
      
      // temperature&humidity
      DHT22_ERROR_t errorCode = DHT22.readData();
      if (errorCode == DHT_ERROR_NONE)
      {
          resp[TEMPERATURE] = (uint16_t)(100.0 * DHT22.getTemperatureC());
-         Serial.print("temperature: ");Serial.println((int)resp[TEMPERATURE]);
+         Serial.print("temperature: ");Serial.println(resp[TEMPERATURE]);
          resp[HUMIDITY]    = (uint16_t)(100.0 * DHT22.getHumidity());
-         Serial.print("humidity: ");Serial.println((int)resp[HUMIDITY]);  
+         Serial.print("humidity: ");Serial.println(resp[HUMIDITY]);  
      }
      else
      {
@@ -358,11 +358,11 @@ int infos (uint16_t *resp, uint8_t *resplen)
      
      // brightness
      resp[BRIGHTNESS] = 0;  //TODO
-     Serial.print("brightness: ");Serial.println((int)resp[BRIGHTNESS]);
+     Serial.print("brightness: ");Serial.println(resp[BRIGHTNESS]);
      
      // noise
      resp[NOISE] =  0;  //TODO
-     Serial.print("noise: ");Serial.println((int)resp[NOISE]);
+     Serial.print("noise: ");Serial.println(resp[NOISE]);
      
 
      *resplen = RESP_SIZE;
@@ -548,7 +548,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      else if (motor_state == STATE_GO)
      { 
            Serial.print("CMD_TURN, alpha: "); Serial.print((cmd[2] != 1) ? ('+'):('-')); Serial.println((int)cmd[1]); 
-           lcd.print("TURN"); lcd.print((cmd[2] != 1) ? ('+'):('-')); lcd.print((int)cmd[1]);lcd.print((char)223); //degree   
+           lcd.print("TURN"); lcd.print((cmd[2] != 1) ? ('+'):('-')); lcd.print((int)cmd[1]);lcd.printByte(223); //degree   
          
            ret = turn ((double)((cmd[2] != 1) ? (cmd[1]):(-cmd[1])), 5);  // 5s max        
            if (ret != SUCCESS){
@@ -576,9 +576,9 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
          lcd.print("STOPPED");
      }
      lcd.setCursor(0,1);   
-     lcd.print((int)resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
-     lcd.print((int)resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe); 
-     lcd.print((int)resp[DIRECTION]); lcd.print((char)223); //degree    
+     lcd.print(resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
+     lcd.print(resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe); 
+     lcd.print(resp[DIRECTION]); lcd.printByte(223); //degree    
  
      *resplen = infolen;
      break;
@@ -625,7 +625,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      Serial.println("CMD_ALERT");
      lcd.print("Alert"); 
     
-     blink(Led_Blue);  
+     blink(Led_Red);  
      buzz(5); 
      
      // If motor_state == STATE_GO => Stop           
@@ -749,7 +749,14 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      Serial.print("CMD_GO, nb seconds: "); Serial.println((int)cmd[1]);
      lcd.print("GO ");lcd.print((int)cmd[1]);lcd.print("secs");
      
-     if (motor_state != STATE_GO)
+     GOtimeout = (unsigned long)cmd[1]; 
+     
+     if (GOtimeout == 0) {    
+        Serial.println("stop"); 
+        stop();
+        motor_state = STATE_STOP;
+     }
+     else if (motor_state != STATE_GO)
      {  
            Serial.println("start_forward");
            start_forward();
@@ -757,7 +764,6 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      }
      
      error = -1;
-     GOtimeout = (unsigned long)cmd[1];
      start = millis();
      while((millis() - start < GOtimeout*1000) && (error == -1)) {
           ret = go(GOtimeout);  
@@ -896,9 +902,9 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
              lcd.print("STOPPED");
          }
          lcd.setCursor(0,1);   
-         lcd.print((int)resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
-         lcd.print((int)resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe);
-         lcd.print((int)resp[DIRECTION]); lcd.print((char)223); //degree   
+         lcd.print(resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
+         lcd.print(resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe);
+         lcd.print(resp[DIRECTION]); lcd.printByte(223); //degree   
      } 
      
      *resplen = infolen;      
@@ -917,7 +923,48 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
        
     *resplen = 0;     
      break;
-          
+ 
+ case CMD_TEST: 
+     Serial.println("CMD_TEST");
+     
+     // reply each value incremented
+     resp[ALERT_STATUS] = cmd[1]+1;
+     Serial.print("alert status: ");Serial.println(resp[ALERT_STATUS]);
+     
+     resp[NO_PICTURE] = cmd[2]+1;
+     Serial.print("no_picture: ");Serial.println(resp[NO_PICTURE]);
+     
+     resp[MOTOR_STATE] = cmd[3]+1;
+     Serial.print("motor_state: ");Serial.println(resp[MOTOR_STATE]);
+     
+     resp[DIRECTION] = cmd[4]+1;
+     Serial.print("direction: ");Serial.println(resp[DIRECTION]);
+
+     resp[OBSTACLE_STATUS] = cmd[5]+1;
+     Serial.print("obstacle_status: ");Serial.println(resp[OBSTACLE_STATUS]);
+
+     resp[DISTANCE] = cmd[6]+1;
+     Serial.print("distance: ");Serial.println(resp[DISTANCE]);
+
+     resp[TEMPERATURE] = cmd[7]+1;
+     Serial.print("temperature: ");Serial.println(resp[TEMPERATURE]);
+     
+     resp[HUMIDITY] = cmd[8]+1;
+     Serial.print("humidity: ");Serial.println(resp[HUMIDITY]);  
+
+     resp[BRIGHTNESS] = cmd[9]+1;
+     Serial.print("brightness: ");Serial.println(resp[BRIGHTNESS]);
+     
+     resp[NOISE] = cmd[10]+1;
+     Serial.print("noise: ");Serial.println(resp[NOISE]);
+
+
+     lcd.setCursor(0,1);   
+     lcd.print("TEST");lcd.write(lcd_pipe); 
+ 
+     *resplen = RESP_SIZE;
+     break;          
+ 
  default:
     Serial.println("invalid command");
     lcd.print("invalid command");
@@ -957,6 +1004,8 @@ void robot_main ()
        if ((currentTimeCheck > previousTimeCheck + freqCheck) && (freqCheck > 0)) {
              previousTimeCheck = currentTimeCheck;   
              Serial.print("Call command CHECK every ");Serial.print(freqCheck/1000);Serial.println(" seconds");
+ 
+             
              cmd[0] = CMD_CHECK;
              cmd[1] = (uint16_t)freqCheck/1000;
              ret = robot_command (cmd, resp, &resplen);
@@ -1095,7 +1144,7 @@ int robot_IOT ()
        return -2;
  }
  
- Serial.print(", tag[0]: "); Serial.print((int)tag[0],HEX); Serial.print(", value[0]: "); Serial.println((int)value[0],HEX);
+ Serial.print(", tag[0]: 0x"); Serial.print((int)tag[0],HEX); Serial.print(", value[0]: 0x"); Serial.println(value[0],HEX);
  if (tag[0] != TAG_CMDID) {
        Serial.println("TAG_CMDID Missing, Call IOTSsend 2 with RESP_KO");    
        ret = IOTSerial.IOTSsend(2, RESP_KO);
@@ -1119,7 +1168,7 @@ int robot_IOT ()
        for (uint8_t j=0; j<(nbtags-1); j++)
        {
            cmd[j] = value[j+1];
-           Serial.print("cmd["); Serial.print((int)j); Serial.print("]: "); Serial.println((int)cmd[j],HEX);
+           Serial.print("cmd["); Serial.print((int)j); Serial.print("]: 0x"); Serial.println((int)cmd[j],HEX);
        }
  
        // Execute the command received from IOT
@@ -1202,11 +1251,11 @@ int robot_Send_Picture (uint8_t n)
     
  if (nbtags < 1)          return -1; 
     
- Serial.print("tag[0]: ");Serial.println((int)tag[0],HEX); 
+ Serial.print("tag[0]: 0x");Serial.println((int)tag[0],HEX); 
  if (tag[0]!= TAG_CMDID)   return -2;
  Serial.print("tag[1]: "); Serial.println((int)tag[1]);  
  if (tag[1]!= TAG_RESP)   return -3;
- Serial.print("value[1]: "); Serial.println((int)value[1]);        
+ Serial.print("value[1]: "); Serial.println(value[1]);        
  if (value[1] == RESP_KO) return -4;
  if (value[1] != RESP_OK) return -5;
 

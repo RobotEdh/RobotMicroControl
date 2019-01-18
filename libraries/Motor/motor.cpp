@@ -167,7 +167,7 @@ int motor_begin()
      {
         Serial.print("Direction: ");
         Serial.println(ivalue); 
-        lcd.print(ivalue);lcd.printByte((char)223);lcd.printByte(lcd_pipe);
+        lcd.print(ivalue);lcd.printByte(223);lcd.printByte(lcd_pipe);
         lcd.setCursor(0,1); 
         lcd.print("Init Compass OK ");    
         Serial.println("Init compass OK");
