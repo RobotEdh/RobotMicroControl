@@ -17,8 +17,8 @@
 #include <Arduino.h> // used for pin definition
 
 
-#define SHARP_IR_PIN_DEFAULT A1  // Default Sharp IR analogic pin  A1
-/* Analogic interface is provided on pin A1 */
+#define SHARP_IR_PIN_DEFAULT A0  // Default Sharp IR analogic pin  A0
+/* Analogic interface is provided on pin A0 */
 /* Power +5V is set on pin VCC              */
 /* Ground    is set on pin GND              */
 
@@ -32,7 +32,7 @@ class SharpIRClass
     
     void SharpIR_init (long sensorModel);
     void SharpIR_init (int pin, long sensorModel);
-    int SharpIR_distance();
+    double SharpIR_distance();
 
   private:
 

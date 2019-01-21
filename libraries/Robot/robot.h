@@ -18,6 +18,7 @@
 #include <DS1307.h>            // RTC
 #include <IOTSerial.h>         // Serial lib to communicate with IOT
 #include <I2C_Scanner.h>       // used to scan I2C
+#include <BH1720.h>            // Brightness sensor
 
 #define CMD_START         0x01
 #define CMD_STOP          0x02

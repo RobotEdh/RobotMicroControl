@@ -10,7 +10,7 @@
 
 #include <Arduino.h> // used for pin definition
 
-#define GP2Y0A21YK_PIN_DEFAULT A1   // IR sensor GP2Y0A21YK analogic pin A1
+#define GP2Y0A21YK_PIN_DEFAULT A0   // IR sensor GP2Y0A21YK analogic pin A0
 /* Analogic interface is provided on pin V0 */
 /* Power +3V is set on pin VCC              */
 /* Ground    is set on pin GND              */

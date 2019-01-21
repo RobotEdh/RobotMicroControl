@@ -16,10 +16,7 @@
 
 #define SUCCESS 0
 #define SPEED_ERROR -1
-#define OBSTACLE 12
-#define OBSTACLE_LEFT 13
-#define OBSTACLE_RIGHT 14
-#define OBSTACLE_LEFT_RIGHT 15
+
 #define TIMEOUT -5
 #define BAD_ANGLE -6
 #define COMPASS_ERROR -7
@@ -32,14 +29,18 @@
 #define SPEEDTURN     80     // speed at turn 
 #define SPEEDBACK     50     // speed at turn back
 
-#define DIRECTION_LEFT  1
-#define DIRECTION_RIGHT 2
-
 #define BOTH_MOTOR  0
 #define LEFT_MOTOR  1
 #define RIGHT_MOTOR 2
 
-#define DISTANCE_MIN 500 // 500 mm before stopping
+#define DISTANCE_MIN 500.0 // 500 mm before stopping
+
+#define DIRECTION_LEFT  1
+#define DIRECTION_RIGHT 2
+#define OBSTACLE 3
+#define OBSTACLE_LEFT 4
+#define OBSTACLE_RIGHT 5
+#define OBSTACLE_LEFT_RIGHT 6
 
 #define InMotorRight1Pin    30    // In pin of Motor controller #1 for motor right #1 connected to digital pin 30
 #define EnableMotorRight1Pin 4    // Enable pin of Motor controller #1 for motor right #1 connected to PWM pin 4
@@ -61,7 +62,7 @@
 #endif
 
 #define IRSERVO_Pin    46        // IR Servo pin connected to digital PWM 46
-#define SHARP_IR_PIN   A1        // Sharp IR analogic pin A1
+#define SHARP_IR_PIN   A0        // Sharp IR analogic pin A0
 #define SHARP_MODEL    1080      // Sharp IR model  > 1080 is the int for the GP2Y0A21Y and 
                                  //                 > 20150 is the int for GP2Y0A02YK and 
                                  //                 > 100500 is the long for GP2Y0A710K0F

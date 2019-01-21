@@ -83,11 +83,11 @@ void SharpIRClass::SharpIR_sort(int a[], int size) {
 }
 
 // Read distance and compute it
-int SharpIRClass::SharpIR_distance() {
+double SharpIRClass::SharpIR_distance() {
 
     int ir_val[NB_SAMPLE];
-    int ir_distCM= -1;
-    float current;
+    double ir_distCM= -1;
+    double current;
 
 
     for (int i=0; i<NB_SAMPLE; i++){
@@ -102,6 +102,7 @@ int SharpIRClass::SharpIR_distance() {
     if (_model==1080) {
         
          ir_distCM = 27.728 * pow(map(ir_val[NB_SAMPLE / 2], 0, 1023, 0, 5000)/1000.0, -1.2045);
+         if (ir_distCM > 80.0) ir_distCM = 80.0;  // max 80 cm
 
     } else if (_model==20150){
 
@@ -120,15 +121,15 @@ int SharpIRClass::SharpIR_distance() {
         // use the inverse number of distance like in the datasheet (1/L)
         // y = mx + b = 137500*x + 1125 
         // x = (y - 1125) / 137500
-        if (current < 1400 || current > 3300) {
+        if (current < 1400.0 || current > 3300.0) {
           //false data
-          ir_distCM = 0;
+          ir_distCM = 0.0;
         } else {
           ir_distCM = 1.0 / (((current - 1125.0) / 1000.0) / 137.5);
         }
     }
 
-    return 10*ir_distCM;  //in mm
+    return 10.0*ir_distCM;  //in mm
 }
 
 

@@ -11,6 +11,7 @@ extern CMPS12Class CMPS12;          // The Compass class
        DS1307Class DS1307;          // The RTC class       
        IOTSerialClass IOTSerial;    // The IOT serial
        I2C_ScannerClass I2C_Scanner;// used to scan I2C
+       BH1720Class BH1720;          // The brightness sensor
 
 // SD variables
 extern SdFile root;          // SD Root
@@ -19,8 +20,6 @@ extern SdFile FilePicture;   // SD File
 // data updated during interrupts
 volatile int IntIOT = 0; 
 
-int HPos = 90;
-int VPos = 90;
 int motor_state = STATE_STOP;
 int alert_status = 0;
 int no_picture = 0;                 // Picture number
@@ -40,8 +39,8 @@ double avg_temperature = 0.0;
 double tab_humidity[NB_HUMIDITY] = {0.0};
 double avg_humidity = 0.0;
 
-int tab_lux[NB_LUX] = {0};
-unsigned long avg_lux = 0;
+double tab_lux[NB_LUX] = {0.0};
+double avg_lux = 0.0;
 
 int tab_noise[NB_NOISE] = {0};
 unsigned long avg_noise = 0;
@@ -108,7 +107,6 @@ int robot_begin()
   int ivalue = 0;
   uint8_t status = 0;
   int nberror = 0;
-  DateTime_t now;
   
   ret = motor_begin(); 
   if (ret != SUCCESS) return ret;
@@ -202,15 +200,33 @@ int robot_begin()
     
   // initialize the Brightness sensor 
   Serial.println(" ");  
-  //TEMT6000.TEMT6000_init(TEMT6000_PIN); // initialize the pin connected to the sensor
-  Serial.println("Init Brightness sensor OK");
-  
-  ivalue = 0; // TODO
-  Serial.print("Value between 0 (dark) and 1023 (bright): ");
-  Serial.println(ivalue); 
-  lcd.print("Lux:");lcd.print(ivalue);lcd.printByte(lcd_pipe);
-  
-   
+  status = BH1720.BH1720_init(); // initialize BH1720
+  if (status == 0)
+  {
+     Serial.print("Init Brightness BH1720 sensor OK, address: 0x");
+     uint8_t address = BH1720.BH1720_getAddress();
+     Serial.println(address,HEX);   
+     
+     double lux = BH1720.BH1720_getLux();
+     status = BH1720.BH1720_getStatus();
+     if (status > 0)
+     {
+        Serial.print("Error BH1720_getLux: ");Serial.println(status);
+     }
+     else
+     {
+        Serial.print(lux);Serial.println(" Lux (cloudy indoor:5-50, cloudy outdoor:50-500, sunny indoor:100-1000, sunny outdoor: >10000)");
+     }
+     ivalue = (int)lux;
+     lcd.print("Lux:");lcd.print(ivalue);lcd.printByte(lcd_pipe);     
+  }
+  else 
+  {           
+     Serial.print("Init Brightness BH1720 sensor KO, I2C error: ");Serial.println(status);
+     nberror++;  
+  } 
+
+ 
   // initialize the Sound detector 
   Serial.println(" ");
   //Sound.Sound_init(SOUND_PIN); // initialize the pin connected to the detector
@@ -257,19 +273,20 @@ int robot_begin()
   status = DS1307.DS1307_init();
   if (status == ERROR_RTC_STOPPED)
   {
-    Serial.println("RTC stopped");
+     Serial.println("RTC stopped");
+     nberror++;   
   }  
   else if (status > 0)
   {   
-      Serial.print("Init DS1307 KO, I2C error:"); Serial.println(status); 
-      nberror++;  
+     Serial.print("Init DS1307 KO, I2C error:"); Serial.println(status); 
+     nberror++;  
   }
   else
   {
-    uint8_t address = DS1307.DS1307_getAddress();
-    Serial.print("Init RTC DS1307 OK, Address: 0x"); Serial.println(address,HEX);
+     uint8_t address = DS1307.DS1307_getAddress();
+     Serial.print("Init RTC DS1307 OK, address: 0x"); Serial.println(address,HEX);
  
-    print_time();    
+     print_time();    
   }
   
   
@@ -303,17 +320,21 @@ int robot_begin()
  
   Serial.print("End Robot Init ");
   if (!nberror) Serial.println("OK");
-  else          Serial.println("KO");
+  else {Serial.print("KO nb errors: ");Serial.println(nberror);}
   Serial.println("*****************");
   Serial.println("");
  
-  return SUCCESS;
+  return nberror;
   
 } 
 
 
 int infos (uint16_t *resp, uint8_t *resplen)
 {    
+     uint8_t status = 0;
+     
+     print_time();
+     
      // alert status
      resp[ALERT_STATUS] = (uint16_t)alert_status;
      Serial.print("alert status: ");Serial.println(resp[ALERT_STATUS]);
@@ -357,9 +378,19 @@ int infos (uint16_t *resp, uint8_t *resplen)
      }     
      
      // brightness
-     resp[BRIGHTNESS] = 0;  //TODO
-     Serial.print("brightness: ");Serial.println(resp[BRIGHTNESS]);
-     
+     double lux = BH1720.BH1720_getLux();
+     status = BH1720.BH1720_getStatus();
+     if (status > 0)
+     {
+        Serial.print("Error BH1720_getLux: ");Serial.println(status);
+        resp[BRIGHTNESS] = 0;
+     }
+     else
+     {
+        resp[BRIGHTNESS] = (uint16_t)lux;
+        Serial.print("brightness: ");Serial.println(resp[BRIGHTNESS]);
+     }
+ 
      // noise
      resp[NOISE] =  0;  //TODO
      Serial.print("noise: ");Serial.println(resp[NOISE]);
@@ -375,18 +406,22 @@ int check ()
 {
   
   int i = 0;
+  uint8_t status = 0;
   
+  print_time();
+
   // Check Motion
-  int status = Motion.Motion_status();
-  if (status) {
+  int motion = Motion.Motion_status();
+  if (motion == 1) {
        blink(Led_Red);   
        Serial.print("Alert Motion");	
        return ALERT_MOTION;
   }
+  else Serial.println("No Motion");
   
   // Check Noise
   int noise = 0; //TODO
-  Serial.print("noise: "); Serial.print(noise);Serial.print(" -- previous_noise: "); Serial.print(tab_noise[0]);Serial.print(" -- MAX_VAR_NOISE: "); Serial.println(MAX_VAR_NOISE);
+  Serial.print("noise: ");Serial.print(noise);Serial.print(" -- previous_noise: ");Serial.print(tab_noise[0]);Serial.print(" -- avg_noise: ");Serial.print(avg_noise);Serial.print(" -- MAX_VAR_NOISE: "); Serial.println(MAX_VAR_NOISE);
   if (noise != tab_noise[0]) {
       if (MAX_VAR_NOISE < abs(avg_noise - noise) && tab_noise[NB_NOISE-1] != 0) {
           return ALERT_NOISE;
@@ -406,8 +441,8 @@ int check ()
   {
       double temperature = DHT22.getTemperatureC();
       double humidity    = DHT22.getHumidity();
-      Serial.print("temperature: "); Serial.print(temperature);Serial.print(" -- previous_temperature: "); Serial.print(tab_temperature[0]);Serial.print(" -- MAX_VAR_TEMPERATURE: "); Serial.println(MAX_VAR_TEMPERATURE);
-      Serial.print("humidity: ");    Serial.print(humidity);   Serial.print(" -- previous_humidity: ");    Serial.print(tab_humidity[0]);   Serial.print(" -- MAX_VAR_HUMIDITY: ");    Serial.println(MAX_VAR_HUMIDITY);
+      Serial.print("temperature: ");Serial.print(temperature);Serial.print(" -- previous_temperature: ");Serial.print(tab_temperature[0]);Serial.print(" -- avg_temperature: ");Serial.print(avg_temperature);Serial.print(" -- MAX_VAR_TEMPERATURE: ");Serial.println(MAX_VAR_TEMPERATURE);
+      Serial.print("humidity: ");   Serial.print(humidity);   Serial.print(" -- previous_humidity: ");   Serial.print(tab_humidity[0]);   Serial.print(" -- avg_humidity: ");   Serial.print(avg_humidity);   Serial.print(" -- MAX_VAR_HUMIDITY: ");      Serial.println(MAX_VAR_HUMIDITY);
   
       if (temperature != tab_temperature[0]) {
          if (MAX_VAR_TEMPERATURE < abs(avg_temperature - temperature) && tab_temperature[NB_TEMPERATURE-1] != 0.0) {
@@ -436,23 +471,32 @@ int check ()
   }
   else
   {
-        Serial.println( szDHT_errors[errorCode]);
+        Serial.print("Error DHT22: " );Serial.println( szDHT_errors[errorCode]);
   }
          
   // Check Lux Variation
-  int lux = 0; // TODO
-  Serial.print("lux: "); Serial.print(lux);Serial.print(" -- previous_lux: "); Serial.print(tab_lux[0]);Serial.print(" -- MAX_VAR_LUX: "); Serial.println(MAX_VAR_LUX);
-  if (lux != tab_lux[0]) {
-      if (MAX_VAR_LUX < abs(avg_lux - lux) && tab_lux[NB_LUX-1] != 0) {
-          return ALERT_LUX;
-      }    
-      avg_lux = 0;
-      for (i=NB_LUX-1;i>0;i--) { 
-          tab_lux[i] = tab_lux[i-1];
-          avg_lux += tab_lux[i];
-      }
-      tab_lux[0]=lux;
-      avg_lux = (avg_lux+lux)/NB_LUX;
+  
+  double lux = BH1720.BH1720_getLux();
+  status = BH1720.BH1720_getStatus();
+  if (status > 0)
+  {
+     Serial.print("Error BH1720_getLux: ");Serial.println(status);
+  }
+  else
+  {
+     Serial.print("lux: ");Serial.print(lux);Serial.print(" -- previous_lux: ");Serial.print(tab_lux[0]);Serial.print(" -- avg_lux: ");Serial.print(avg_lux);Serial.print(" -- MAX_VAR_LUX: ");Serial.println(MAX_VAR_LUX);
+     if (lux != tab_lux[0]) {
+        if (MAX_VAR_LUX < abs(avg_lux - lux) && tab_lux[NB_LUX-1] != 0) {
+           return ALERT_LUX;
+        }    
+        avg_lux = 0;
+        for (i=NB_LUX-1;i>0;i--) { 
+           tab_lux[i] = tab_lux[i-1];
+           avg_lux += tab_lux[i];
+        }
+        tab_lux[0]=lux;
+        avg_lux = (avg_lux+lux)/NB_LUX;
+     }
   }
       
   return NO_ALERT;              
@@ -462,6 +506,9 @@ int check ()
 
 int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
 {    
+ 
+ int HPos = 90;
+ int VPos = 90;
  unsigned long start = 0;
  uint8_t infolen = 0;
  int checkdir = SUCCESS;
@@ -515,7 +562,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen)
      break;
      
  case CMD_MOVE_TILT_PAN:    
-     Serial.print("CMD_MOVE_TILT_PAN: "); Serial.print((int)cmd[1]);Serial.print((int)cmd[2]);Serial.print((int)cmd[3]);Serial.println((int)cmd[4]);    
+     Serial.print("CMD_MOVE_TILT_PAN: "); Serial.print(cmd[1]);Serial.print(cmd[2]);Serial.print(cmd[3]);Serial.println(cmd[4]);    
      if (cmd[2] == 0) HPos = (int)cmd[1] + 90; else HPos = 90 - (int)cmd[1]; 
      if (cmd[4] == 0) VPos = (int)cmd[3] + 90; else VPos = 90 - (int)cmd[3]; 
      Serial.print("CMD_MOVE_TILT_PAN, HPos VPos: "); Serial.print(HPos);Serial.println(VPos);   

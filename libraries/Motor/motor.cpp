@@ -84,10 +84,10 @@ int motor_begin()
     
   // initialize the pin connected to the IR sensor 
   SharpIR.SharpIR_init(SHARP_IR_PIN,(long)SHARP_MODEL); 
-  ivalue = SharpIR.SharpIR_distance();
+  double distance = SharpIR.SharpIR_distance();
   Serial.println(" ");
-  Serial.print("SharpIR sensor, Distance: "); Serial.print(ivalue); Serial.println("mm");
-  lcd.print("IR:");lcd.print(ivalue);lcd.print(" mm");lcd.printByte(lcd_pipe);   
+  Serial.print("SharpIR sensor, Distance (max 800mm): "); Serial.print(distance); Serial.println("mm");
+  lcd.print("IR:");lcd.print((int)distance);lcd.print(" mm");lcd.printByte(lcd_pipe);   
   Serial.println("Init SharpIR sensor OK");
   delay(5*1000);lcd.clear(); 
 
@@ -123,7 +123,7 @@ int motor_begin()
   }
   else
   {
-     Serial.print ("ModelId: 0x"); Serial.println (reg16,HEX);
+     Serial.print("ModelId: 0x"); Serial.println (reg16,HEX);
   }   
   uint8_t reg8   = VL53L0X.getRevisionId();
   status = VL53L0X.VL53L0X_getStatus();
@@ -133,7 +133,10 @@ int motor_begin()
   }
   else
   {
-     Serial.print ("RevisionId: 0x"); Serial.println (reg8,HEX);
+     Serial.print("RevisionId: 0x"); Serial.println (reg8,HEX);
+     Serial.print("Address: 0x");
+     uint8_t address = VL53L0X.VL53L0X_getAddress();
+     Serial.println(address,HEX);       
   }
   delay(2000);
   
@@ -149,7 +152,7 @@ int motor_begin()
      }
      else
      {    
-        Serial.print("Distance: "); Serial.print(d); Serial.println("mm"); 
+        Serial.print("Distance (max 1200mm): "); Serial.print(d); Serial.println("mm"); 
         Serial.println("Init ToF VL53L0X OK");
      }    
   } 
@@ -550,8 +553,8 @@ int go(unsigned long timeout)
 
 int check_around()
 {
-    int distance_right = 0;
-    int distance_left = 0;
+    double distance_right = 0.0;
+    double distance_left = 0.0;
     int inputpin = HIGH; 
     
     // Check Contacts sensors, HIGH in normal situation
@@ -568,25 +571,19 @@ int check_around()
     IRServo.write(0);    // turn servo left
     delay(15*90);        // waits the servo to reach the position 
     distance_left = SharpIR.SharpIR_distance(); // Check distance on right side
-       
+    Serial.print("SharpIR sensor, distance_left: ");  Serial.print(distance_left);  Serial.println("mm");       
+    
     IRServo.write(180);  // turn servo right
     delay(15*180);       // waits the servo to reach the position 
     distance_right = SharpIR.SharpIR_distance(); // Check distance on left side
-   
+    Serial.print("SharpIR sensor, distance_right: "); Serial.print(distance_right); Serial.println("mm");
+    
     IRServo.write(90);   // reset servo position
     delay(15*90);        // waits the servo to reach the position 
 	 
-    if ((distance_left > DISTANCE_MIN) && (distance_left >= distance_right)) {
-         return DIRECTION_LEFT;     
-    }
-    else if ((distance_right > DISTANCE_MIN) && (distance_right >= distance_left)) {
-         return DIRECTION_RIGHT; 
-    }
-    else {    
-         Serial.print("SharpIR sensor, distance_left: ");  Serial.print(distance_left);  Serial.println("mm");
-         Serial.print("SharpIR sensor, distance_right: "); Serial.print(distance_right); Serial.println("mm");
-         return OBSTACLE_LEFT_RIGHT; 
-    }      
+    if ((distance_left > DISTANCE_MIN) && (distance_left >= distance_right))       return DIRECTION_LEFT;     
+    else if ((distance_right > DISTANCE_MIN) && (distance_right >= distance_left)) return DIRECTION_RIGHT; 
+    else                                                                           return OBSTACLE_LEFT_RIGHT;      
 }
 
 

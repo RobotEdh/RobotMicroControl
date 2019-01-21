@@ -819,6 +819,7 @@ uint16_t VL53L0XClass::readRangeContinuousMillimeters(void)
   // assumptions: Linearity Corrective Gain is 1000 (default);
   // fractional ranging is not enabled
   uint16_t range = readReg16BitHL(RESULT_RANGE_STATUS + 10);
+  if (range > 1200) range = 1200;  //  max = 1200 mm
 
   writeReg(SYSTEM_INTERRUPT_CLEAR, 0x01);
 
