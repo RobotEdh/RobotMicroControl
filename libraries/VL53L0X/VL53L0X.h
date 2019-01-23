@@ -10,6 +10,7 @@
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
 
+#define VL53L0X_NB_SAMPLE          9  // Number of sample to get mediane
 
 class VL53L0XClass
 {
@@ -133,6 +134,7 @@ class VL53L0XClass
     void stopContinuous(void);
     uint16_t readRangeContinuousMillimeters(void);
     uint16_t readRangeSingleMillimeters(void);
+    uint16_t VL53L0X_readMillimeters(void);
 
     inline void setTimeout(uint16_t timeout) { io_timeout = timeout; }
     inline uint16_t getTimeout(void) { return io_timeout; }
@@ -180,6 +182,7 @@ class VL53L0XClass
     static uint16_t encodeTimeout(uint16_t timeout_mclks);
     static uint32_t timeoutMclksToMicroseconds(uint16_t timeout_period_mclks, uint8_t vcsel_period_pclks);
     static uint32_t timeoutMicrosecondsToMclks(uint32_t timeout_period_us, uint8_t vcsel_period_pclks);
+    void sort16(uint16_t a[], int size);
 };
 
 #endif

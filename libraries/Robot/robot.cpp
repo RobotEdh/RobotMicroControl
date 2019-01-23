@@ -6,7 +6,6 @@ extern LiquidCrystal_I2C lcd;       // The LCD class
 extern CMPS12Class CMPS12;          // The Compass class
 
        DHT22Class DHT22;            // The Temperature&Humidity class      
-       MotionClass Motion;          // The Motion class
        JPEGCameraClass JPEGCamera;  // The Camera class 
        DS1307Class DS1307;          // The RTC class       
        IOTSerialClass IOTSerial;    // The IOT serial
@@ -19,6 +18,7 @@ extern SdFile FilePicture;   // SD File
 
 // data updated during interrupts
 volatile int IntIOT = 0; 
+volatile int IntMotion = 0; 
 
 int motor_state = STATE_STOP;
 int alert_status = 0;
@@ -50,6 +50,24 @@ void IntrIOT()  // IOT interrupt
     IntIOT = 1;
     digitalWrite(Led_Blue, HIGH);  // turn on led
 }
+
+void IntrMotion()  // Motion interrupt
+{
+    IntMotion = 1;
+    digitalWrite(Led_Red, HIGH);  // turn on led
+}
+
+// Wake up ESP
+void ESPWakeUp()
+{
+    // send a pulse
+    digitalWrite(WAKEUP_PIN, LOW);
+    delay(10);
+    digitalWrite(WAKEUP_PIN, HIGH);
+	// wait for ESP init
+	delay(1000);
+}
+
 
 void print_time()
 {
@@ -257,17 +275,13 @@ int robot_begin()
   }
   
   
-  // initialize the motion sensor
+  // set Motion interrupt
   Serial.println(" ");
-  Serial.println("Test Motion sensor in 5s"); 
-  delay(5*1000);  
-  pinMode(MOTION_PIN, INPUT);
-  
-  status = Motion.Motion_status();
-  if (status) Serial.println("Motion detected"); 
-  else        Serial.println(" No Motion detected"); 
-  Serial.println("Init Motion sensor OK");
+  Serial.println("Set Motion interrupt");
+  pinMode(MOTION_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(MOTION_PIN), IntrMotion, RISING);         // set Motion interrupt
 
+  
   // initialize RTC
   Serial.println(" ");
   status = DS1307.DS1307_init();
@@ -304,9 +318,12 @@ int robot_begin()
   pinMode(IOT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
  
+  // sets the digital pin WAKEUP_PIN as output
+  pinMode(WAKEUP_PIN, OUTPUT);          
+     
   interrupts(); // enable all interrupts
-  Serial.print("Init Interrupts OK, IntIOT: "); Serial.println(IntIOT);
-  
+  Serial.print("Init Interrupts OK, IntIOT: ");    Serial.println(IntIOT);
+  Serial.print("Init Interrupts OK, IntMotion: "); Serial.println(IntMotion);
   
   // Check I2C
   Serial.println(" ");
@@ -356,7 +373,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      Serial.print("obstacle_status: ");Serial.println(resp[OBSTACLE_STATUS]);
       
      // distance
-     uint16_t distance = VL53L0X.readRangeSingleMillimeters(); 
+     uint16_t distance = VL53L0X.VL53L0X_readMillimeters(); 
      if (distance > 0) resp[DISTANCE] = distance; // in mm
      else              resp[DISTANCE] = 0;
      Serial.print("distance: ");Serial.println(resp[DISTANCE]);
@@ -411,10 +428,10 @@ int check ()
   print_time();
 
   // Check Motion
-  int motion = Motion.Motion_status();
-  if (motion == 1) {
+  if (IntMotion == 1) {
        blink(Led_Red);   
-       Serial.print("Alert Motion");	
+       Serial.print("Alert Motion");
+       IntMotion = 0; //reset alert	
        return ALERT_MOTION;
   }
   else Serial.println("No Motion");
@@ -1048,10 +1065,10 @@ void robot_main ()
  
  while (1) {  // No stop
        currentTimeCheck = millis();
-       if ((currentTimeCheck > previousTimeCheck + freqCheck) && (freqCheck > 0)) {
+       if ( ((currentTimeCheck > previousTimeCheck + freqCheck) || (IntMotion == 1)) && (freqCheck > 0)) {  // check every freqCheck or if motion alert
              previousTimeCheck = currentTimeCheck;   
              Serial.print("Call command CHECK every ");Serial.print(freqCheck/1000);Serial.println(" seconds");
- 
+             Serial.print("IntMotion: ");Serial.println(IntMotion);
              
              cmd[0] = CMD_CHECK;
              cmd[1] = (uint16_t)freqCheck/1000;
@@ -1083,6 +1100,7 @@ void robot_main ()
              
              // Send Infos + last 3 pictures in WIFI to the PI server if it is activated
              if ((PI_activated == PI_ALERT_ONLY)|| (PI_activated == PI_ALERT_INFOS)) {
+                ESPWakeUp();  // wake up ESP
                 
                 resp[NO_PICTURE] = 0; // No picture send
                 //Send the Infos message first time quickly

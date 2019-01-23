@@ -1057,3 +1057,38 @@ uint8_t VL53L0XClass::VL53L0X_getAddress()
 {
   return address;
 }
+
+
+// Sort an array
+void VL53L0XClass::sort16(uint16_t a[], int size) {
+    for(int i=0; i<(size-1); i++) {
+        bool flag = true;
+        for(int o=0; o<(size-(i+1)); o++) {
+            if(a[o] > a[o+1]) {
+                uint16_t t = a[o];
+                a[o] = a[o+1];
+                a[o+1] = t;
+                flag = false;
+            }
+        }
+        if (flag) break;
+    }
+}
+
+uint16_t VL53L0XClass::VL53L0X_readMillimeters(void)
+{
+  uint16_t distance[VL53L0X_NB_SAMPLE]; 
+  
+  // read n values
+  for (int i=0; i<VL53L0X_NB_SAMPLE; i++){
+        distance[i] = readRangeSingleMillimeters();
+        if ((timeoutOccurred()) || (VL53L0X_getStatus())) i--;  // ignore errors
+  }
+  
+  // sort
+  sort16(distance,VL53L0X_NB_SAMPLE);
+  
+  // return mediane
+  return distance[VL53L0X_NB_SAMPLE/2];
+  
+}

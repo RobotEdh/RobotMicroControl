@@ -113,7 +113,7 @@ int motor_begin()
   Serial.println("Init ToF VL53L0X");
   VL53L0X.init();
   VL53L0X.setTimeout(500);
-  VL53L0X.setMeasurementTimingBudget(200000);
+  VL53L0X.setMeasurementTimingBudget(200000);  // increase timing budget to 200 ms
   
   uint16_t reg16 = VL53L0X.getModelId();
   status = VL53L0X.VL53L0X_getStatus();
@@ -136,27 +136,13 @@ int motor_begin()
      Serial.print("RevisionId: 0x"); Serial.println (reg8,HEX);
      Serial.print("Address: 0x");
      uint8_t address = VL53L0X.VL53L0X_getAddress();
-     Serial.println(address,HEX);       
+     Serial.println(address,HEX); 
+     delay(2000); 
+       
+     uint16_t d = VL53L0X.VL53L0X_readMillimeters();
+     Serial.print("Distance (max 1200mm): "); Serial.print(d); Serial.println("mm"); 
+     Serial.println("Init ToF VL53L0X OK");     
   }
-  delay(2000);
-  
-  uint16_t d = VL53L0X.readRangeSingleMillimeters();
-  if (VL53L0X.timeoutOccurred()) Serial.print(" TIMEOUT");
-  else
-  { 
-     status = VL53L0X.VL53L0X_getStatus();
-     if (status > 0)
-     {
-        Serial.print("readRangeSingleMillimeters KO, I2C error: ");Serial.println(status);
-        Serial.println("Init ToF VL53L0X KO");
-     }
-     else
-     {    
-        Serial.print("Distance (max 1200mm): "); Serial.print(d); Serial.println("mm"); 
-        Serial.println("Init ToF VL53L0X OK");
-     }    
-  } 
-   
     
   // initialize the Compass CMPS12
   Serial.println (" ");
@@ -530,19 +516,16 @@ int go(unsigned long timeout)
        if (millis() - current > 1*1000) { // check every 1 second
              current = millis();
              
-             distance = VL53L0X.readRangeSingleMillimeters(); // Check distance minimum
-             if (VL53L0X.timeoutOccurred()) Serial.print(" TIMEOUT");
-             else
-             { 
-                Serial.print("-->distance: ");
-                Serial.print(distance); 
-                Serial.println("mm");    
+             distance = VL53L0X.VL53L0X_readMillimeters(); // Check distance minimum
+             Serial.print("-->distance: ");
+             Serial.print(distance); 
+             Serial.println("mm");    
 
-                if ((distance > 0) && (distance < DISTANCE_MIN)) 
-                {
-                   return OBSTACLE;       
-                }                                  
-             }
+             if ((distance > 0) && (distance < DISTANCE_MIN)) 
+             {
+                return OBSTACLE;       
+             }                                  
+
         }  // end check every 1 second  
        
  }  // end while (millis() - start < timeout)

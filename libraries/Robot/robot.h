@@ -60,11 +60,16 @@
 #define Led_Red      23  
 #define Led_Blue     24 
 #define BUZZ_PIN     25          
-#define MOTION_PIN   28   // Pin used by the Motion sensor pin 28
 #define DHT22_PIN    34   // Pin used by the Temperature&Humidity sensor pin 34
+
+
+#define MOTION_PIN    2   // Pin used by the Motion connected to interrupt INT0 on MEGA2560
+void IntrMotion();        // interrupt handler Motion
 
 #define IOT_PIN       3   // Pin used by the IOT connected to interrupt INT1 on MEGA2560
 void IntrIOT();           // interrupt handler IOT
+
+#define WAKEUP_PIN  36   // Pin used by the MEGA2560 to wake-up the ESp
 
 void print_time(void );
 /* Description: print date & time                                             */                                            
