@@ -1151,7 +1151,9 @@ void robot_main ()
                    cmd[0] = CMD_INFOS;
                    ret = robot_command (cmd, resp, &resplen);
                    Serial.print("Call robot_command, ret: "); Serial.println(ret);
-       
+                   
+                   ESPWakeUp();  // wake up ESP
+                   
                    Serial.println("Call IOTSsend 1 INFOS");
                    ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
              }

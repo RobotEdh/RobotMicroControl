@@ -146,8 +146,8 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen);
 /*              makePicture                                                   */   
 /*              go                                                            */  
 
-
-int robot_IOT();    
+void ESPWakeUp(void); 
+int robot_IOT(void);    
 int robot_Send_Picture (uint8_t n);
-void robot_main(); 
+void robot_main(void); 
 #endif
