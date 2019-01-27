@@ -1,13 +1,4 @@
-
-#include <ESP8266WiFi.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
-#include <IOTSerial.h>
-#include "IoTWiFiServer.h"
-
-
-const char *ssid     = "WIFICOTEAU";
-const char *password = "kitesurf9397";
+#include <IoTWiFiServer.h>
 
 ESP8266WebServer tcpServer (80);
 IOTSerialClass IOTSerial;
@@ -59,8 +50,10 @@ void IoTWiFiServerClass::IoTWShandleNotFound() {
 
 }
 
-void IoTWiFiServerClass::IoTWSbegin()
+int IoTWiFiServerClass::IoTWSbegin()
 {
+    char ssid[31];
+    char password[64];
     int ret = SUCCESS;
     
     //Serial.println("Begin IoTWSbegin");
@@ -72,7 +65,16 @@ void IoTWiFiServerClass::IoTWSbegin()
     pinMode(4, OUTPUT);            // sets pin as output,used to interrupt the robot
    
     // We start by connecting to a WiFi network
-
+    ret =  get_credentials(ssid, password);
+    if (ret == 0) {
+       //Serial.print ("ssid: ");Serial.println (ssid);
+       //Serial.print ("password: ");Serial.println (password);   
+    }
+    else  {  
+       //Serial.print ("Error get credentials: ");Serial.println (ret);
+       return ret;
+    }
+    
     //Serial.print("Connecting to ");
     //Serial.println(ssid);
              
@@ -87,7 +89,7 @@ void IoTWiFiServerClass::IoTWSbegin()
     //Serial.println("WiFi connected");  
     //Serial.println("IP address: ");
     //Serial.println(WiFi.localIP());
-     
+
     // MAC address 
     byte mac[6]; 
     WiFi.macAddress(mac);
@@ -104,21 +106,34 @@ void IoTWiFiServerClass::IoTWSbegin()
     Serial.print(":");
     Serial.println(mac[5],HEX);
     */
-    if ( MDNS.begin ( "esp8266" ) ) {
+    if (MDNS.begin( "esp8266" )) {
          // Serial.println ( "MDNS responder started" );
     }
-
+    else  {  
+       //Serial.print ("MDNS responder started");
+       return -100;
+    }
+    
     tcpServer.on ( "/robotCmd/", std::bind(&IoTWiFiServerClass::IoTWShandleRoot, this));
     tcpServer.onNotFound (std::bind(&IoTWiFiServerClass::IoTWShandleNotFound, this));
     tcpServer.begin();
     //Serial.println ( "HTTP server started" );    
     
     ret = IOTSerial.IOTSbegin(0); // Serial port
+    if (ret != 0) {
+       //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
+       return ret;
+    }
     ret = IOTSerial.IOTSflush(0); // start clean
-    
+    if (ret != 0) {
+       //Serial.print ("Error IOTSflush: ");Serial.println (ret);
+       return ret;
+    } 
+       
     digitalWrite(4, LOW); // reset interrupt of the Robot
     digitalWrite(5, LOW); // led off
-                          
+    
+    return SUCCESS;                  
 }
 
 
@@ -355,5 +370,5 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
            _Noise =          value[11];        
            return SUCCESS; 
     }
-  
+    return -10;  // unknow command
 }

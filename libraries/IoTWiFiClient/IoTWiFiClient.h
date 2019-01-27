@@ -1,11 +1,20 @@
 #ifndef IoTWiFiClient_h
 #define IoTWiFiClient_h
 
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+#include <IOTSerial.h>
+#include <ESPcredentials.h>
+
 #define SUCCESS              0
 
 class IoTWiFiClientClass
 {
   public:
+  void ESPblink(void);
+  /* Blink the led                                              */  
+    
   int IoTWCbegin (void);
   /* Connect to SSID WIFICOTEAU2                                */
   /* Init IOTSerial                                             */

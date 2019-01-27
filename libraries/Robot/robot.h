@@ -60,7 +60,7 @@
 #define Led_Red      23  
 #define Led_Blue     24 
 #define BUZZ_PIN     25          
-#define DHT22_PIN    34   // Pin used by the Temperature&Humidity sensor pin 34
+#define DHT22_PIN    38   // Pin used by the Temperature&Humidity sensor pin 38
 
 
 #define MOTION_PIN    2   // Pin used by the Motion connected to interrupt INT0 on MEGA2560
@@ -146,7 +146,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen);
 /*              makePicture                                                   */   
 /*              go                                                            */  
 
-void ESPWakeUp(void); 
+void WakeUpESP(void); 
 int robot_IOT(void);    
 int robot_Send_Picture (uint8_t n);
 void robot_main(void); 

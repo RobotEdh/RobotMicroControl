@@ -58,7 +58,7 @@ void IntrMotion()  // Motion interrupt
 }
 
 // Wake up ESP
-void ESPWakeUp()
+void WakeUpESP()
 {
     // send a pulse
     digitalWrite(WAKEUP_PIN, LOW);

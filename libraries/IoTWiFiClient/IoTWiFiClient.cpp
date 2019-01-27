@@ -1,32 +1,43 @@
-// Basic serial communication with ESP8266
-// Uses serial monitor for communication with ESP8266
-//
-// When a command is entered in to the serial monitor on the computer 
-// the Arduino will relay it to the ESP8266
-//
- 
-#include <ESP8266WiFi.h>
-#include <IOTSerial.h>
-#include "IoTWiFiClient.h"
+#include <IoTWiFiClient.h>
 
-const char* ssid     = "WIFICOTEAU";     // WIFI SSID
-const char* password = "kitesurf9397";    // WIFI Password
 const char* host = "192.168.0.18";        // Server IP
 const int   port = 8080;                  // Server Port
 
 WiFiClient tcpClient;
 IOTSerialClass IOTSerial;
 
+void IoTWiFiClientClass::ESPblink(void)
+{
+  // blink the resquested led
+  for (int i=0;i<3;i++){
+        digitalWrite(5, HIGH);  // turn on led
+        delay(500);
+        digitalWrite(5, LOW);  // turn off led
+        delay(500);  
+  }          
+}
 
 int IoTWiFiClientClass::IoTWCbegin()
 {
-    int ret=SUCCESS;
-    
-    pinMode(5, OUTPUT); 
-    digitalWrite(5, HIGH); // Led on
-    
+    char ssid[31];
+    char password[64];
+    int ret = SUCCESS;
+
     //Serial.println("Begin IoTWCbegin");
+        
+    pinMode(5, OUTPUT); 
+    digitalWrite(5, HIGH); // Led on  
+
     // We start by connecting to a WiFi network
+    ret =  get_credentials(ssid, password);
+    if (ret == 0) {
+       //Serial.print ("ssid: ");Serial.println (ssid);
+       //Serial.print ("password: ");Serial.println (password);   
+    }
+    else  {  
+       //Serial.print ("Error get credentials: ");Serial.println (ret);
+       return ret;
+    }
 
     //Serial.print("Connecting to ");
     //Serial.println(ssid);
@@ -59,10 +70,15 @@ int IoTWiFiClientClass::IoTWCbegin()
     Serial.print(":");
     Serial.println(mac[5],HEX);
     */
-    ret = IOTSerial.IOTSbegin(0); // Serial
+    ret = IOTSerial.IOTSbegin(0); // Serial port
+    if (ret != 0) {
+       //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
+       return ret;
+    }
     
     digitalWrite(5, LOW); // Led off
-    return ret;                   
+    
+    return SUCCESS;                   
 }
 
 

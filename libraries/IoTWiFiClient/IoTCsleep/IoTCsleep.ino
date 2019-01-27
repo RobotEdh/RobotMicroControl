@@ -1,22 +1,21 @@
-#include <ESP8266WiFi.h>
-#include <IOTSerial.h>
-#include "IoTWiFiClient.h"
+#include <IoTWiFiClient.h>
 
 IoTWiFiClientClass IoTWiFiClient;
 
-  
+ 
 void setup()
 {
     char infos[1000];
     uint8_t tag;
     int n;
     uint16_t size;
-    int ret = SUCCESS; 
+    int ret = 0; 
      
     //Serial.begin(9600);        // open serial ports, used for logging, sets data rate to 9600 bps
    
     //Serial.println("Call IoTWCbegin");
     ret = IoTWiFiClient.IoTWCbegin();
+    if (ret != 0) exit (0);
    
     //Serial.println("End setup"); 
     
@@ -37,7 +36,9 @@ void setup()
          }
        }     
     } // end while
-     
+    
+    IoTWiFiClient.ESPblink();
+
     // sleep until wake up on pin RST   
     ESP.deepSleep(0,WAKE_RF_DEFAULT); 
  }
