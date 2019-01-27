@@ -16,4 +16,4 @@ In addition:
   
   
   
-  NB: It is recommended to modified the size of the Arduino serial buffers SERIAL_TX_BUFFER_SIZE and SERIAL_RX_BUFFER_SIZE from 64 to 128 in order to have the same than in ESP. You can do it by updating the fie HardwareSerial.h located in the Arduino core sources directory. 
+  NB: It is recommended to modifhy the size of the Arduino serial buffers SERIAL_TX_BUFFER_SIZE and SERIAL_RX_BUFFER_SIZE from 64 to 128 in order to have the same than in ESP. You can do it by updating the fie HardwareSerial.h located in the Arduino core sources directory. 
