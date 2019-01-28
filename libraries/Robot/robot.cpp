@@ -1100,7 +1100,7 @@ void robot_main ()
              
              // Send Infos + last 3 pictures in WIFI to the PI server if it is activated
              if ((PI_activated == PI_ALERT_ONLY)|| (PI_activated == PI_ALERT_INFOS)) {
-                ESPWakeUp();  // wake up ESP
+                WakeUpESP();  // wake up ESP
                 
                 resp[NO_PICTURE] = 0; // No picture send
                 //Send the Infos message first time quickly
@@ -1152,7 +1152,7 @@ void robot_main ()
                    ret = robot_command (cmd, resp, &resplen);
                    Serial.print("Call robot_command, ret: "); Serial.println(ret);
                    
-                   ESPWakeUp();  // wake up ESP
+                   WakeUpESP();  // wake up ESP
                    
                    Serial.println("Call IOTSsend 1 INFOS");
                    ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
