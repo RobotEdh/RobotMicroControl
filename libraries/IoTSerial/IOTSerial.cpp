@@ -398,7 +398,13 @@ void IOTSerialClass::IOTSsend0(uint8_t msgtype, uint8_t cmdType, uint16_t *param
        Serial.write(TAG_PICTURE);
        Serial.write(uint8_t(0));
        Serial.write(paramlen);
-       break;                
+       break;  
+    
+    case SLEEP:
+       Serial.write(TAG_SLEEP);
+       Serial.write(uint8_t(0));
+       Serial.write(paramlen);
+       break;                     
     }     
         
     for (uint8_t j=0; j<paramlen; j++)
@@ -419,14 +425,14 @@ void IOTSerialClass::IOTSsend1(uint8_t msgtype, uint8_t cmdType, uint16_t *param
     Serial1.write(SBN1);
     Serial1.write(8+(paramlen*4));  // msg len    
     Serial1.write(SBN2);
-    
+
     Serial1.write(TAGSYMBOL);
     Serial1.write(TAG_CMDID);
     Serial1.write(uint8_t(0));
     Serial1.write(cmdId);
     
     Serial1.write(TAGSYMBOL);
-    
+
     switch (msgtype) {
         
     case RESP_OK:
@@ -452,7 +458,13 @@ void IOTSerialClass::IOTSsend1(uint8_t msgtype, uint8_t cmdType, uint16_t *param
        Serial1.write(TAG_PICTURE);
        Serial1.write(uint8_t(0));
        Serial1.write(paramlen);
-       break;                
+       break;
+    
+    case SLEEP:
+       Serial1.write(TAG_SLEEP);
+       Serial1.write(uint8_t(0));
+       Serial1.write(paramlen);
+       break;                        
     }     
         
     for (uint8_t j=0; j<paramlen; j++)
@@ -465,7 +477,6 @@ void IOTSerialClass::IOTSsend1(uint8_t msgtype, uint8_t cmdType, uint16_t *param
         
     Serial1.write(EBN1);
     Serial1.write(EBN2);
-
 }
 
 
@@ -506,7 +517,13 @@ void IOTSerialClass::IOTSsend2(uint8_t msgtype, uint8_t cmdType, uint16_t *param
        Serial2.write(TAG_PICTURE);
        Serial2.write(uint8_t(0));
        Serial2.write(paramlen);
-       break;                
+       break;
+    
+    case SLEEP:
+       Serial2.write(TAG_SLEEP);
+       Serial2.write(uint8_t(0));
+       Serial2.write(paramlen);
+       break;                        
     }     
         
     for (uint8_t j=0; j<paramlen; j++)

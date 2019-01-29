@@ -12,13 +12,16 @@
 class IoTWiFiClientClass
 {
   public:
-  void ESPblink(void);
+  void ESPblink(int n);
   /* Blink the led                                              */  
     
   int IoTWCbegin (void);
-  /* Connect to SSID WIFICOTEAU2                                */
+  /* Connect to SSID                                            */
   /* Init IOTSerial                                             */
-  
+ 
+  void IoTWCend (void);
+  /* End IOTSerial                                              */ 
+   
   int IoTWCSendPicture (int n, uint16_t size); 
   /* call IoTWCSendInfos                                        */
   /* call 3 times IoTWCSendFastPicture                          */

@@ -60,12 +60,21 @@ void IntrMotion()  // Motion interrupt
 // Wake up ESP
 void WakeUpESP()
 {
+    int ret = 0;
+    
     // send a pulse
     digitalWrite(WAKEUP_PIN, LOW);
     delay(10);
     digitalWrite(WAKEUP_PIN, HIGH);
+    Serial.println ("Wake up ESP sent");
 	// wait 10s for ESP init
 	delay(10000);
+	
+	// re-initialize the IOT Serial 1 
+	ret = IOTSerial.IOTSend(1); // close the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+    ret = IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+    ret = IOTSerial.IOTSflush(1); // flush to start clean
+    Serial.println ("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK");
 }
 
 
@@ -1084,7 +1093,7 @@ void robot_main ()
        PI_currentTimeInfos = millis();  
        if (alert_status > 0)
        {
-             Serial.print("Alert trigerred: "); Serial.println(alert_status);	// robot has detected something...
+             Serial.print  ("Alert trigerred: "); Serial.println(alert_status);	// robot has detected something...
              Serial.println("***************");
              Serial.println("");
              
@@ -1102,6 +1111,7 @@ void robot_main ()
              
              // Send Infos + last 3 pictures in WIFI to the PI server if it is activated
              if ((PI_activated == PI_ALERT_ONLY)|| (PI_activated == PI_ALERT_INFOS)) {
+                
                 WakeUpESP();  // wake up ESP
                 
                 resp[NO_PICTURE] = 0; // No picture send
@@ -1119,7 +1129,11 @@ void robot_main ()
                 resp[NO_PICTURE] = n_pict;
                 Serial.println("Call IOTSsend 1 INFOS");
                 ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
-                Serial.print("Call IOTSsend, ret: "); Serial.println(ret);              
+                Serial.print("Call IOTSsend, ret: "); Serial.println(ret);   
+                
+                ret = IOTSerial.IOTSsend (1, SLEEP);
+                Serial.print("Call IOTSsend SLEEP, ret: "); Serial.println(ret);         
+                           
                 alert_status = 0;
              }
              else
@@ -1161,7 +1175,11 @@ void robot_main ()
                    
                    Serial.println("Call IOTSsend 1 INFOS");
                    ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
-                   Serial.print("Call IOTSsend, ret: "); Serial.println(ret);
+                   Serial.print("Call IOTSsend INFOS, ret: "); Serial.println(ret);
+                   
+                   ret = IOTSerial.IOTSsend (1, SLEEP);
+                   Serial.print("Call IOTSsend SLEEP, ret: "); Serial.println(ret);
+
                    Serial.println(" "); 
              }
         

@@ -61,6 +61,7 @@ const uint8_t RESP_OK      = 2;
 const uint8_t RESP_KO      = 3;
 const uint8_t INFOS        = 4;
 const uint8_t PICTURE      = 5;
+const uint8_t SLEEP        = 6;
 
 const uint8_t TAG_CMD      = 'C';
 const uint8_t TAG_CMDID    = 'I';
@@ -68,6 +69,7 @@ const uint8_t TAG_PARAM    = 'P';
 const uint8_t TAG_RESP     = 'R';
 const uint8_t TAG_INFOS    = 'F';
 const uint8_t TAG_PICTURE  = 'U';
+const uint8_t TAG_SLEEP    = 'S';
 const uint8_t TAGSYMBOL    = '#';
 const uint8_t SBN1 = 0xFA;
 const uint8_t SBN2 = 0xFB;

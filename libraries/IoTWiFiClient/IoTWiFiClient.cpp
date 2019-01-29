@@ -6,10 +6,10 @@ const int   port = 8080;                  // Server Port
 WiFiClient tcpClient;
 IOTSerialClass IOTSerial;
 
-void IoTWiFiClientClass::ESPblink(void)
+void IoTWiFiClientClass::ESPblink(int n)
 {
-  // blink the resquested led during 6s
-  for (int i=0;i<5;i++){
+  // blink the resquested led n times
+  for (int i=0;i<n;i++){
         digitalWrite(5, HIGH);  // turn on led
         delay(500);
         digitalWrite(5, LOW);  // turn off led
@@ -70,15 +70,24 @@ int IoTWiFiClientClass::IoTWCbegin()
     Serial.print(":");
     Serial.println(mac[5],HEX);
     */
-    ret = IOTSerial.IOTSbegin(0); // Serial port
+    ret = IOTSerial.IOTSbegin(0); // Init Serial port
     if (ret != 0) {
        //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
        return ret;
     }
     
+    // Swap Serial port in order to avoit conflict at startup with ESP core logging
+    Serial.swap();
+    
     digitalWrite(5, LOW); // Led off
     
     return SUCCESS;                   
+}
+
+
+void IoTWiFiClientClass::IoTWCend()
+{
+    IOTSerial.IOTSend(0);
 }
 
 
@@ -217,6 +226,12 @@ int IoTWiFiClientClass::IoTWCReceive (char *infos, uint8_t *type, int *n, uint16
                     strcat(buf,"&");
        }
        sprintf(infos, buf);
+    }
+    else if (tag[1]== TAG_SLEEP)
+    {
+       *type = SLEEP;
+       *n = 0;
+       *size = 0;
     }
     else
     {    
