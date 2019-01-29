@@ -176,7 +176,7 @@ int IOTSerialClass::IOTSRawread(int snum)
 }
 
 // Read a structured message
-int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
+int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen, unsigned long timeout)
 {
 	int     byteread = 0;
     uint8_t buf = 0;
@@ -192,7 +192,7 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
 	*msglen = 0;
 	
 	//Get the response from the IOT and add it to the response string
-	while ((istop != 2) && (i < MSG_SIZE_MAX) && ( millis()< previousTime0+ (60UL*1000UL)))
+	while ((istop != 2) && (i < MSG_SIZE_MAX) && ( millis()< previousTime0 + timeout))
 	{
         buf = 0;
         ibuf = -9;
@@ -202,7 +202,7 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
         
         case 0:
 
-  		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
+  		  while((byteread == 0) && ( millis()< previousTime + timeout)) // waiting for data until 60 seconds in the serial buffer
           {
 #if defined(ESP8266)            
              yield();  // to avoid watchdog timer reseting the ESP8266. 
@@ -213,7 +213,7 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
           break;
         
         case 1:
-		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
+		  while((byteread == 0) && ( millis()< previousTime + timeout)) // waiting for data until 60 seconds in the serial buffer
           {
               byteread = Serial1.available();
 #if defined(ESP8266)            
@@ -230,7 +230,7 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen)
           break;          
         
         case 2:
-		  while((byteread == 0) && ( millis()< previousTime+ (60UL*1000UL))) // waiting for data until 60 seconds in the serial buffer
+		  while((byteread == 0) && ( millis()< previousTime + timeout)) // waiting for data until 60 seconds in the serial buffer
           {
 #if defined(ESP8266)            
               yield();  // to avoid watchdog timer reseting the ESP8266. 

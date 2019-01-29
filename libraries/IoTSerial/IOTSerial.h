@@ -122,7 +122,7 @@ class IOTSerialClass
         /* lib:         Serialx.available                                             */
         /*              Serialx.read                                                  */  
                     		
-		int IOTSread(int snum, uint8_t *msg, uint8_t *msglen);
+		int IOTSread(int snum, uint8_t *msg, uint8_t *msglen, unsigned long timeout);
         /* Description: Read a structued message                                      */                                            
         /* input:       snum                                                          */ 
         /*                  = Serial port number: 0, 1 or 2                           */ 

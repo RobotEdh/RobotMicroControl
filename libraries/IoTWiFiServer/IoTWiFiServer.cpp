@@ -267,7 +267,7 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     digitalWrite(4, LOW); // reset interrupt of the Robot
     //Serial.print("Call IOTSsend");Serial.print(", paramlen: "); Serial.print((int)paramlen);Serial.print(", cmdId: "); Serial.println((int)_cmdId);
     delay(100);
-    ret = IOTSerial.IOTSread(0, msg, &msg_len); // read the response from the Robot
+    ret = IOTSerial.IOTSread(0, msg, &msg_len, 60000UL); // read the response from the Robot, timeout 60s
     //Serial.print("Call IOTSread, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
     digitalWrite(5, LOW); // led off 
     if (ret < 0) {_AlertStatus = (uint16_t)msg_len; _result = ret; return _result;}

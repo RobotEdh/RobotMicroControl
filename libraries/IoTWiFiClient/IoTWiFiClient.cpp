@@ -8,8 +8,8 @@ IOTSerialClass IOTSerial;
 
 void IoTWiFiClientClass::ESPblink(void)
 {
-  // blink the resquested led
-  for (int i=0;i<3;i++){
+  // blink the resquested led during 6s
+  for (int i=0;i<5;i++){
         digitalWrite(5, HIGH);  // turn on led
         delay(500);
         digitalWrite(5, LOW);  // turn off led
@@ -174,10 +174,11 @@ int IoTWiFiClientClass::IoTWCReceive (char *infos, uint8_t *type, int *n, uint16
     int ret = SUCCESS;
 
     //Serial.println("Begin IoTWCReceive");
- 
-    ret = IOTSerial.IOTSread(0, msg, &msg_len);
+    digitalWrite(5, HIGH);    // Led on 
+    ret = IOTSerial.IOTSread(0, msg, &msg_len, 10000UL);  // timeout 10s
     //Serial.print("Call IOTSread, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
-
+    digitalWrite(5, LOW);    // Led off 
+    
     if (ret != SUCCESS) {
        //Serial.println("error IOTSread");
        return ret;  

@@ -64,8 +64,8 @@ void WakeUpESP()
     digitalWrite(WAKEUP_PIN, LOW);
     delay(10);
     digitalWrite(WAKEUP_PIN, HIGH);
-	// wait for ESP init
-	delay(1000);
+	// wait 10s for ESP init
+	delay(10000);
 }
 
 
@@ -318,9 +318,10 @@ int robot_begin()
   pinMode(IOT_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
  
-  // sets the digital pin WAKEUP_PIN as output
+  // sets the digital pin WAKEUP_PIN as output and keep high level
   pinMode(WAKEUP_PIN, OUTPUT);          
-     
+  digitalWrite(WAKEUP_PIN, HIGH);
+      
   interrupts(); // enable all interrupts
   Serial.print("Init Interrupts OK, IntIOT: ");    Serial.println(IntIOT);
   Serial.print("Init Interrupts OK, IntMotion: "); Serial.println(IntMotion);
@@ -1077,6 +1078,7 @@ void robot_main ()
              Serial.print("Call robot_command, ret: "); Serial.println(ret);	
              alert_status = resp[0];  
              Serial.print("Alert: "); Serial.println(alert_status);
+             Serial.println(" "); 
        }
        
        PI_currentTimeInfos = millis();  
@@ -1109,21 +1111,23 @@ void robot_main ()
                 
                 //Send the 3 last pictures
                 Serial.println("Call robot_Send_Picture ");
-                if (n_pict > 2) ret = robot_Send_Picture(n_pict-2); 
-                if (n_pict > 1) ret = robot_Send_Picture(n_pict-1);  
-                ret = robot_Send_Picture(n_pict); 
+                if (n_pict > 3) ret = robot_Send_Picture(n_pict-2); 
+                if (n_pict > 2) ret = robot_Send_Picture(n_pict-1);  
+                if (n_pict > 1) ret = robot_Send_Picture(n_pict); 
                 
                 //Send the Infos message again to attach pictures
                 resp[NO_PICTURE] = n_pict;
                 Serial.println("Call IOTSsend 1 INFOS");
                 ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
+                Serial.print("Call IOTSsend, ret: "); Serial.println(ret);              
                 alert_status = 0;
              }
              else
              {
                 Serial.println("PI communication not activated"); 
                 alert_status = 0;   
-             }                        
+             } 
+             Serial.println(" ");                        
        }
        else if (IntIOT > 0) { // IOT wants to do something...
              Serial.println("Request received from IOT, call robot_IOT");	
@@ -1140,6 +1144,7 @@ void robot_main ()
              {
                    Serial.println("robot_IOT OK"); 
              }
+             Serial.println(" "); 
 
        }
        else if (PI_activated == PI_ALERT_INFOS)
@@ -1156,6 +1161,8 @@ void robot_main ()
                    
                    Serial.println("Call IOTSsend 1 INFOS");
                    ret = IOTSerial.IOTSsend (1, INFOS, resp, resplen);
+                   Serial.print("Call IOTSsend, ret: "); Serial.println(ret);
+                   Serial.println(" "); 
              }
         
        }   
@@ -1166,8 +1173,8 @@ void robot_main ()
              cmd[1] = GOtimeout;
              cmd[2] = 0;   // na  
              ret = robot_command (cmd, resp, &resplen);
-  
              Serial.print("Call robot_command, ret: "); Serial.println(ret);
+             Serial.println(" ");             
        }         
  } // end while 
  
@@ -1191,7 +1198,7 @@ int robot_IOT ()
  Serial.println("Start robot_IOT");
 
  //Read the message received from IOT
- ret = IOTSerial.IOTSread(2, msg, &msg_len);
+ ret = IOTSerial.IOTSread(2, msg, &msg_len, 60000UL);  // timeout 60s
  Serial.print("Call IOTSread 2, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
 
  if (ret != SUCCESS) {
@@ -1303,7 +1310,7 @@ int robot_Send_Picture (uint8_t n)
  ret = IOTSerial.IOTSsend(1, PICTURE, param, paramlen); 
             
  //Read the message replied to be sure that the client is ready to receive the picture
- ret = IOTSerial.IOTSread(1, msg, &msg_len);
+ ret = IOTSerial.IOTSread(1, msg, &msg_len, 60000UL);  // timeout 60s
  Serial.print("Call IOTSread 1, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
 
  if (ret != SUCCESS) {

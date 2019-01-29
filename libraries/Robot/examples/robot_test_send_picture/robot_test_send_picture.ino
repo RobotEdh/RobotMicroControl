@@ -104,7 +104,7 @@ int test()
  ret = IOTSerial.IOTSsend(1, PICTURE, param, paramlen); 
             
  //Read the message replied to be sure that the client is ready to receive the picture
- ret = IOTSerial.IOTSread(1, msg, &msg_len);
+ ret = IOTSerial.IOTSread(1, msg, &msg_len, 60000UL);  // timeout 60s
  Serial.print("Call IOTSread 1, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
 
  if (ret != SUCCESS) {

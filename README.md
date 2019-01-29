@@ -8,9 +8,9 @@ In addition:
   There is one specific folder for the main programm that should run on Arduino MEGA25620, it is named Robot.
   This folder contains several sketchs depending on the type of implementation, the more complete is robot_IoT that commnunicate with 2 ESP8266
   
-  There is one specific folder for the WIFI Server programm that should run on ESP8266, it is named IoTWiFiServer. The final skecth is IoTS
+  There is one specific folder for the WIFI Server programm that should run on ESP8266, it is named IoTWiFiServer. The final sketch is IoTS
   
-  There is one specific folder for the WIFI Client programm that should run on ESP8266, it is named IoTWiFiClient. The final skecth is IoTCsleep, it includes deep Sleep feature to reduce consumption.
+  There is one specific folder for the WIFI Client programm that should run on ESP8266, it is named IoTWiFiClient. The final sketch is IoTCsleep, it includes deep Sleep feature to reduce consumption.
   
   There is one specific folder to set up WIFI credentials for ESP8266, it is named ESP8266. WIFI credentials are stored in the flash memory of the ESP (so they are not displayed in Git!)
   
