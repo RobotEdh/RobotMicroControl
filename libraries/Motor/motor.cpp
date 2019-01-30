@@ -27,8 +27,8 @@ int motor_begin()
   int ivalue = 0;
   uint8_t status = 0;
  
-  Serial.println("Begin Motor Init");
-  Serial.println("****************");
+  Serial.println(F("Begin Motor Init"));
+  Serial.println(F("****************"));
 
   // initialize the lcd 
   lcd.init();
@@ -45,7 +45,7 @@ int motor_begin()
 
   delay (5*1000);
   lcd.clear();
-  Serial.println("Init LCD OK");
+  Serial.println(F("Init LCD OK"));
   lcd.print("Begin Motor Init");
   lcd.setCursor(0,1); 
   lcd.print("Init LCD OK     ");
@@ -63,7 +63,7 @@ int motor_begin()
   
   stop();
   lcd.print("Init motors OK");
-  Serial.println("Init motors OK");
+  Serial.println(F("Init motors OK"));
   delay(5*1000);lcd.clear(); 
    
 
@@ -71,29 +71,29 @@ int motor_begin()
   pinMode(ContactRightPin, INPUT);
   pinMode(ContactLeftPin, INPUT);
   
-  Serial.println(" ");
-  Serial.println("Test Contact sensors in 5s"); 
+  Serial.println(F(" "));
+  Serial.println(F("Test Contact sensors in 5s")); 
   delay(5*1000);     
   ivalue = digitalRead(ContactRightPin);  // read input value
-  if (ivalue == LOW) Serial.println("-->obstacle right");
-  else Serial.println("-->No obstacle right");
+  if (ivalue == LOW) Serial.println(F("-->obstacle right"));
+  else Serial.println(F("-->No obstacle right"));
   ivalue = digitalRead(ContactLeftPin);  // read input value
-  if (ivalue == LOW) Serial.println("-->obstacle left");
-  else Serial.println("-->No obstacle left");
-  Serial.println("Init Contact sensors OK");
+  if (ivalue == LOW) Serial.println(F("-->obstacle left"));
+  else Serial.println(F("-->No obstacle left"));
+  Serial.println(F("Init Contact sensors OK"));
     
   // initialize the pin connected to the IR sensor 
   SharpIR.SharpIR_init(SHARP_IR_PIN,(long)SHARP_MODEL); 
   double distance = SharpIR.SharpIR_distance();
   Serial.println(" ");
-  Serial.print("SharpIR sensor, Distance (max 800mm): "); Serial.print(distance); Serial.println("mm");
+  Serial.print(F("SharpIR sensor, Distance (max 800mm): ")); Serial.print(distance); Serial.println("mm");
   lcd.print("IR:");lcd.print((int)distance);lcd.print(" mm");lcd.printByte(lcd_pipe);   
-  Serial.println("Init SharpIR sensor OK");
+  Serial.println(F("Init SharpIR sensor OK"));
   delay(5*1000);lcd.clear(); 
 
   // initialize the PWM pin connected to the servo used for the IR sensor and initialize the associate Timer interrupt
-  Serial.println(" ");
-  Serial.println("Move IR Servo");
+  Serial.println(F(" "));
+  Serial.println(F("Move IR Servo"));
   IRServo.attach(IRSERVO_Pin);  
  
   // test the servo position
@@ -105,12 +105,12 @@ int motor_begin()
   
   IRServo.write(90);   // reset servo position
   delay(15*90);        // waits the servo to reach the position 
-  Serial.println("Init IR Servo OK");  
+  Serial.println(F("Init IR Servo OK"));  
 
 
   // initialize the Time Of Flight VL53LOX
-  Serial.println (" ");
-  Serial.println("Init ToF VL53L0X");
+  Serial.println (F(" "));
+  Serial.println(F("Init ToF VL53L0X"));
   VL53L0X.init();
   VL53L0X.setTimeout(500);
   VL53L0X.setMeasurementTimingBudget(200000);  // increase timing budget to 200 ms
@@ -119,34 +119,34 @@ int motor_begin()
   status = VL53L0X.VL53L0X_getStatus();
   if (status > 0)
   {
-     Serial.print("getModelId KO, I2C error: ");Serial.println(status);
+     Serial.print(F("getModelId KO, I2C error: "));Serial.println(status);
   }
   else
   {
-     Serial.print("ModelId: 0x"); Serial.println (reg16,HEX);
+     Serial.print(F("ModelId: 0x")); Serial.println (reg16,HEX);
   }   
   uint8_t reg8   = VL53L0X.getRevisionId();
   status = VL53L0X.VL53L0X_getStatus();
   if (status > 0)
   {
-     Serial.print("getRevisionId KO, I2C error: ");Serial.println(status);
+     Serial.print(F("getRevisionId KO, I2C error: "));Serial.println(status);
   }
   else
   {
-     Serial.print("RevisionId: 0x"); Serial.println (reg8,HEX);
-     Serial.print("Address: 0x");
+     Serial.print(F("RevisionId: 0x")); Serial.println (reg8,HEX);
+     Serial.print(F("Address: 0x"));
      uint8_t address = VL53L0X.VL53L0X_getAddress();
      Serial.println(address,HEX); 
      delay(2000); 
        
      uint16_t d = VL53L0X.VL53L0X_readMillimeters();
-     Serial.print("Distance (max 1200mm): "); Serial.print(d); Serial.println("mm"); 
-     Serial.println("Init ToF VL53L0X OK");     
+     Serial.print(F("Distance (max 1200mm): ")); Serial.print(d); Serial.println(F("mm")); 
+     Serial.println(F("Init ToF VL53L0X OK"));     
   }
     
   // initialize the Compass CMPS12
-  Serial.println (" ");
-  Serial.println("Init Compass CMPS12");
+  Serial.println (F(" "));
+  Serial.println(F("Init Compass CMPS12"));
   uint8_t calib = CMPS12.CMPS12_init();
   if(calib == 0) 
   { 
@@ -154,7 +154,7 @@ int motor_begin()
      status = CMPS12.CMPS12_getStatus();
      if (status == 0)
      {
-        Serial.print("Direction: ");
+        Serial.print(F("Direction: "));
         Serial.println(ivalue); 
         lcd.print(ivalue);lcd.printByte(223);lcd.printByte(lcd_pipe);
         lcd.setCursor(0,1); 
@@ -163,7 +163,7 @@ int motor_begin()
      }
      else
      { 
-        Serial.print("Init CMPS12 KO, I2C error: ");Serial.println(status); 
+        Serial.print(F("Init CMPS12 KO, I2C error: "));Serial.println(status); 
         lcd.setCursor(0,1); 
         lcd.print("Init Compass KO ");       
      }        
@@ -173,13 +173,13 @@ int motor_begin()
      status = CMPS12.CMPS12_getStatus();
      if (status == 0)
      {
-        Serial.print("Calibrate CMPS12 KO, calibrate status: 0b");Serial.println(calib,BIN); 
+        Serial.print(F("Calibrate CMPS12 KO, calibrate status: 0b"));Serial.println(calib,BIN); 
         lcd.setCursor(0,1); 
         lcd.print("Init Compass KO ");    
      }
      else 
      {           
-        Serial.print("Init CMPS12 KO, I2C error: ");Serial.println(status); 
+        Serial.print(F("Init CMPS12 KO, I2C error: "));Serial.println(status); 
         lcd.setCursor(0,1); 
         lcd.print("Init Compass KO ");  
      }    
@@ -197,9 +197,9 @@ int motor_begin()
 #endif 
   
   lcd.print("End   Motor Init");
-  Serial.println("End Motor Init");
-  Serial.println("**************");
-  Serial.println("");
+  Serial.println(F("End Motor Init"));
+  Serial.println(F("**************"));
+  Serial.println(F(""));
   delay(5*1000);lcd.clear(); 
   
   return SUCCESS;

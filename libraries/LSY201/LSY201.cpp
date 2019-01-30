@@ -352,7 +352,7 @@ int JPEGCameraClass::readData(long int address, uint8_t * buf, int * count, int 
 	{
 		while(Serial3.available() == 0); // waiting for data in the serial buffer
 		ibuf = Serial3.read();
-		if (ibuf == -1) return -100; // serial buffer empty, should not happen as we wait before
+		if (ibuf == -1) return -11; // serial buffer empty, should not happen as we wait before
 	        buf[j] = (uint8_t)ibuf;
 	        if((j > 1) && (buf[j-1] == (uint8_t)0xFF) && (buf[j] == (uint8_t)0xD9))end_frame = 1; //end of frame detected
 	        if (end_frame == 0) icount+=1;
@@ -364,7 +364,7 @@ int JPEGCameraClass::readData(long int address, uint8_t * buf, int * count, int 
 	{
 		while(Serial3.available() == 0); // waiting for data in the serial buffer
 		ibuf = Serial3.read();
-		if (ibuf == -1) return -1000; // serial buffer empty, should not happen as we wait before
+		if (ibuf == -1) return -12; // serial buffer empty, should not happen as we wait before
 		response[i] = (uint8_t)ibuf;
 	}
 	

@@ -308,7 +308,16 @@ int IoTWiFiServerClass::IoTWSRobotCmd(String command) {
     } 
     else if (szcmd == "ALERT")
     {
-           _PictureNumber = value[2]; 
+           _AlertStatus =    value[2];
+           _PictureNumber =  value[3];
+           _MotorState =     value[4];
+           _Direction =      value[5];
+           _ObstacleStatus = value[6];           
+           _Distance =       value[7];
+           _Temperature =    value[8];
+           _Humidity =       value[9];  
+           _Brightness =     value[10];
+           _Noise =          value[11]; 
            return SUCCESS; 
     } 
     else if (szcmd == "TURN")

@@ -22,7 +22,7 @@
 
 #define CMD_START         0x01
 #define CMD_STOP          0x02
-#define CMD_INFOS         0x03
+#define CMD_GET_INFOS     0x03
 #define CMD_PICTURE       0x04
 #define CMD_TURN          0x05
 #define CMD_CHECK_AROUND  0x06
@@ -36,7 +36,7 @@
 #define PI_ALERT_ONLY     1
 #define PI_ALERT_INFOS    2
 
-#define CMD_SIZE   10
+#define CMD_SIZE   11
 
 #define PAYLOAD_SIZE 80
 
@@ -123,7 +123,7 @@ int robot_begin();
 /*              pinMode                                                       */
 /*              digitalWrite                                                  */
 
-int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen);
+int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen);
 /* Description: command the robot                                             */                                            
 /* input:       cmd                                                           */
 /*                  = command and the related parameters                      */
@@ -146,6 +146,7 @@ int robot_command (uint16_t *cmd, uint16_t *resp, uint8_t *resplen);
 /*              makePicture                                                   */   
 /*              go                                                            */  
 
+int freeRam (void);
 void WakeUpESP(void); 
 int robot_IOT(void);    
 int robot_Send_Picture (uint8_t n);

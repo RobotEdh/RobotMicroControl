@@ -210,7 +210,7 @@ int IoTWiFiClientClass::IoTWCReceive (char *infos, uint8_t *type, int *n, uint16
      *size = value[3];
          
      //Serial.println("Call IOTSsend with RESP_OK");    
-     ret = IOTSerial.IOTSsend(0, RESP_OK);
+     // CANNOT use TX swapped with Sparkfunk Thing    ret = IOTSerial.IOTSsend(0, RESP_OK);
     }
     else if (tag[1]== TAG_INFOS)
     {  
