@@ -627,9 +627,9 @@ int turn(double alpha, unsigned long timeout)
   double direction = 0.0;  // direction between 0 and 360    
   double direction_target = 0.0; 
   int end_turn = 0;
+  int sens = 0;
   
   if ((alpha == 0.0) || (alpha < -180.0) || (alpha > 180.0)) return BAD_ANGLE; // alpha between -180 and +180 and <> 0
-  if (alpha < 0.0) alpha = alpha + 360.0;  
   
   change_speed(SPEEDTURN);
   
@@ -637,35 +637,36 @@ int turn(double alpha, unsigned long timeout)
   if (direction < 0.0)  return COMPASS_ERROR;
   
   direction_target = direction + alpha; // compute target direction between 0 and 360 
-  
-  if (alpha < 180.0 ) {
-        backward (RIGHT_MOTOR);
+  if (direction_target < 0.0)   direction_target = direction_target + 360.0;  
+  if (direction_target > 360.0) direction_target = direction_target - 360.0;  
+    
+  if (abs(direction_target - direction) < 180.0) {
+     if (direction_target > direction) sens =  1;
+     else                              sens = -1;
   }
-  else
-  {
-        backward (LEFT_MOTOR);  
-  }
+  else {
+     if (direction_target > direction) sens = -2;
+     else                              sens =  2;
+  }  
+                  Serial.print("alpha: "); Serial.println(alpha);
+                  Serial.print("direction: "); Serial.println(direction);
+                  Serial.print("direction_target: "); Serial.println(direction_target);
+                  Serial.print("sens: "); Serial.println(sens);
+    
+  if (sens > 0) backward (RIGHT_MOTOR);  // turn right
+  else          backward (LEFT_MOTOR);   // turn left
   
   unsigned long start = millis();
-  while ((millis() - start < timeout*1000) && end_turn == 0) {  // turn during maximum timeout milliseconds   
+  while ((millis() - start < timeout*1000UL) && end_turn == 0) {  // turn during maximum timeout milliseconds   
         direction = CMPS12.CMPS12_getCompassHighResolution(); // get current direction between 0 and 360 
-        if ( ((alpha < 180.0 ) && (direction > direction_target)) || ((alpha > 180.0 ) && (direction < direction_target)) ) end_turn = 1;
-  } 
+        if ( ((sens == 1) && (direction > direction_target)) || ((sens == -1 ) && (direction < direction_target)) 
+           ||((sens == 2) && (direction > direction_target) && (direction <180.0)) || ((sens == -2 ) && (direction < direction_target) && (direction >180.0)) ) end_turn = 1;            
+  } //  end while
   
-  if (alpha < 180.0 )
-  {
-          forward (RIGHT_MOTOR); // stop turns right  
-  }
-  else
-  {
-          forward (LEFT_MOTOR); // stop turns left 
-  }
+  if (sens > 0) forward (RIGHT_MOTOR); // stop turns right  
+  else          forward (LEFT_MOTOR);  // stop turns left 
    
-  if (direction < 0)
-  {  
-      return COMPASS_ERROR;
-  }    
-  else if(end_turn == 1)
+  if(end_turn == 1)
   {
       change_speed(SPEEDNOMINAL);
       return SUCCESS;

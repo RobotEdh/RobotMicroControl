@@ -849,7 +849,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      
      error = -1;
      start = millis();
-     while((millis() - start < GOtimeout*1000) && (error == -1)) {
+     while((millis() - start < GOtimeout*1000UL) && (error == -1)) {
           ret = go(GOtimeout);  
      
           if ((ret != SUCCESS) && (ret != OBSTACLE) && (ret != OBSTACLE_LEFT) && (ret != OBSTACLE_RIGHT))
@@ -877,8 +877,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               if (ret == OBSTACLE_LEFT)        lcd.print("OBSTACLE LEFT");
               else if (ret == OBSTACLE_RIGHT)  lcd.print("OBSTACLE RIGHT");
               else if (ret == OBSTACLE)        lcd.print("OBSTACLE");
-              else 
-
+              else                             lcd.print("?");
                               
               ret = SUCCESS;            
               checkdir = check_around();
@@ -892,11 +891,12 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               else if (checkdir == OBSTACLE_LEFT)   lcd.print("OBSTACLE LEFT");
               else if (checkdir == OBSTACLE_RIGHT)  lcd.print("OBSTACLE RIGHT");
               else if (checkdir == OBSTACLE)        lcd.print("OBSTACLE");
-              else                             lcd.print("?");;
+              else                                  lcd.print("?");
          
               if (checkdir == DIRECTION_LEFT) {
                    start_forward();
                    motor_state = STATE_GO;
+                   Serial.println("turn left");
                    ret = turn (-45,  5); // turn  -45 degrees during 5s max
                    if (ret != SUCCESS)
                    {
@@ -914,12 +914,14 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
                    else
                    {
                       lcd.clear();                   	  
-                   	  lcd.print("turn left OK");                  	
+                   	  lcd.print("turn left OK"); 
+                   	  Serial.println("turn left OK");                	
                    }
               }
               else if (checkdir == DIRECTION_RIGHT) {
                    start_forward();
                    motor_state = STATE_GO;
+                   Serial.println("turn right");
                    ret = turn (+45,  5); // turn  +45 degrees during 5s max
                    if (ret != SUCCESS)
                    {
@@ -937,7 +939,8 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
                    else
                    {
                       lcd.clear();                   	  
-                   	  lcd.print("turn right OK");                  	
+                   	  lcd.print("turn right OK");  
+                   	  Serial.println("turn right OK");                	
                    }                  
               }
               else 
@@ -945,6 +948,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               	   buzz(3);
                    blink(Led_Red);
               	   motor_state = STATE_GO;
+              	   Serial.println("turnback"); 
               	   ret = turnback (10); // turn back during 10s max
                    if (ret != SUCCESS)
                    {
@@ -962,7 +966,8 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
                    else
                    {
                       lcd.clear();                   	  
-                   	  lcd.print("turnback OK");                  	
+                   	  lcd.print("turnback OK"); 
+                   	  Serial.println("turnback OK");                  	
                    }                   
               }                 
           }
@@ -1084,7 +1089,7 @@ void robot_main ()
  int mem = 0;
  int ret = SUCCESS;
  
- mem0 = freeRam();Serial.print("freeRam: ");Serial.println(mem0); 
+ mem0 = freeRam();Serial.print("Free RAM: ");Serial.println(mem0); 
  while (1) {  // No stop
        
        //check memory
