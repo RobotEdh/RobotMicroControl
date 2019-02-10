@@ -25,7 +25,7 @@
 #define STATE_GO   1
 
 #define SPEEDMAX     255     // 255=PWM max
-#define SPEEDNOMINAL 100     // speed at start
+#define SPEEDNOMINAL  80     // speed at start
 #define SPEEDTURN     80     // speed at turn 
 #define SPEEDBACK     50     // speed at turn back
 
@@ -33,7 +33,7 @@
 #define LEFT_MOTOR  1
 #define RIGHT_MOTOR 2
 
-#define DISTANCE_MIN 500.0 // 500 mm before stopping
+#define DISTANCE_MIN 600.0 // 600 mm before stopping
 
 #define DIRECTION_LEFT  1
 #define DIRECTION_RIGHT 2

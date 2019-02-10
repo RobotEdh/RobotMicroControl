@@ -7,6 +7,8 @@
 #include <IOTSerial.h>
 #include <ESPcredentials.h>
 
+#define PIN_LED              2 // pin 2 on Adafruit HUZZAH, pin 5 on Sparkfun thing
+
 #define SUCCESS              0
 
 class IoTWiFiClientClass

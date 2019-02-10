@@ -10,9 +10,9 @@ void IoTWiFiClientClass::ESPblink(int n)
 {
   // blink the resquested led n times
   for (int i=0;i<n;i++){
-        digitalWrite(5, HIGH);  // turn on led
+        digitalWrite(PIN_LED, HIGH);  // turn on led
         delay(500);
-        digitalWrite(5, LOW);  // turn off led
+        digitalWrite(PIN_LED, LOW);  // turn off led
         delay(500);  
   }          
 }
@@ -23,10 +23,21 @@ int IoTWiFiClientClass::IoTWCbegin()
     char password[64];
     int ret = SUCCESS;
 
-    //Serial.println("Begin IoTWCbegin");
+
+    ret = IOTSerial.IOTSbegin(0); // Init Serial port
+    if (ret != 0) {
+       //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
+       return ret;
+    }
+    Serial.pins(15,13);  // to avoid ROM logging at startup
+    
+    Serial1.set_tx(2);   // for logging only
+    Serial1.begin(9600);
+    
+    Serial1.println("Begin IoTWCbegin");
         
-    pinMode(5, OUTPUT); 
-    digitalWrite(5, HIGH); // Led on  
+    pinMode(PIN_LED, OUTPUT); 
+    digitalWrite(PIN_LED, HIGH); // Led on  
 
     // We start by connecting to a WiFi network
     ret =  get_credentials(ssid, password);
@@ -70,16 +81,8 @@ int IoTWiFiClientClass::IoTWCbegin()
     Serial.print(":");
     Serial.println(mac[5],HEX);
     */
-    ret = IOTSerial.IOTSbegin(0); // Init Serial port
-    if (ret != 0) {
-       //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
-       return ret;
-    }
-    
-    // Swap Serial port in order to avoit conflict at startup with ESP core logging
-    Serial.swap();
-    
-    digitalWrite(5, LOW); // Led off
+       
+    digitalWrite(PIN_LED, LOW); // Led off
     
     return SUCCESS;                   
 }
@@ -106,7 +109,7 @@ int IoTWiFiClientClass::IoTWCSendInfos (char *infos)
   //Serial.println("is connected to server");
 
   //Serial.println(infos);
-  digitalWrite(5, HIGH);    // Led on 
+  digitalWrite(PIN_LED, HIGH);    // Led on 
   tcpClient.print(String("POST ") + url + " HTTP/1.1\r\n" +
                          "Host: " + host + "\r\n" +
                          "Connection: close\r\n" +
@@ -117,7 +120,7 @@ int IoTWiFiClientClass::IoTWCSendInfos (char *infos)
   tcpClient.println(infos);
   tcpClient.println(); 
   tcpClient.stop();
-  digitalWrite(5, LOW); // Led off    
+  digitalWrite(PIN_LED, LOW); // Led off    
 
   return SUCCESS;              
 } 
@@ -152,7 +155,7 @@ int IoTWiFiClientClass::IoTWCSendPicture (int n, uint16_t size)
                
   tcpClient.print( start_request);
        
-  digitalWrite(5, HIGH);    // Led on 
+  digitalWrite(PIN_LED, HIGH);    // Led on 
   unsigned long previousTime;
   previousTime = millis();
   int incomingByte = 0;
@@ -166,7 +169,7 @@ int IoTWiFiClientClass::IoTWCSendPicture (int n, uint16_t size)
   tcpClient.print(end_request);
   tcpClient.println();
   tcpClient.stop();
-  digitalWrite(5, LOW); // Led off  
+  digitalWrite(PIN_LED, LOW); // Led off  
   
   return SUCCESS;     
 }
@@ -183,10 +186,10 @@ int IoTWiFiClientClass::IoTWCReceive (char *infos, uint8_t *type, int *n, uint16
     int ret = SUCCESS;
 
     //Serial.println("Begin IoTWCReceive");
-    digitalWrite(5, HIGH);    // Led on 
+    digitalWrite(PIN_LED, HIGH);    // Led on 
     ret = IOTSerial.IOTSread(0, msg, &msg_len, 10000UL);  // timeout 10s
     //Serial.print("Call IOTSread, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
-    digitalWrite(5, LOW);    // Led off 
+    digitalWrite(PIN_LED, LOW);    // Led off 
     
     if (ret != SUCCESS) {
        //Serial.println("error IOTSread");
