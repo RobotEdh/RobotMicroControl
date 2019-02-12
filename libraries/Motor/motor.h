@@ -28,12 +28,14 @@
 #define SPEEDNOMINAL  80     // speed at start
 #define SPEEDTURN     80     // speed at turn 
 #define SPEEDBACK     50     // speed at turn back
+#define SPEEDTICK     5      // speed increment&decrement for small turns
 
 #define BOTH_MOTOR  0
 #define LEFT_MOTOR  1
 #define RIGHT_MOTOR 2
 
-#define DISTANCE_MIN 600.0 // 600 mm before stopping
+#define DISTANCE_MIN 600      // 600 mm before stopping
+#define DISTANCE_NOMINAL 1000 // 1000 mm before turning
 
 #define DIRECTION_LEFT  1
 #define DIRECTION_RIGHT 2
@@ -61,7 +63,15 @@
 #define EncoderTickLeftPin  21
 #endif
 
-#define IRSERVO_Pin    46        // IR Servo pin connected to digital PWM 46
+#define VL53L0X_LEFT_XSHUT_PIN  35  // Shutdown pin of ToF VL53L0X in left direction
+#define VL53L0X_FRONT_XSHUT_PIN 37  // Shutdown pin of ToF VL53L0X in front direction
+#define VL53L0X_RIGHT_XSHUT_PIN 39  // Shutdown pin of ToF VL53L0X in right direction
+
+#define VL53L0X_LEFT_ADDRESS  0x30   // Address of ToF VL53L0X in left direction
+#define VL53L0X_FRONT_ADDRESS 0x31   // Address of ToF VL53L0X in left direction
+#define VL53L0X_RIGHT_ADDRESS 0x32   // Address of ToF VL53L0X in left direction
+
+#define IRSERVO_PIN    46        // IR Servo pin connected to digital PWM 46
 #define SHARP_IR_PIN   A0        // Sharp IR analogic pin A0
 #define SHARP_MODEL    1080      // Sharp IR model  > 1080 is the int for the GP2Y0A21Y and 
                                  //                 > 20150 is the int for GP2Y0A02YK and 
@@ -69,6 +79,8 @@
 
 #define ContactLeftPin  26   // Contact sensor Left pin connected to digital 26
 #define ContactRightPin 27   // Contact sensor Right pin connected to digital 27
+
+#define LCD_ADDRESS  0x20   // Address of the LCD
 
 #ifdef PID
 void IntrTickRight();  // interrupt handler encoder right
@@ -265,7 +277,7 @@ void change_speed(int speed);
 /*                  = return number of decrements done                        */                                     
 /* lib:         analogWrite                                                   */ 
  
-int adjustMotor (int motor);
+int adjustMotor (int motor, int pid);
 /* Description: Adjust the speed of the motor according the PID value         */
 /* input:       motor                                                         */ 
 /*                  = LEFT_MOTOR                                              */ 

@@ -43,10 +43,12 @@ VL53L0XClass::VL53L0XClass(void)
 
 // Public Methods //////////////////////////////////////////////////////////////
 
+
 void VL53L0XClass::setAddress(uint8_t new_addr)
 {
   writeReg(I2C_SLAVE_DEVICE_ADDRESS, new_addr & 0x7F);
   address = new_addr;
+  delay(10);
 }
 
 // Initialize sensor using sequence based on VL53L0X_DataInit(),
@@ -57,8 +59,20 @@ void VL53L0XClass::setAddress(uint8_t new_addr)
 // enough unless a cover glass is added.
 // If io_2v8 (optional) is true or not given, the sensor is configured for 2V8
 // mode.
+
 bool VL53L0XClass::init(bool io_2v8)
 {
+   return init(io_2v8, 0, 0);  // default address
+}    
+
+bool VL53L0XClass::init(uint8_t new_addr, uint8_t xshut_pin, bool io_2v8)
+{
+    
+  if (xshut_pin > 0) {
+      pinMode(xshut_pin, INPUT); //  XSHUT high avoiding high voltage 
+      delay(10);   // wait for reset finalized
+  }
+  
   // VL53L0X_DataInit() begin
 
   // sensor uses 1V8 mode for I/O by default; switch to 2V8 mode if necessary
@@ -90,7 +104,6 @@ bool VL53L0XClass::init(bool io_2v8)
   // VL53L0X_DataInit() end
 
   // VL53L0X_StaticInit() begin
-
   uint8_t spad_count;
   bool spad_type_is_aperture;
   if (!getSpadInfo(&spad_count, &spad_type_is_aperture)) { return false; }
@@ -101,7 +114,6 @@ bool VL53L0XClass::init(bool io_2v8)
   uint8_t ref_spad_map[6];
   uint8_t status = readMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
   if (status > 0) return false;
-    
   // -- VL53L0X_set_reference_spads() begin (assume NVM values are valid)
 
   writeReg(0xFF, 0x01);
@@ -112,7 +124,6 @@ bool VL53L0XClass::init(bool io_2v8)
 
   uint8_t first_spad_to_enable = spad_type_is_aperture ? 12 : 0; // 12 is the first aperture spad
   uint8_t spads_enabled = 0;
-
   for (uint8_t i = 0; i < 48; i++)
   {
     if (i < first_spad_to_enable || spads_enabled == spad_count)
@@ -126,7 +137,6 @@ bool VL53L0XClass::init(bool io_2v8)
       spads_enabled++;
     }
   }
-
   writeMulti(GLOBAL_CONFIG_SPAD_ENABLES_REF_0, ref_spad_map, 6);
 
   // -- VL53L0X_set_reference_spads() end
@@ -258,7 +268,6 @@ bool VL53L0XClass::init(bool io_2v8)
   // VL53L0X_PerformRefCalibration() begin (VL53L0X_perform_ref_calibration())
 
   // -- VL53L0X_perform_vhv_calibration() begin
-
   writeReg(SYSTEM_SEQUENCE_CONFIG, 0x01);
   if (!performSingleRefCalibration(0x40)) { return false; }
 
@@ -275,7 +284,11 @@ bool VL53L0XClass::init(bool io_2v8)
   writeReg(SYSTEM_SEQUENCE_CONFIG, 0xE8);
 
   // VL53L0X_PerformRefCalibration() end
-
+  
+  if (new_addr > 0) {
+      setAddress(new_addr);   
+  }
+  
   return true;
 }
 

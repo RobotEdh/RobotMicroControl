@@ -10,7 +10,10 @@
    #define PRINTs(s)       
    #define PRINT(s,v)    
    #define PRINTx(s,v)      
-   #define PRINTb(s,v)               
+   #define PRINTb(s,v)  
+   
+   #define PRINTd 
+   #define PRINTt              
 	
 #elif defined  LOGSERIAL    // log Serial
 
@@ -22,7 +25,10 @@
    #define PRINT(s,v)  { Serial.print(F(s)); Serial.println(v); }
    #define PRINTx(s,v) { Serial.print(F(s)); Serial.print(F("0x")); Serial.println(v, HEX); }
    #define PRINTb(s,v) { Serial.print(F(s)); Serial.print(F("0b")); Serial.println(v, BIN); }
-        	
+   
+   #define PRINTd { Serial.print(F("Date: "));Serial.print(now.days);Serial.print(F("/"));Serial.print(now.months);Serial.print(F("/"));Serial.println(now.year + 2000); }
+   #define PRINTt { Serial.print(F("Time: "));Serial.print(now.hours);Serial.print(F(":"));Serial.print(now.minutes);Serial.print(F(":"));Serial.println(now.seconds); }
+     	
 #elif defined LOGSDCARD    // log SD card   
           
    #include <SD.h>

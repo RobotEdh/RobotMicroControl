@@ -1,13 +1,14 @@
 #include <robot.h>         
 
 // Logging mode
-#define LOGSDCARD  // log to SD Card
-#define LOGTRACE   // Enable trace
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define LOGTRACE   // Enable trace
 #include <log.h>
+//extern File logFile;                // The loging class
 
 /* classes aleady defined in motor */
-extern File logFile;                // The loging class
-extern VL53L0XClass VL53L0X;        // The ToF class
+extern VL53L0XClass VL53L0Xfront;   // The ToF class for the front direction
 extern LiquidCrystal_I2C lcd;       // The LCD class
 extern CMPS12Class CMPS12;          // The Compass class
 
@@ -375,7 +376,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      
      // alert status
      resp[ALERT_STATUS] = (uint16_t)alert_status;
-    PRINT("alert status: ",resp[ALERT_STATUS])
+     PRINT("alert status: ",resp[ALERT_STATUS])
      
      // picture number
      resp[NO_PICTURE] = (uint16_t)no_picture;
@@ -394,7 +395,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      PRINT("obstacle_status: ",resp[OBSTACLE_STATUS])
       
      // distance
-     uint16_t distance = VL53L0X.VL53L0X_readMillimeters(); 
+     uint16_t distance = VL53L0Xfront.VL53L0X_readMillimeters(); 
      if (distance > 0) resp[DISTANCE] = distance; // in mm
      else              resp[DISTANCE] = 0;
      PRINT("distance: ",resp[DISTANCE])
@@ -886,9 +887,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
           {
               stop();
               motor_state = STATE_STOP;
-              
-              buzz(2);
-              blink(Led_Red);     
+                 
               PRINT("CMD_GO, Obstacle: ",ret)
               PRINTs("Stop")
               lcd.setCursor(0,1); 

@@ -6,16 +6,19 @@
 #include <VL53L0X.h>     // TOF
 
 // Logging mode
-#define LOGSDCARD  // log to SD Card
-#define LOGTRACE   // Enable trace
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define LOGTRACE   // Enable trace
 #include <log.h>
+//File logFile;                     // The loging class
 
-File logFile;                 // The loging class
-CMPS12Class CMPS12;           // The Compass class
-SharpIRClass SharpIR;         // The IR sensor class
-Servo IRServo;                // The Servo class used for IR sensor
-VL53L0XClass VL53L0X;         // The ToF class
-LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
+CMPS12Class CMPS12;               // The Compass class
+SharpIRClass SharpIR;             // The IR sensor class
+Servo IRServo;                    // The Servo class used for IR sensor
+VL53L0XClass VL53L0Xleft;         // The ToF class for left direction
+VL53L0XClass VL53L0Xfront;        // The ToF class for front direction
+VL53L0XClass VL53L0Xright;        // The ToF class for right direction
+LiquidCrystal_I2C lcd (LCD_ADDRESS,16,2); // The LCD class with 16 chars and 2 line display
 
 int SpeedMotorRight = 0;      // Duty cycle PWM motor right between 0 and SPEEDMAX( 255)
 int SpeedMotorLeft = 0;       // Duty cycle PWM motor left between 0 and SPEEDMAX (255)
@@ -99,7 +102,7 @@ int motor_begin()
   // initialize the PWM pin connected to the servo used for the IR sensor and initialize the associate Timer interrupt
   PRINTs(" ")
   PRINTs("Move IR Servo")
-  IRServo.attach(IRSERVO_Pin);  
+  IRServo.attach(IRSERVO_PIN);  
  
   // test the servo position
   IRServo.write(0);    // turn servo left
@@ -113,15 +116,53 @@ int motor_begin()
   Serial.println(F("Init IR Servo OK"));  
 
 
-  // initialize the Time Of Flight VL53LOX
+  // initialize the 3 devices Time Of Flight VL53LOX: left, front and right
   PRINTs(" ")
-  PRINTs("Init ToF VL53L0X")
-  VL53L0X.init();
-  VL53L0X.setTimeout(500);
-  VL53L0X.setMeasurementTimingBudget(200000);  // increase timing budget to 200 ms
+  PRINTs("Init of the 3 ToF VL53L0X")
+    
+  uint16_t reg16;
+  uint8_t reg8;
+  uint8_t address;
+  uint16_t d;
+  bool a;
   
-  uint16_t reg16 = VL53L0X.getModelId();
-  status = VL53L0X.VL53L0X_getStatus();
+  //1. Reset all sensors by setting all of their XSHUT pins low for delay(10), then set all XSHUT high to bring out of reset
+  pinMode(VL53L0X_LEFT_XSHUT_PIN,  OUTPUT);
+  pinMode(VL53L0X_FRONT_XSHUT_PIN, OUTPUT);
+  pinMode(VL53L0X_RIGHT_XSHUT_PIN, OUTPUT);
+  digitalWrite (VL53L0X_LEFT_XSHUT_PIN,  LOW);
+  digitalWrite (VL53L0X_FRONT_XSHUT_PIN, LOW);
+  digitalWrite (VL53L0X_RIGHT_XSHUT_PIN, LOW); 
+    
+  delay(10); 
+  
+  pinMode(VL53L0X_LEFT_XSHUT_PIN,  INPUT);  // XSHUT high avoiding high voltage 
+  pinMode(VL53L0X_FRONT_XSHUT_PIN, INPUT);  // XSHUT high avoiding high voltage 
+  pinMode(VL53L0X_RIGHT_XSHUT_PIN, INPUT);  // XSHUT high avoiding high voltage 
+
+  //2. Keep sensor #1 awake by keeping XSHUT pin high, Put all other sensors into shutdown by pulling XSHUT pins low
+  pinMode(VL53L0X_FRONT_XSHUT_PIN, OUTPUT);
+  pinMode(VL53L0X_RIGHT_XSHUT_PIN, OUTPUT);
+  digitalWrite (VL53L0X_FRONT_XSHUT_PIN, LOW);
+  digitalWrite (VL53L0X_RIGHT_XSHUT_PIN, LOW); 
+    
+  PRINTs("Init ToF VL53L0Xleft")
+  a = VL53L0Xleft.init((uint8_t)VL53L0X_LEFT_ADDRESS,(uint8_t)VL53L0X_LEFT_XSHUT_PIN);
+  if (a)
+  {
+     PRINTs("Call init OK")
+  }
+  else
+  {
+     status = VL53L0Xleft.VL53L0X_getStatus();
+     PRINT("Call init KO, error: ",status)
+  }
+  
+  VL53L0Xleft.setTimeout(500);  // 500 ms
+  VL53L0Xleft.setMeasurementTimingBudget(33000);  // Default 33 milliseconds; the minimum is 20 ms.
+  
+  reg16 = VL53L0Xleft.getModelId();
+  status = VL53L0Xleft.VL53L0X_getStatus();
   if (status > 0)
   {
      PRINT("getModelId KO, I2C error: ",status)
@@ -130,8 +171,8 @@ int motor_begin()
   {
      PRINTx("ModelId: ",reg16)
   }   
-  uint8_t reg8   = VL53L0X.getRevisionId();
-  status = VL53L0X.VL53L0X_getStatus();
+  reg8   = VL53L0Xleft.getRevisionId();
+  status = VL53L0Xleft.VL53L0X_getStatus();
   if (status > 0)
   {
      PRINT("getRevisionId KO, I2C error: ",status)
@@ -139,14 +180,100 @@ int motor_begin()
   else
   {
      PRINTx("RevisionId: ",reg8)
-     uint8_t address = VL53L0X.VL53L0X_getAddress();
-     PRINTx("Address: ",address)
+     address = VL53L0Xleft.VL53L0X_getAddress();
+     PRINTx("VL53L0Xleft Address: ",address)
      delay(2000); 
        
-     uint16_t d = VL53L0X.VL53L0X_readMillimeters();
+     d = VL53L0Xleft.VL53L0X_readMillimeters();
      PRINT("Distance in mm (max 1200mm): ",d)
-     PRINTs("Init ToF VL53L0X OK")     
+     PRINTs("Init ToF VL53L0Xleft OK")     
+  } 
+   
+  PRINTs("Init ToF VL53L0Xfront")
+  a = VL53L0Xfront.init((uint8_t)VL53L0X_FRONT_ADDRESS,(uint8_t)VL53L0X_FRONT_XSHUT_PIN);
+  if (a)
+  {
+     PRINTs("Call init OK")
   }
+  else
+  {
+     status = VL53L0Xfront.VL53L0X_getStatus();
+     PRINT("Call init KO, error: ",status)
+  }  
+  VL53L0Xfront.setTimeout(500);  // 500 ms
+  VL53L0Xfront.setMeasurementTimingBudget(33000);  // Default 33 milliseconds; the minimum is 20 ms.
+  
+  reg16 = VL53L0Xfront.getModelId();
+  status = VL53L0Xfront.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     PRINT("getModelId KO, I2C error: ",status)
+  }
+  else
+  {
+     PRINTx("ModelId: ",reg16)
+  }   
+  reg8   = VL53L0Xfront.getRevisionId();
+  status = VL53L0Xfront.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     PRINT("getRevisionId KO, I2C error: ",status)
+  }
+  else
+  {
+     PRINTx("RevisionId: ",reg8)
+     address = VL53L0Xfront.VL53L0X_getAddress();
+     PRINTx("VL53L0Xfront Address: ",address)
+     delay(2000); 
+       
+     d = VL53L0Xfront.VL53L0X_readMillimeters();
+     PRINT("Distance in mm (max 1200mm): ",d)
+     PRINTs("Init ToF VL53L0Xfront OK")     
+  }
+    
+  PRINTs("Init ToF VL53L0Xright")
+  a = VL53L0Xright.init((uint8_t)VL53L0X_RIGHT_ADDRESS,(uint8_t)VL53L0X_RIGHT_XSHUT_PIN);
+  if (a)
+  {
+     PRINTs("Call init OK")
+  }
+  else
+  {
+     status = VL53L0Xright.VL53L0X_getStatus();
+     PRINT("Call init KO, error: ",status)
+  }  
+ 
+  VL53L0Xright.setTimeout(500);  // 500 ms
+  VL53L0Xright.setMeasurementTimingBudget(33000);  // Default 33 milliseconds; the minimum is 20 ms.
+  
+  reg16 = VL53L0Xright.getModelId();
+  status = VL53L0Xright.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     PRINT("getModelId KO, I2C error: ",status)
+  }
+  else
+  {
+     PRINTx("ModelId: ",reg16)
+  }   
+  reg8   = VL53L0Xright.getRevisionId();
+  status = VL53L0Xright.VL53L0X_getStatus();
+  if (status > 0)
+  {
+     PRINT("getRevisionId KO, I2C error: ",status)
+  }
+  else
+  {
+     PRINTx("RevisionId: ",reg8)
+     address = VL53L0Xright.VL53L0X_getAddress();
+     PRINTx("VL53L0Xright Address: ",address)
+     delay(2000); 
+       
+     d = VL53L0Xright.VL53L0X_readMillimeters();
+     PRINT("Distance in mm (max 1200mm): ",d)
+     PRINTs("Init ToF VL53L0Xright OK")     
+  }
+   
     
   // initialize the Compass CMPS12
   PRINTs(" ")
@@ -480,8 +607,11 @@ void change_speed(int speed)
 
 int go(unsigned long timeout)
 {
- uint16_t distance = 0;
+ uint16_t distanceLeft = 0;
+ uint16_t distanceFront = 0;
+ uint16_t distanceRight = 0;
  int inputpin = HIGH; 
+ int ret = SUCCESS;
 
 #ifdef PID  
  TickLeft  = 0;  // reset ticks
@@ -510,26 +640,46 @@ int go(unsigned long timeout)
        // Check Contacts sensors, HIGH in normal situation
        inputpin = digitalRead(ContactRightPin);  // read input value
        if (inputpin == LOW) {
-            PRINTs("-->obstacle right")
+            PRINTs("->obstacle right")
             return OBSTACLE_RIGHT;   
        }  
        inputpin = digitalRead(ContactLeftPin);  // read input value
        if (inputpin == LOW) { 
-           PRINTs("-->obstacle left")
+           PRINTs("->obstacle left")
            return OBSTACLE_LEFT;   
        }
             
-       if (millis() - current > 1*1000UL) { // check every 1 second
+       if (millis() - current > 1*100UL) { // check every 100ms
              current = millis();
              
-             distance = VL53L0X.VL53L0X_readMillimeters(); // Check distance minimum
-             PRINT("-->distance(mm): ",distance)
-             if ((distance > 0) && (distance < DISTANCE_MIN)) 
+             distanceFront = VL53L0Xfront.VL53L0X_readMillimeters(); // Check distance minimum
+             PRINT("->distance front (mm): ",distanceFront)
+                        
+             if ((distanceFront > 0) && (distanceFront < DISTANCE_MIN)) // obstacle
              {
+                PRINTs("->obstacle")
                 return OBSTACLE;       
-             }                                  
+             }
+             else if ((distanceFront > 0) && (distanceFront < DISTANCE_NOMINAL)) // obstacle near
+             {
+                distanceLeft = VL53L0Xleft.VL53L0X_readMillimeters(); 
+                PRINT("->distance left(mm): ",distanceLeft)
+                distanceRight = VL53L0Xright.VL53L0X_readMillimeters(); 
+                PRINT("->distance right(mm): ",distanceRight)
+                
+                if ((distanceLeft > 0) && (distanceLeft > distanceRight) && (distanceLeft > distanceFront)) 
+                {    
+                   ret = adjustMotor (LEFT_MOTOR, SPEEDTICK);     // small turn to left
+                   if (ret == SPEED_ERROR) return SPEED_ERROR;
+                } 
+                else if ((distanceRight > 0) && (distanceRight > distanceLeft) && (distanceRight > distanceFront)) // small turn to right
+                {    
+                   ret = adjustMotor (RIGHT_MOTOR, SPEEDTICK);     // small turn to right
+                   if (ret == SPEED_ERROR) return SPEED_ERROR;                
+                }     
+             }                                   
 
-        }  // end check every 1 second  
+       }  // end check every 100ms
        
  }  // end while (millis() - start < timeout)
  

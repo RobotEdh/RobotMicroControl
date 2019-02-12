@@ -10,7 +10,7 @@
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
 
-#define VL53L0X_NB_SAMPLE          9  // Number of sample to get mediane
+#define VL53L0X_NB_SAMPLE          5  // Number of sample to get mediane
 
 class VL53L0XClass
 {
@@ -107,11 +107,10 @@ class VL53L0XClass
     uint8_t _last_nb_receive; // status of last I2C transmission
     VL53L0XClass(void);
 
-    void setAddress(uint8_t new_addr);
     inline uint8_t getAddress(void) { return address; }
-
+    void setAddress(uint8_t new_addr);
+    bool init(uint8_t new_addr, uint8_t xshut_pin, bool io_2v8 = true);
     bool init(bool io_2v8 = true);
-
     void writeReg(uint8_t reg, uint8_t value);
     void writeReg16Bit(uint8_t reg, uint16_t value);
     void writeReg32Bit(uint8_t reg, uint32_t value);
