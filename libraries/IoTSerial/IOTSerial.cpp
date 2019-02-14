@@ -11,7 +11,6 @@
 
 #include <IOTSerial.h>
 
-     
 // Constructor
 IOTSerialClass::IOTSerialClass()
 {
@@ -190,7 +189,6 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen, unsigned l
     unsigned long previousTime0=millis();
     
 	*msglen = 0;
-	
 	//Get the response from the IOT and add it to the response string
 	while ((istop != 2) && (i < MSG_SIZE_MAX) && ( millis()< previousTime0 + timeout))
 	{
@@ -209,7 +207,10 @@ int IOTSerialClass::IOTSread(int snum, uint8_t *msg, uint8_t *msglen, unsigned l
 #endif              
              byteread = Serial.available();
           }
-		  if (byteread>0) ibuf = Serial.read();
+		  
+		  if (byteread>0) {
+		     ibuf = Serial.read();
+          }
           break;
         
         case 1:

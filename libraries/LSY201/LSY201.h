@@ -20,9 +20,6 @@
 
 #define SUCCESS 0
 #define CAMERA_ERROR -6
-#define FILE_OPEN_ERROR -1000
-#define FILE_CLOSE_ERROR -1001
-
 
 class JPEGCameraClass
 {

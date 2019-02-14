@@ -37,12 +37,14 @@
 #define DISTANCE_MIN 600      // 600 mm before stopping
 #define DISTANCE_NOMINAL 1000 // 1000 mm before turning
 
-#define DIRECTION_LEFT  1
-#define DIRECTION_RIGHT 2
-#define OBSTACLE 3
-#define OBSTACLE_LEFT 4
-#define OBSTACLE_RIGHT 5
-#define OBSTACLE_LEFT_RIGHT 6
+#define DIRECTION_MID_LEFT  1
+#define DIRECTION_MID_RIGHT 2
+#define DIRECTION_LEFT  3
+#define DIRECTION_RIGHT 4
+#define OBSTACLE 5
+#define OBSTACLE_LEFT 6
+#define OBSTACLE_RIGHT 7
+#define OBSTACLE_LEFT_RIGHT 8
 
 #define InMotorRight1Pin    30    // In pin of Motor controller #1 for motor right #1 connected to digital pin 30
 #define EnableMotorRight1Pin 4    // Enable pin of Motor controller #1 for motor right #1 connected to PWM pin 4
@@ -277,7 +279,7 @@ void change_speed(int speed);
 /*                  = return number of decrements done                        */                                     
 /* lib:         analogWrite                                                   */ 
  
-int adjustMotor (int motor, int pid);
+void adjustMotor (int motor, int pid);
 /* Description: Adjust the speed of the motor according the PID value         */
 /* input:       motor                                                         */ 
 /*                  = LEFT_MOTOR                                              */ 

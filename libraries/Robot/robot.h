@@ -71,6 +71,10 @@ void IntrIOT();           // interrupt handler IOT
 
 #define WAKEUP_PIN  36   // Pin used by the MEGA2560 to wake-up the ESp
 
+int freeRam (void);
+void WakeUpESP(void); 
+void dateTime(uint16_t* date, uint16_t* time);
+
 void print_time(void );
 /* Description: print date & time                                             */                                            
 /* input:       none                                                          */
@@ -146,8 +150,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen);
 /*              makePicture                                                   */   
 /*              go                                                            */  
 
-int freeRam (void);
-void WakeUpESP(void); 
+
 int robot_IOT(void);    
 int robot_Send_Picture (uint8_t n);
 void robot_main(void); 

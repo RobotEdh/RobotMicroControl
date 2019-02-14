@@ -36,10 +36,6 @@ const uint8_t READ_DATA_OK[5] =        {0x76, 0x00, 0x32, 0x00, 0x00};
 
 //Message send by the camera following power on
 static const char *PWR_ON_MSG = "Init end\x0d\x0a";
-
-//SD card
-extern SdFile root;        // SD Root     
-       SdFile FilePicture; // SD File
    
 // Constructor
 JPEGCameraClass::JPEGCameraClass()
@@ -395,8 +391,10 @@ int JPEGCameraClass::makePicture (int n)
   
   // Open the file
   sprintf(filename, "PICT%d.jpg", n);
-  if (!FilePicture.open(&root, filename, O_CREAT|O_WRITE|O_TRUNC)) return FILE_OPEN_ERROR;  
-  
+  SD.remove(filename);
+  File FilePicture = SD.open(filename, FILE_WRITE);
+  if (!FilePicture)return FILE_OPEN_ERROR;
+   
   //Take a picture
   ret=takePicture();
   if (ret != SUCCESS) return CAMERA_ERROR;
@@ -427,7 +425,7 @@ int JPEGCameraClass::makePicture (int n)
   if (ret != SUCCESS ) return CAMERA_ERROR;
   
   //Close file
-  if (!FilePicture.close()) return FILE_CLOSE_ERROR;  
+  FilePicture.close(); 
   
   return SUCCESS;
 }

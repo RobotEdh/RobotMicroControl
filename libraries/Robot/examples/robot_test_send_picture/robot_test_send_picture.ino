@@ -1,8 +1,6 @@
 
 
 #define PAYLOAD_SIZE 100
-#define FILE_OPEN_ERROR  -1000
-#define FILE_CLOSE_ERROR -1001
 
 
 #include <sdcard.h>            // SD Card

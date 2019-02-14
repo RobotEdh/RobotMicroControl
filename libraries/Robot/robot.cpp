@@ -19,10 +19,6 @@ extern CMPS12Class CMPS12;          // The Compass class
        I2C_ScannerClass I2C_Scanner;// used to scan I2C
        BH1720Class BH1720;          // The brightness sensor
 
-// SD variables
-extern SdFile root;          // SD Root
-extern SdFile FilePicture;   // SD File
-
 // data updated during interrupts
 volatile int IntIOT = 0; 
 volatile int IntMotion = 0; 
@@ -52,6 +48,7 @@ double avg_lux = 0.0;
 int tab_noise[NB_NOISE] = {0};
 unsigned long avg_noise = 0;
 
+char timestamp[30];
 
 void IntrIOT()  // IOT interrupt
 {
@@ -72,26 +69,27 @@ int freeRam ()
     return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
 
-// Wake up ESP
-void WakeUpESP()
-{
-    int ret = 0;
-    
-    // send a pulse
-    digitalWrite(WAKEUP_PIN, LOW);
-    delay(10);
-    digitalWrite(WAKEUP_PIN, HIGH);
-    PRINTs("Wake up ESP sent, wait 15s for init")
-	// wait 15s for ESP init
-	delay(15000);
-	
-	// re-initialize the IOT Serial 1 
-	ret = IOTSerial.IOTSend(1); // close the IOT Serial 1 to communicate with IOT WIFClient ESP8266
-    ret = IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
-    ret = IOTSerial.IOTSflush(1); // flush to start clean
-    PRINTs("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK")
-}
 
+// call back for file timestamps
+void dateTime(uint16_t* date, uint16_t* time) {
+  uint8_t status = 0;
+  DateTime_t now; 
+   
+  status = DS1307.DS1307_read_current_datetime(&now);
+  if (status > 0)
+  {
+      PRINT("DS1307_read_current_datetime KO, I2C error: ",status)
+  }
+  else
+  {
+    sprintf(timestamp, "%02d:%02d:%02d %2d/%2d/%2d \n", now.hours,now.minutes,now.seconds,now.months,now.days,now.year-2000);
+   // return date using FAT_DATE macro to format fields
+   *date = FAT_DATE(now.year, now.months, now.days);
+
+   // return time using FAT_TIME macro to format fields
+   *time = FAT_TIME(now.hours, now.minutes, now.seconds);
+  }
+} 
 
 void print_time()
 {
@@ -142,6 +140,28 @@ void buzz(int buzzNb)
       delay(200);
    }            
 }
+
+ 
+// Wake up ESP
+void WakeUpESP()
+{
+    int ret = 0;
+    
+    // send a pulse
+    digitalWrite(WAKEUP_PIN, LOW);
+    delay(10);
+    digitalWrite(WAKEUP_PIN, HIGH);
+    PRINTs("Wake up ESP sent, wait 15s for init")
+	// wait 15s for ESP init
+	delay(15000);
+	
+	// re-initialize the IOT Serial 1 
+	ret = IOTSerial.IOTSend(1); // close the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+    ret = IOTSerial.IOTSbegin(1); // initialize the IOT Serial 1 to communicate with IOT WIFClient ESP8266
+    ret = IOTSerial.IOTSflush(1); // flush to start clean
+    PRINTs("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK")
+}
+
 
 int robot_begin()
 {
@@ -228,7 +248,14 @@ int robot_begin()
   delay(5*1000);lcd.clear();    
   
   // initialize the SD-Card 
-  PRINTs(" ")    
+  PRINTs(" ") 
+  if (!SD.begin(SS_CS_Pin)) {
+    PRINTs("initialization SD Card KO")
+  }
+  else {
+    PRINTs("initialization SD Card OK") 
+  }
+     
   ret = initSDCard();
   if (ret != SUCCESS)
   {  
@@ -257,7 +284,10 @@ int robot_begin()
         lcd.setCursor(0,1); 
         lcd.print("Num picture:");lcd.print(no_picture);
   }   
-  delay(5*1000);lcd.clear();  
+  delay(5*1000);lcd.clear(); 
+  
+ // set date time callback function
+ SdFile::dateTimeCallback(dateTime);  
     
     
   // initialize the Brightness sensor 
@@ -329,6 +359,11 @@ int robot_begin()
   ret = IOTSerial.IOTSflush(1); // flush to start clean
   PRINTs("Init IOT Serial 1 to communicate with IOT WIFClient ESP8266 OK")
   
+  // Send sleep to IOT WIFClient 
+  PRINTs("Call IOTSsend 1 SLEEP")
+  ret = IOTSerial.IOTSsend (1, SLEEP);
+  PRINT("Call IOTSsend, ret: ",ret) 
+  
   // initialize the IOT Serial 2, interrupt setting
   PRINTs(" ")
   ret = IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT WIFServer ESP8266
@@ -398,7 +433,7 @@ int infos (uint16_t *resp, uint8_t *resplen)
      uint16_t distance = VL53L0Xfront.VL53L0X_readMillimeters(); 
      if (distance > 0) resp[DISTANCE] = distance; // in mm
      else              resp[DISTANCE] = 0;
-     PRINT("distance: ",resp[DISTANCE])
+     PRINT("distance front: ",resp[DISTANCE])
      
      // temperature&humidity
      DHT22_ERROR_t errorCode = DHT22.readData();
@@ -601,13 +636,14 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      checkdir = check_around();
      
      lcd.setCursor(0,1); 
-     if      (checkdir == DIRECTION_LEFT)     lcd.print("LEFT");
-     else if (checkdir == DIRECTION_RIGHT)    lcd.print("RIGHT");
-     else if (checkdir == OBSTACLE)           lcd.print("OBSTACLE");        
-     else if (checkdir == OBSTACLE_LEFT)      lcd.print("OBSTACLE LEFT");
-     else if (checkdir == OBSTACLE_RIGHT)     lcd.print("OBSTACLE RIGHT");
-     else if (checkdir == OBSTACLE_LEFT_RIGHT)lcd.print("OBSTACLE LEFT RIGHT");
-     else                                     lcd.print("?");
+     if      (checkdir == DIRECTION_MID_LEFT)   lcd.print("MID LEFT");
+     else if (checkdir == DIRECTION_MID_RIGHT)  lcd.print("MID RIGHT");
+     else if (checkdir == DIRECTION_LEFT)       lcd.print("LEFT");
+     else if (checkdir == DIRECTION_RIGHT)      lcd.print("RIGHT");
+     else if (checkdir == OBSTACLE_LEFT)        lcd.print("OBSTACLE LEFT");
+     else if (checkdir == OBSTACLE_RIGHT)       lcd.print("OBSTACLE RIGHT");
+     else if (checkdir == OBSTACLE_LEFT_RIGHT)  lcd.print("OBSTACLE LEFT RIGHT");
+     else                                       lcd.print("?");
 
      resp[0] = (uint16_t)checkdir;
      *resplen = 0+1;
@@ -903,67 +939,50 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               lcd.clear();
               lcd.print("check around");
               lcd.setCursor(0,1); 
-              if      (checkdir == DIRECTION_LEFT)       lcd.print("LEFT");
+              if      (checkdir == DIRECTION_MID_LEFT)   lcd.print("MID LEFT");
+              else if (checkdir == DIRECTION_MID_RIGHT)  lcd.print("MID RIGHT");
+              else if (checkdir == DIRECTION_LEFT)       lcd.print("LEFT");
               else if (checkdir == DIRECTION_RIGHT)      lcd.print("RIGHT");
               else if (checkdir == OBSTACLE_LEFT)        lcd.print("OBSTACLE LEFT");
               else if (checkdir == OBSTACLE_RIGHT)       lcd.print("OBSTACLE RIGHT");
-              else if (checkdir == OBSTACLE_LEFT_RIGHT)  lcd.print("OBSTACLE_LEFT_RIGHT");
+              else if (checkdir == OBSTACLE_LEFT_RIGHT)  lcd.print("OBSTACLE LEFT RIGHT");
               else                                       lcd.print("?");
          
-              if (checkdir == DIRECTION_LEFT) {
+              if ((checkdir == DIRECTION_MID_LEFT) || (checkdir == DIRECTION_LEFT) || (checkdir == DIRECTION_MID_RIGHT) || (checkdir == DIRECTION_RIGHT)) {
                    start_forward();
                    motor_state = STATE_GO;
-                   PRINTs("Turn left")
-                   ret = turn (-45,  5); // turn  -45 degrees during 5s max
+                   
+                   double alpha = 0.0;
+                   if      (checkdir == DIRECTION_MID_LEFT)   alpha = -30.0;
+                   else if (checkdir == DIRECTION_MID_RIGHT)  alpha =  30.0;
+                   else if (checkdir == DIRECTION_LEFT)       alpha = -45.0;
+                   else if (checkdir == DIRECTION_RIGHT)      alpha =  45.0;
+                       
+                   PRINT("Turn, angle: ",alpha)
+                   ret = turn (alpha,  5); // turn during 5s max
                    if (ret != SUCCESS)
                    {
                       stop();
                       motor_state = STATE_STOP;                   	  
                    	  error = 1;
                    	                     	  
-                   	  PRINT("Turn left KO, error: ",ret)
+                   	  PRINT("Turn KO, error: ",ret)
                       PRINTs("Stop")                                         	  
                    	  lcd.clear();                   	  
-                   	  lcd.print("turn left");
+                   	  lcd.print("turn");
                    	  lcd.setCursor(0,1);
                    	  lcd.print("error: "); lcd.print(ret); 
                    }
                    else
                    {
                       lcd.clear();                   	  
-                   	  lcd.print("turn left OK"); 
-                   	  PRINTs("Turn left OK");               	
+                   	  lcd.print("turn OK"); 
+                   	  PRINT("Turn OK, angle: ",alpha)               	
                    }
-              }
-              else if (checkdir == DIRECTION_RIGHT) {
-                   start_forward();
-                   motor_state = STATE_GO;
-                   PRINTs("Turn right")
-                   ret = turn (+45,  5); // turn  +45 degrees during 5s max
-                   if (ret != SUCCESS)
-                   {
-                   	  stop();
-                      motor_state = STATE_STOP;  
-                   	  error = 1;
-                   	                     	 
-                   	  PRINT("Turn right KO, error: ",ret)
-                   	  PRINTs("Stop")
-                   	  lcd.clear();                   	  
-                   	  lcd.print("turn right");
-                   	  lcd.setCursor(0,1);
-                   	  lcd.print("error: "); lcd.print(ret); 
-                   }
-                   else
-                   {
-                      lcd.clear();                   	  
-                   	  lcd.print("turn right OK");  
-                   	  PRINTs("Turn right OK");                  	
-                   }                  
               }
               else 
               {
               	   buzz(2);
-                   blink(Led_Red);
               	   motor_state = STATE_GO;
               	   PRINTs("Turnback 10 ms")
               	   ret = turnback (10); // turn back during 10s max
@@ -1303,8 +1322,7 @@ int robot_IOT ()
        for (uint8_t j=0; j<(nbtags-1); j++)
        {
            cmd[j] = value[j+1];
-           PRINT("j",j)
-           PRINTx("cmd[j]: ",cmd[j])
+           PRINTj("cmd",j,cmd[j])
        }
  
        // Execute the command received from IOT
@@ -1317,8 +1335,7 @@ int robot_IOT ()
         	 PRINT("cmdId",cmdId)    
         	 for (uint8_t k=0; k<resplen; k++)
              {
-                PRINT("k",k)
-                PRINTx("resp[k]: ",resp[k])
+                PRINTj("resp",k,resp[k])
              }
              ret = IOTSerial.IOTSsend(2, RESP_OK, resp, resplen, cmdId);
        }
@@ -1364,45 +1381,45 @@ int robot_Send_Picture (uint8_t n)
  
  // Open picture file
  sprintf(filename, "PICT%d.jpg", n);  
- if (!FilePicture.open(&root, filename, O_READ)) return FILE_OPEN_ERROR; 
- PRINTs("FilePicture open ok ")
+ File FilePicture = SD.open(filename, FILE_READ);
+ if (!FilePicture) {PRINTs("FilePicture open KO "); return FILE_OPEN_ERROR;}
+ else PRINTs("FilePicture open OK ")
  
  //Send the Picture message 
  param[0] = (uint16_t)n;
- param[1] = (uint16_t)FilePicture.fileSize();
+ param[1] = (uint16_t)FilePicture.size();
  paramlen = 2;
 
  ret = IOTSerial.IOTSsend(1, PICTURE, param, paramlen); 
  
- // CANNOT use TX swapped with Sparkfunk Thing  
+ // CANNOT use TX with Sparkfunk Thing but CAN with Adafruit HUZZAH 
        
  //Read the message replied to be sure that the client is ready to receive the picture
- //ret = IOTSerial.IOTSread(1, msg, &msg_len, 60000UL);  // timeout 60s
- //Serial.print("Call IOTSread 1, ret: "); Serial.print(ret); Serial.print(", msg_len: "); Serial.println((int)msg_len);
+ ret = IOTSerial.IOTSread(1, msg, &msg_len, 60000UL);  // timeout 60s
+ PRINT("Call IOTSread 1, ret: ", ret);
+ PRINT("msg_len: ",msg_len)
 
- //if (ret != SUCCESS) {
-   //  Serial.println("error IOTSread");  
-     //ret = IOTSerial.IOTSflush(1);
-     //return 0;
- //}
+ if (ret != SUCCESS) {
+     PRINTs("error IOTSread")  
+     ret = IOTSerial.IOTSflush(1);
+     return 0;
+ }
  
  //Decode the message
- //IOTSerial.IOTSgetTags(msg, tag, value, &nbtags); // parse the response  
- //Serial.print("Call IOTSgetTags, nbtags: "); Serial.println((int)nbtags);
+ IOTSerial.IOTSgetTags(msg, tag, value, &nbtags); // parse the response  
+ PRINT("Call IOTSgetTags, nbtags: ",nbtags)
     
- //if (nbtags < 1)          return -1; 
+ if (nbtags < 1)          return -1; 
     
- //Serial.print("tag[0]: 0x");Serial.println((int)tag[0],HEX); 
- //if (tag[0]!= TAG_CMDID)   return -2;
- //Serial.print("tag[1]: "); Serial.println((int)tag[1]);  
- //if (tag[1]!= TAG_RESP)   return -3;
- //Serial.print("value[1]: "); Serial.println(value[1]);        
- //if (value[1] == RESP_KO) return -4;
- //if (value[1] != RESP_OK) return -5;
+ PRINTx("tag[0]: ",tag[0]) 
+ if (tag[0]!= TAG_CMDID)   return -2;
+ PRINTx("tag[1]: ",tag[1])   
+ if (tag[1]!= TAG_RESP)   return -3;
+ PRINTx("value[1]: ",value[1])         
+ if (value[1] == RESP_KO) return -4;
+ if (value[1] != RESP_OK) return -5;
 
- delay(10*1000);  // delay 10s because can't read ESP answer
- 
- 
+ // RESP_OK received, we are good.
  // read from the file until there's nothing else in it:
  while ((nbytes = FilePicture.read(buf, sizeof(buf))) > 0 && ret == SUCCESS) {
        for (uint16_t i = 0;i<nbytes;i++)
@@ -1413,9 +1430,35 @@ int robot_Send_Picture (uint8_t n)
  }// while 
   
  //Close file
- if (!FilePicture.close()) return FILE_CLOSE_ERROR; 
+ FilePicture.close();
  
+ //Read the message that indicate that the client has send the picture
+ ret = IOTSerial.IOTSread(1, msg, &msg_len, 60000UL);  // timeout 60s
+ PRINT("Call IOTSread 1, ret: ", ret);
+ PRINT("msg_len: ",msg_len)
+
+ if (ret != SUCCESS) {
+     PRINTs("error IOTSread")  
+     ret = IOTSerial.IOTSflush(1);
+     return 0;
+ }
+ 
+ //Decode the message
+ IOTSerial.IOTSgetTags(msg, tag, value, &nbtags); // parse the response  
+ PRINT("Call IOTSgetTags, nbtags: ",nbtags)
     
- PRINTs("End OK robot_IOT") 
+ if (nbtags < 1)          return -1; 
+    
+ PRINTx("tag[0]: ",tag[0]) 
+ if (tag[0]!= TAG_CMDID)   return -2;
+ PRINTx("tag[1]: ",tag[1])   
+ if (tag[1]!= TAG_RESP)   return -3;
+ PRINTx("value[1]: ",value[1])         
+ if (value[1] == RESP_KO) return -4;
+ if (value[1] != RESP_OK) return -5;
+
+ // RESP_OK received, we are good.
+    
+ PRINTs("End OK robot_Send_Picture") 
  return SUCCESS;                     
 }			 

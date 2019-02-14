@@ -607,11 +607,10 @@ void change_speed(int speed)
 
 int go(unsigned long timeout)
 {
- uint16_t distanceLeft = 0;
+ uint16_t distanceLeft  = 0;
  uint16_t distanceFront = 0;
  uint16_t distanceRight = 0;
  int inputpin = HIGH; 
- int ret = SUCCESS;
 
 #ifdef PID  
  TickLeft  = 0;  // reset ticks
@@ -619,7 +618,6 @@ int go(unsigned long timeout)
 #endif
  
  unsigned long start = millis();
- unsigned long current = millis();
  while (millis() - start < timeout*1000UL) {  // go during maximum timeout seconds  
     
 #ifdef PID 
@@ -627,13 +625,11 @@ int go(unsigned long timeout)
        int pid;
        if (TickLeft > TickRight) {
              pid = computePID (TickLeft - TickRight); // compute PID
-             ret = adjustMotor (LEFT_MOTOR, pid);     // Adjust according PID
-             if (ret == SPEED_ERROR) return SPEED_ERROR;
+             adjustMotor (LEFT_MOTOR, pid);     // Adjust according PID
        }      
        if (TickLeft < TickRight) {
              pid = computePID (TickRight - TickLeft);  // compute PID
-             ret = adjustMotor (RIGHT_MOTOR, pid);     // Adjust according PID
-             if (ret == SPEED_ERROR) return SPEED_ERROR;
+             adjustMotor (RIGHT_MOTOR, pid);     // Adjust according PID
        }
 #endif
     
@@ -649,37 +645,25 @@ int go(unsigned long timeout)
            return OBSTACLE_LEFT;   
        }
             
-       if (millis() - current > 1*100UL) { // check every 100ms
-             current = millis();
-             
-             distanceFront = VL53L0Xfront.VL53L0X_readMillimeters(); // Check distance minimum
-             PRINT("->distance front (mm): ",distanceFront)
-                        
-             if ((distanceFront > 0) && (distanceFront < DISTANCE_MIN)) // obstacle
-             {
-                PRINTs("->obstacle")
-                return OBSTACLE;       
-             }
-             else if ((distanceFront > 0) && (distanceFront < DISTANCE_NOMINAL)) // obstacle near
-             {
-                distanceLeft = VL53L0Xleft.VL53L0X_readMillimeters(); 
-                PRINT("->distance left(mm): ",distanceLeft)
-                distanceRight = VL53L0Xright.VL53L0X_readMillimeters(); 
-                PRINT("->distance right(mm): ",distanceRight)
-                
-                if ((distanceLeft > 0) && (distanceLeft > distanceRight) && (distanceLeft > distanceFront)) 
-                {    
-                   ret = adjustMotor (LEFT_MOTOR, SPEEDTICK);     // small turn to left
-                   if (ret == SPEED_ERROR) return SPEED_ERROR;
-                } 
-                else if ((distanceRight > 0) && (distanceRight > distanceLeft) && (distanceRight > distanceFront)) // small turn to right
-                {    
-                   ret = adjustMotor (RIGHT_MOTOR, SPEEDTICK);     // small turn to right
-                   if (ret == SPEED_ERROR) return SPEED_ERROR;                
-                }     
-             }                                   
 
-       }  // end check every 100ms
+       distanceFront = VL53L0Xfront.VL53L0X_readMillimeters(); // Check distance minimum
+       PRINT("->distance front (mm): ",distanceFront)
+                        
+       if ((distanceFront > 0) && (distanceFront < DISTANCE_MIN)) // obstacle
+       {
+          PRINTs("->obstacle")
+          return OBSTACLE;       
+       }
+       else if ((distanceFront > 0) && (distanceFront < DISTANCE_NOMINAL)) // obstacle near
+       {
+          distanceLeft = VL53L0Xleft.VL53L0X_readMillimeters(); 
+          PRINT("->distance left(mm): ",distanceLeft)
+          distanceRight = VL53L0Xright.VL53L0X_readMillimeters(); 
+          PRINT("->distance right(mm): ",distanceRight)
+                
+          if      ((distanceLeft  > 0) && (distanceLeft > distanceRight) && (distanceLeft  > distanceFront))  adjustMotor (LEFT_MOTOR,  SPEEDTICK); // small turn to left
+          else if ((distanceRight > 0) && (distanceRight > distanceLeft) && (distanceRight > distanceFront))  adjustMotor (RIGHT_MOTOR, SPEEDTICK); // small turn to right     
+       }                                   
        
  }  // end while (millis() - start < timeout)
  
@@ -689,8 +673,8 @@ int go(unsigned long timeout)
 
 int check_around()
 {
-    double distance_right = 0.0;
-    double distance_left = 0.0;
+    double distanceLeft  = 0.0;
+    double distanceRight = 0.0;
     int inputpin = HIGH; 
     
     // Check Contacts sensors, HIGH in normal situation
@@ -706,26 +690,36 @@ int check_around()
         return OBSTACLE_LEFT;   
     }
        
+
+    distanceLeft = VL53L0Xleft.VL53L0X_readMillimeters(); 
+    PRINT("distance left(mm): ",distanceLeft)
+    distanceRight = VL53L0Xright.VL53L0X_readMillimeters(); 
+    PRINT("distance right(mm): ",distanceRight)
+   
+    if      ((distanceLeft > DISTANCE_MIN) && (distanceLeft > distanceRight)) return DIRECTION_MID_LEFT;     
+    else if (distanceRight > DISTANCE_MIN)                                    return DIRECTION_MID_RIGHT; 
+
+       
     IRServo.write(0);    // turn servo left
-    delay(15*90);        // waits the servo to reach the position 
-    distance_left = SharpIR.SharpIR_distance(); // Check distance on right side
-    PRINT("SharpIR sensor, distance_left(mm): ",distance_left)
+    delay(15*90);        // waits 1350 ms the servo to reach the position 
+    distanceLeft = SharpIR.SharpIR_distance(); // Check distance on right side
+    PRINT("SharpIR sensor, distance left(mm): ",distanceLeft)
           
     IRServo.write(180);  // turn servo right
-    delay(15*180);       // waits the servo to reach the position 
-    distance_right = SharpIR.SharpIR_distance(); // Check distance on left side
-    PRINT("SharpIR sensor, distance_right(mm): ",distance_right)
+    delay(15*180);       // waits 2700 ms the servo to reach the position 
+    distanceRight = SharpIR.SharpIR_distance(); // Check distance on left side
+    PRINT("SharpIR sensor, distance right(mm): ",distanceRight)
     
     IRServo.write(90);   // reset servo position
-    delay(15*90);        // waits the servo to reach the position 
+    delay(15*90);        // waits 1350 ms the servo to reach the position 
 	 
-    if      ((distance_left > DISTANCE_MIN) && (distance_left > distance_right)) return DIRECTION_LEFT;     
-    else if (distance_right > DISTANCE_MIN)                                      return DIRECTION_RIGHT; 
-    else                                                                         return OBSTACLE_LEFT_RIGHT;      
+    if      ((distanceLeft > DISTANCE_MIN) && (distanceLeft > distanceRight)) return DIRECTION_LEFT;     
+    else if (distanceRight > DISTANCE_MIN)                                    return DIRECTION_RIGHT; 
+    else                                                                      return OBSTACLE_LEFT_RIGHT;      
 }
 
 
-int adjustMotor (int motor, int pid)
+void adjustMotor (int motor, int pid)
 {
   if (motor == LEFT_MOTOR) {
        if  ((SpeedMotorLeft - pid) > SPEEDNOMINAL){
@@ -755,24 +749,22 @@ int adjustMotor (int motor, int pid)
   
   // check speed max
   
-  if (SpeedMotorRight - SPEEDMAX > SpeedMotorLeft) return SPEED_ERROR;
   if (SpeedMotorRight - SPEEDMAX > 0) {
        SpeedMotorRight = SPEEDMAX;
        SpeedMotorLeft = SpeedMotorLeft - (SPEEDMAX - SpeedMotorRight) ;
   } 
-  
-  if (SpeedMotorLeft - SPEEDMAX > SpeedMotorRight) return SPEED_ERROR;
+  if (SpeedMotorLeft < 0) SpeedMotorLeft = 0;
+    
   if (SpeedMotorLeft - SPEEDMAX > 0) {
        SpeedMotorLeft = SPEEDMAX;
        SpeedMotorRight = SpeedMotorRight - (SPEEDMAX - SpeedMotorLeft) ;
   }
-   
+  if (SpeedMotorRight < 0) SpeedMotorRight = 0;
+       
   analogWrite(EnableMotorRight1Pin,  SpeedMotorRight); 
   analogWrite(EnableMotorRight2Pin,  SpeedMotorRight); 
   analogWrite(EnableMotorLeft1Pin,  SpeedMotorLeft);
   analogWrite(EnableMotorLeft2Pin,  SpeedMotorLeft);
-  
-  return SUCCESS;
    
 }
 

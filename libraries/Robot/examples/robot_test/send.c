@@ -3,8 +3,6 @@
 #define PAYLOAD_SIZE 100
 
 #define SUCCESS              0
-#define FILE_OPEN_ERROR  -1000
-#define FILE_CLOSE_ERROR -1001
 
 
 #include <sdcard.h>     // used to read the picture on a SD-Card
@@ -32,12 +30,9 @@ void setup()
 
 void loop()
 {
- int ret=0;
- 
 
-  
   // read from the file until there's nothing else in it:
-  while ((nbytes = FilePicture.read(buf, sizeof(buf))) > 0 && ret == SUCCESS) {
+  while ((nbytes = FilePicture.read(buf, sizeof(buf))) > 0) {
       tbytes=tbytes+nbytes;Serial.print("tbytes: "); Serial.println(tbytes);
        if (nbytes == sizeof(buf)) 
        {
@@ -55,12 +50,9 @@ void loop()
            Serial1.write( buffer [i]);
      
        }
-            
-
-       if (ret != SUCCESS ) return -1;
  
   }// while
   
-  
+  FilePicture.close(); 
 
 }

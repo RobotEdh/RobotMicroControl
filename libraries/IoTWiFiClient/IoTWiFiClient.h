@@ -7,7 +7,7 @@
 #include <IOTSerial.h>
 #include <ESPcredentials.h>
 
-#define PIN_LED              2 // pin 2 on Adafruit HUZZAH, pin 5 on Sparkfun thing
+#define PIN_LED              12 // pin 12 on Adafruit HUZZAH, pin 5 on Sparkfun thing
 
 #define SUCCESS              0
 

@@ -5,9 +5,9 @@
 #include <SD.h>   
 
 #define SUCCESS 0
-#define SDCARD_ERROR -7
-#define FILE_OPEN_ERROR  -1000
-#define FILE_CLOSE_ERROR -1001
+#define SDCARD_ERROR     -1000
+#define FILE_OPEN_ERROR  -1001
+
 
 #define SS_CS_Pin  10   
 
