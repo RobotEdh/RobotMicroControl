@@ -5,6 +5,9 @@
   Use SoftwareSerial at 38400 bauds
 */
 #if defined(ESP8266)  
+  #define Serial2 Serial 
+#endif 
+#if defined(NRF5) 
   #define Serial1 Serial 
   #define Serial2 Serial 
 #endif 
