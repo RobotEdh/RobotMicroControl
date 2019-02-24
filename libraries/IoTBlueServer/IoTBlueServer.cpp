@@ -30,6 +30,8 @@ int IoTBlueServerClass::IoTBSbegin()
    const char * localName = "Robot";
    int ret = SUCCESS;
       
+  Serial.begin (9600); 
+  
   // led on
   pinMode(LED_PIN, OUTPUT); 
   digitalWrite(LED_PIN, LOW);
@@ -41,7 +43,7 @@ int IoTBlueServerClass::IoTBSbegin()
   BLESerial.setLocalName(localName);
    
   BLESerial.begin();
-    
+   
   ret = IOTSerial.IOTSbegin(0); // Serial port
   if (ret != 0) {
        //Serial.print ("Error IOTSbegin: ");Serial.println (ret);
@@ -83,8 +85,7 @@ int IoTBlueServerClass::IoTBSmain()
        return -2;
     }
     
-    sprintf(infos,"{\"result\": %d, \"AlertStatus\": %u, \"PictureNumber\": %u, \"MotorState\": %u, \"Direction\": %u, \"ObstacleStatus\": %u, \"Distance\": %u, \"Temperature\": %u, \"Humidity\": %u, \"Brightness\": %u, \"Noise\": %u}",_result,_AlertStatus,_PictureNumber,_MotorState,_Direction,_ObstacleStatus,_Distance,_Temperature,_Humidity,_Brightness,_Noise);
-    BLESerial.print("ok");
+    IoTBSRobotReply();
 
     return SUCCESS;
 }
@@ -117,7 +118,7 @@ int IoTBlueServerClass::IoTBSReadMsg(uint8_t *msg, uint8_t *msglen, unsigned lon
  
 		if (byteread>0) {
 		     ibuf = BLESerial.read();
-             //Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
+             Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
              byteread--;  // one byte read
              msg[i++] = (uint8_t)ibuf; // fill message
              if((uint8_t) ibuf == 0x3E) istop = 1;  // stop when > received
@@ -172,14 +173,14 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
        paramTag = command.indexOf("P=");
        if (paramTag != -1)
        {   
-          Start = paramTag + 6;
+          Start = paramTag + 2;
           Separator = command.indexOf('|', Start + 1);
           for (int p=0; (Separator != -1) && (Start < Stop) ; p++)
           {
                szparam[p] = command.substring(Start, Separator);
                iparam[p] = szparam[p].toInt();
-               //Serial.print("param"); Serial.print(p); Serial.print("=");
-               //Serial.print(szparam[p]); Serial.print("/"); Serial.println(iparam[p]);
+               Serial.print("param"); Serial.print(p); Serial.print("=");
+               Serial.print(szparam[p]); Serial.print("/"); Serial.println(iparam[p]);
                Start = Separator + 1;
                if ( Start < Stop) Separator = command.indexOf('|', Start + 1);              
           }                                   
@@ -224,6 +225,8 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
            param[paramlen++] = ((iparam[0] != abs(iparam[0])) ? (1):(0));
            param[paramlen++] = abs(iparam[1]);
            param[paramlen++] = ((iparam[1] != abs(iparam[1])) ? (1):(0));
+           Serial.print("iparam[0]");Serial.println(iparam[0]);
+           Serial.print("iparam[1]");Serial.println(iparam[1]);
     }                                    
     else if (szcmd == "GO")
     {
@@ -379,3 +382,38 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
     }
     return -10;  // unknow command
 }
+
+
+
+void IoTBlueServerClass::IoTBSRobotReply() { 
+ 
+  IoTBSSendReply ((uint8_t)ALERT_STATUS, _AlertStatus);
+  IoTBSSendReply ((uint8_t)NO_PICTURE, _PictureNumber);
+  delay(500);
+  IoTBSSendReply ((uint8_t)MOTOR_STATE, _MotorState);
+  IoTBSSendReply ((uint8_t)DIRECTION, _Direction);
+  delay(5000);
+  IoTBSSendReply ((uint8_t)OBSTACLE_STATUS, _ObstacleStatus);
+  IoTBSSendReply ((uint8_t)DISTANCE, _Distance);
+  delay(500);
+  IoTBSSendReply ((uint8_t)TEMPERATURE, _Temperature);
+  IoTBSSendReply ((uint8_t)HUMIDITY, _Humidity);
+  delay(500);
+  IoTBSSendReply ((uint8_t)BRIGHTNESS, _Brightness);
+  IoTBSSendReply ((uint8_t)NOISE, _Noise);
+}
+
+
+void IoTBlueServerClass::IoTBSSendReply(uint8_t tag, uint16_t value) {
+
+  BLESerial.write((uint8_t)SBN1);
+  BLESerial.write((uint8_t)0);  //to chunk 2 msg into 20 bytes
+  BLESerial.write((uint8_t)4);  //msg lenght
+  BLESerial.write((uint8_t)SBN2);
+  BLESerial.write((uint8_t)TAG_INFOS);    
+  BLESerial.write(tag); 
+  BLESerial.write((uint8_t)(value >> 8));
+  BLESerial.write((uint8_t)value);
+  BLESerial.write((uint8_t)EBN1);
+  BLESerial.write((uint8_t)EBN2);
+} 
