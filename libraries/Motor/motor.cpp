@@ -673,6 +673,7 @@ int go(unsigned long timeout)
 
 int check_around()
 {
+    double distanceFront = 0.0;
     double distanceLeft  = 0.0;
     double distanceRight = 0.0;
     int inputpin = HIGH; 
@@ -690,12 +691,14 @@ int check_around()
         return OBSTACLE_LEFT;   
     }
        
-
+    distanceFront = VL53L0Xfront.VL53L0X_readMillimeters(); 
+    PRINT("distance front(mm): ",distanceFront)
     distanceLeft = VL53L0Xleft.VL53L0X_readMillimeters(); 
     PRINT("distance left(mm): ",distanceLeft)
     distanceRight = VL53L0Xright.VL53L0X_readMillimeters(); 
     PRINT("distance right(mm): ",distanceRight)
    
+    if      (distanceFront > DISTANCE_MIN)                                    return NO_OBSTACLE;  
     if      ((distanceLeft > DISTANCE_MIN) && (distanceLeft > distanceRight)) return DIRECTION_MID_LEFT;     
     else if (distanceRight > DISTANCE_MIN)                                    return DIRECTION_MID_RIGHT; 
 

@@ -29,6 +29,7 @@
 #define CMD_CHECK         0x0A
 #define CMD_PI            0x0B
 #define CMD_TEST          0x0C
+#define CMD_RUN           0x0D
 
 #define ALERT_STATUS           0
 #define NO_PICTURE             1
@@ -41,8 +42,9 @@
 #define BRIGHTNESS             8
 #define NOISE                  9
 
-#define RESP_SIZE 10
-    
+#define RESP_SIZE  10
+#define CMD_SIZE   RESP_SIZE+1  
+ 
 const char szField[RESP_SIZE][30]={    
 "alert_status",
 "no_picture",

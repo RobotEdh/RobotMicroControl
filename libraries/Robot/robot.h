@@ -20,23 +20,9 @@
 #include <I2C_Scanner.h>       // used to scan I2C
 #include <BH1720.h>            // Brightness sensor
 
-#define CMD_START         0x01
-#define CMD_STOP          0x02
-#define CMD_GET_INFOS     0x03
-#define CMD_PICTURE       0x04
-#define CMD_TURN          0x05
-#define CMD_CHECK_AROUND  0x06
-#define CMD_MOVE_TILT_PAN 0x07
-#define CMD_GO            0x08
-#define CMD_ALERT         0x09
-#define CMD_CHECK         0x0A
-#define CMD_PI            0x0B
-
 #define PI_NO_COMM        0
 #define PI_ALERT_ONLY     1
 #define PI_ALERT_INFOS    2
-
-#define CMD_SIZE   11
 
 #define PAYLOAD_SIZE 80
 

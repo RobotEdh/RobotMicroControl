@@ -37,6 +37,7 @@
 #define DISTANCE_MIN 600      // 600 mm before stopping
 #define DISTANCE_NOMINAL 1000 // 1000 mm before turning
 
+#define NO_OBSTACLE  0
 #define DIRECTION_MID_LEFT  1
 #define DIRECTION_MID_RIGHT 2
 #define DIRECTION_LEFT  3

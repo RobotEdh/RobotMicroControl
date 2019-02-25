@@ -306,7 +306,7 @@ int robot_begin()
      }
      else
      {
-        PRINT(" Lux (cloudy indoor:5-50, cloudy outdoor:50-500, sunny indoor:100-1000, sunny outdoor: >10000): ",lux)
+        PRINT("Lux (cloudy indoor:5-50, cloudy outdoor:50-500, sunny indoor:100-1000, sunny outdoor: >10000): ",lux)
      }
      ivalue = (int)lux;
      lcd.print("Lux:");lcd.print(ivalue);lcd.printByte(lcd_pipe);     
@@ -325,7 +325,7 @@ int robot_begin()
   
   ivalue = 0; //TODO
   //Serial.print("Value between 0 (no noise) and 1023 (huge noise): ");
-  Serial.println(ivalue); 
+  PRINT("Noise: ",ivalue)
   lcd.print("Noise:");lcd.print(ivalue);
 
    
@@ -651,10 +651,10 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      
  case CMD_MOVE_TILT_PAN:    
      PRINTs("CMD_MOVE_TILT_PAN")
-      Serial.print(cmd[1]);Serial.print(cmd[2]);Serial.print(cmd[3]);Serial.println(cmd[4]);    
      if (cmd[2] == 0) HPos = (int)cmd[1] + 90; else HPos = 90 - (int)cmd[1]; 
      if (cmd[4] == 0) VPos = (int)cmd[3] + 90; else VPos = 90 - (int)cmd[3]; 
-     Serial.print("CMD_MOVE_TILT_PAN, HPos VPos: "); Serial.print(HPos);Serial.println(VPos);   
+     PRINT("HPos: ",HPos)
+     PRINT("VPos: ",VPos)
      lcd.print("MOVE TILT&PAN");
      lcd.setCursor(0,1); 
      lcd.print("X: ");
@@ -668,15 +668,17 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      break; 
                     
  case CMD_TURN:
-    PRINT("CMD_TURN, angle (deg): ",cmd[1])
-       if (cmd[1] == 180)
+     PRINTs("CMD_TURN")
+     PRINT("angle (deg): ",cmd[1])
+     PRINT("angle (sign): ",(cmd[2] != 1) ? ('+'):('-'))
+     if (cmd[1] == 180)
      {       
-           Serial.print("CMD_TURN_BACK");
+           PRINTs("CMD_TURN_BACK")
            lcd.print("TURN BACK ");  
          
            ret = turnback (10);  // 10s max
            if (ret != SUCCESS){
-           	  Serial.print("turnback error"); Serial.println(ret);
+           	  PRINT("turnback KO, error: ",ret)
            	  lcd.setCursor(0,1); 
            	  lcd.print("turnback error: "); lcd.print(ret);
            	  error = 1;
@@ -684,12 +686,11 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }       
      else if (motor_state == STATE_GO)
      { 
-           Serial.print("CMD_TURN, alpha: "); Serial.print((cmd[2] != 1) ? ('+'):('-')); Serial.println((int)cmd[1]); 
            lcd.print("TURN"); lcd.print((cmd[2] != 1) ? ('+'):('-')); lcd.print((int)cmd[1]);lcd.printByte(223); //degree   
          
            ret = turn ((double)((cmd[2] != 1) ? (cmd[1]):(-cmd[1])), 5);  // 5s max        
            if (ret != SUCCESS){
-           	  Serial.print("turn error"); Serial.println(ret);
+           	  PRINT("turn KO, error: ",ret)
            	  lcd.setCursor(0,1); 
            	  lcd.print(" turn error: "); lcd.print(ret);
            	  error = 1;
@@ -723,12 +724,12 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
  case CMD_PICTURE: 
      PRINTs("CMD_PICTURE")
      no_picture++;
-     Serial.println(no_picture);
+     PRINT("no picture: ",no_picture)
      lcd.print("PICTURE ");
      
      motor_state_save = motor_state;
      if (motor_state == STATE_GO) {
-        Serial.println("Stop"); 
+        PRINTs("Stop") 
         stop();
         motor_state = STATE_STOP;
       }
@@ -748,7 +749,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }
        
      if (motor_state_save == STATE_GO) {          
-        Serial.println("Start");
+        PRINTs("Start")
         start_forward();                     
         motor_state = STATE_GO;
      }
@@ -767,7 +768,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      
      // If motor_state == STATE_GO => Stop           
      if (motor_state == STATE_GO) {
-        Serial.println("Stop"); 
+        PRINTs("Stop")
         stop();
         motor_state = STATE_STOP;
      }
@@ -783,9 +784,8 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
         TiltPan_move(HPos, VPos);
      }
      
-     Serial.print("makePicture, no_picture: ");
      no_picture++;
-     Serial.println(no_picture);
+     PRINT("makePicture, no picture: ",no_picture)
      lcd.print("PICTURE ");
      
      ret = JPEGCamera.makePicture (no_picture);
@@ -796,7 +796,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }
      else
      {
-        Serial.print("makePicture error: "); Serial.println(ret);
+        PRINT("makePicture KO, error: ",ret)
         lcd.setCursor(0,1); 
         lcd.print("error: "); lcd.print(ret);       
         error = 1;
@@ -808,9 +808,8 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
         VPos = 90;
         TiltPan_move(HPos, VPos);
 
-        Serial.print("makePicture, no_picture: ");
         no_picture++;
-        Serial.println(no_picture);
+        PRINT("makePicture, no picture: ",no_picture)
         lcd.print("PICTURE ");
         
         ret = JPEGCamera.makePicture (no_picture);
@@ -820,7 +819,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }
      else
      {
-        Serial.print("makePicture error: "); Serial.println(ret);
+        PRINT("makePicture KO, error: ",ret)
         lcd.setCursor(0,1); 
         lcd.print("error: "); lcd.print(ret);       
         error = 1;
@@ -832,9 +831,8 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
         VPos = 90;
         TiltPan_move(HPos, VPos);
      
-        Serial.print("makePicture, no_picture: ");
         no_picture++;
-        Serial.println(no_picture);
+        PRINT("makePicture, no picture: ",no_picture)
         lcd.print("PICTURE ");
         
         ret = JPEGCamera.makePicture (no_picture);
@@ -844,7 +842,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }
      else
      {
-        Serial.print("makePicture error: "); Serial.println(ret);
+        PRINT("makePicture KO, error: ",ret)
         lcd.setCursor(0,1); 
         lcd.print("error: "); lcd.print(ret);       
         error = 1;
@@ -868,13 +866,13 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      if (freqCheck > 0) alert_status = check();
      
      if (alert_status != 0) {
-           Serial.print("Alert detected: ");Serial.println(alert_status);
+           PRINT("Alert detected: ",alert_status)
            lcd.setCursor(0,1); 
            lcd.print("Alert: "); lcd.print(alert_status);                
      }
      else
      {
-           Serial.println("No alert detected: ");
+           PRINTs("No alert detected: ")
            lcd.setCursor(0,1); 
            lcd.print(" No Alert");               
      } 
@@ -885,19 +883,20 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      break; 
   
  case CMD_GO: 
-     PRINT("CMD_GO, timeout (sec): ",cmd[1])
-     lcd.print("GO ");lcd.print((int)cmd[1]);lcd.print("secs");
+ case CMD_RUN: 
+     PRINT("CMD_GO/RUN, timeout (sec): ",cmd[1])
+     lcd.print("GO/RUN ");lcd.print((int)cmd[1]);lcd.print("secs");
      
      GOtimeout = (unsigned long)cmd[1]; 
      
      if (GOtimeout == 0) {    
-        Serial.println("stop"); 
+        PRINTs("stop")
         stop();
         motor_state = STATE_STOP;
      }
      else if (motor_state != STATE_GO)
      {  
-           Serial.println("start_forward");
+           PRINTs("start_forward")
            start_forward();
            motor_state = STATE_GO;
      }
@@ -913,7 +912,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               motor_state = STATE_STOP;
      	      error = 1;
      	                   
-              PRINT("CMD_GO, error: ",ret)
+              PRINT("CMD_GO/RUN, error: ",ret)
               PRINTs("Stop")              
               lcd.setCursor(0,1); 
               lcd.print("error: "); lcd.print(ret);                
@@ -924,7 +923,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
               stop();
               motor_state = STATE_STOP;
                  
-              PRINT("CMD_GO, Obstacle: ",ret)
+              PRINT("CMD_GO/RUN, Obstacle: ",ret)
               PRINTs("Stop")
               lcd.setCursor(0,1); 
               if (ret == OBSTACLE_LEFT)        lcd.print("OBSTACLE LEFT");
@@ -1014,25 +1013,26 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
                    lcd.print("GO OK");
                    error = 0;
           }           
-     } // end while
+     } // end while (millis() - start < GOtimeout*1000UL) && (error == -1)
      
-     ret = infos (resp, &infolen);
+     if ((int)cmd[0] == CMD_GO) {
+        ret = infos (resp, &infolen);
               
-     if (error == 0) {
-         if (resp[MOTOR_STATE] == STATE_GO) {
-            lcd.print("RUNNING");
-          }    
-         else
-         {
-             lcd.print("STOPPED");
-         }
-         lcd.setCursor(0,1);   
-         lcd.print(resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
-         lcd.print(resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe);
-         lcd.print(resp[DIRECTION]); lcd.printByte(223); //degree   
-     } 
-     
-     *resplen = infolen;      
+        if (error == 0) {
+           if (resp[MOTOR_STATE] == STATE_GO) lcd.print("RUNNING");
+           else                               lcd.print("STOPPED");
+           lcd.setCursor(0,1);   
+           lcd.print(resp[TEMPERATURE]); lcd.print((byte)lcd_celcius);lcd.write(lcd_pipe);   
+           lcd.print(resp[DISTANCE]); lcd.print("cm");lcd.write(lcd_pipe);
+           lcd.print(resp[DIRECTION]); lcd.printByte(223); //degree   
+        }  
+        *resplen = infolen; 
+     }
+     else
+     { 
+        *resplen = 0;       
+     }
+                 
      break;
  
  case CMD_PI: 
@@ -1245,7 +1245,7 @@ void robot_main ()
        }   
        else if (motor_state == STATE_GO)
        {       
-             mcmd[0] = (uint16_t)CMD_GO;
+             mcmd[0] = (uint16_t)CMD_RUN;
              mcmd[1] = (uint16_t)GOtimeout;
              mcmd[2] = (uint16_t)0;   // na             
              PRINT("Call command GO, timout (sec): ",mcmd[1])

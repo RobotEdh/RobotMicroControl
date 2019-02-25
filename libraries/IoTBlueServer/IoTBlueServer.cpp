@@ -30,7 +30,7 @@ int IoTBlueServerClass::IoTBSbegin()
    const char * localName = "Robot";
    int ret = SUCCESS;
       
-  Serial.begin (9600); 
+  //Serial.begin (9600); 
   
   // led on
   pinMode(LED_PIN, OUTPUT); 
@@ -118,7 +118,7 @@ int IoTBlueServerClass::IoTBSReadMsg(uint8_t *msg, uint8_t *msglen, unsigned lon
  
 		if (byteread>0) {
 		     ibuf = BLESerial.read();
-             Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
+             //Serial.print(" - byteread: ");Serial.print(byteread);Serial.print(" - ibuf: 0x"); Serial.print(ibuf,HEX); Serial.print("/"); Serial.println((isalnum(ibuf))?((char)ibuf):(' '));
              byteread--;  // one byte read
              msg[i++] = (uint8_t)ibuf; // fill message
              if((uint8_t) ibuf == 0x3E) istop = 1;  // stop when > received
@@ -179,8 +179,8 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
           {
                szparam[p] = command.substring(Start, Separator);
                iparam[p] = szparam[p].toInt();
-               Serial.print("param"); Serial.print(p); Serial.print("=");
-               Serial.print(szparam[p]); Serial.print("/"); Serial.println(iparam[p]);
+               //Serial.print("param"); Serial.print(p); Serial.print("=");
+               //Serial.print(szparam[p]); Serial.print("/"); Serial.println(iparam[p]);
                Start = Separator + 1;
                if ( Start < Stop) Separator = command.indexOf('|', Start + 1);              
           }                                   
@@ -225,8 +225,6 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
            param[paramlen++] = ((iparam[0] != abs(iparam[0])) ? (1):(0));
            param[paramlen++] = abs(iparam[1]);
            param[paramlen++] = ((iparam[1] != abs(iparam[1])) ? (1):(0));
-           Serial.print("iparam[0]");Serial.println(iparam[0]);
-           Serial.print("iparam[1]");Serial.println(iparam[1]);
     }                                    
     else if (szcmd == "GO")
     {
@@ -243,7 +241,7 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
     {
             cmd = CMD_GET_INFOS; 
     }      
-    else if (szcmd == "TEST")
+    else if (szcmd == "T")
     {
            //Serial.print("Test OK command with param: "); ;  Serial.println((int)iparam[0]);    
            cmd = CMD_TEST;
@@ -252,11 +250,12 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
            param[paramlen++] = iparam[2];
            param[paramlen++] = iparam[3];
            param[paramlen++] = iparam[4];
-           param[paramlen++] = iparam[5];
-           param[paramlen++] = iparam[6];
-           param[paramlen++] = iparam[7]; 
-           param[paramlen++] = iparam[8];
-           param[paramlen++] = iparam[9];                                            
+           
+           param[paramlen++] = 123;
+           param[paramlen++] = 2345;
+           param[paramlen++] = 6789; 
+           param[paramlen++] = 77;
+           param[paramlen++] = 99;                                            
     }
     
     ret = IOTSerial.IOTSflush(0); // clean before serial com 
@@ -330,7 +329,7 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
            _ObstacleStatus = value[2]; 
            return SUCCESS;  
     }                                    
-    else if (szcmd == "MOVE_TILT_PAN")
+    else if (szcmd == "M")
     {
            return SUCCESS; 
     }                                    
@@ -366,7 +365,7 @@ int IoTBlueServerClass::IoTBSRobotCmd(String command) {
            _Noise =          value[11];       
            return SUCCESS; 
     }      
-    else if (szcmd == "TEST")
+    else if (szcmd == "T")
     {
            _AlertStatus =    value[2];
            _PictureNumber =  value[3];
