@@ -1,23 +1,23 @@
 
  Robot & Motor
- +++++++++++++
+ -------------
  The main programs for Arduino.
  There are several sketchs dedicated for testing.
  
  
  IoTBlueServer
- +++++++++++++
+ -------------
  The main program to commnunicate with an Mobile Android via Bluetooth.
   
    
  IoTWiFiServer
- +++++++++++++
+ -------------
  The main program for ESP8266 to commnunicate with a PC Windows via WIFI.
  There is a sketch dedicated for testing.
 
 
  IoTWiFiClient
- +++++++++++++
+ -------------
  The main program for ESP8266 to send data via WIFI to the Raspberry PI.
  There is a sketch that handles the deep sleep feature (recommanded for low consumption)
  
@@ -123,7 +123,7 @@
  
  
  Other lib
- +++++++++
+----------
  CMPS03: this is the Compass I have used before CMPS12 
  TEMT6000: this is the Ambient Light sensor I have used before BH1720
  TMP102: this is the Temperature sensor I have used before DHT22
