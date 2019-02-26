@@ -124,11 +124,11 @@
  
  Other lib
 ----------
- CMPS03: this is the Compass I have used before CMPS12 
- TEMT6000: this is the Ambient Light sensor I have used before BH1720
- TMP102: this is the Temperature sensor I have used before DHT22
- LIS3MDL: this is a lib to study a three-axis magnetic sensor. Not used for the time being.
- MPU6050: this is a lib to study the MPU-6050 sensor. Not used for the time being.
- Micro: this is a lib to manage an electret Micro but it didn't worked as exepected.
- Sound: this is a lib to manage a Sound Detector but it didn't worked as exepected.
- Drone, RC, MotorESC, MPU6050: my next project !!!
+ + CMPS03: this is the Compass I have used before CMPS12
+ + TEMT6000: this is the Ambient Light sensor I have used before BH1720
+ + TMP102: this is the Temperature sensor I have used before DHT22
+ + LIS3MDL: this is a lib to study a three-axis magnetic sensor. Not used for the time being.
+ + MPU6050: this is a lib to study the MPU-6050 sensor. Not used for the time being.
+ + Micro: this is a lib to manage an electret Micro but it didn't worked as exepected.
+ + Sound: this is a lib to manage a Sound Detector but it didn't worked as exepected.
+ + Drone, RC, MotorESC, MPU6050: my next project !!!
