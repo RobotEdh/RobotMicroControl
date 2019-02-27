@@ -1,11 +1,11 @@
 #include <robot.h>         
 
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
-//#define LOGTRACE   // Enable trace
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
+#define LOGTRACE   // Enable trace
 #include <log.h>
-//extern File logFile;                // The loging class
+extern File logFile;                // The loging class
 
 /* classes aleady defined in motor */
 extern VL53L0XClass VL53L0Xfront;   // The ToF class for the front direction
@@ -233,8 +233,7 @@ int robot_begin()
   ret=JPEGCamera.begin();
   if (ret != SUCCESS)
   {  
-        PRINTs("Error Init Camera, error: ")
-        Serial.println(ret);
+        PRINT("Error Init Camera, error: ",ret)
         lcd.setCursor(0,1); 
         lcd.print("Init Camera KO  ");
         nberror++;
@@ -324,7 +323,6 @@ int robot_begin()
   PRINTs("Init Sound Detector  OK")
   
   ivalue = 0; //TODO
-  //Serial.print("Value between 0 (no noise) and 1023 (huge noise): ");
   PRINT("Noise: ",ivalue)
   lcd.print("Noise:");lcd.print(ivalue);
 
@@ -364,18 +362,18 @@ int robot_begin()
   ret = IOTSerial.IOTSsend (1, SLEEP);
   PRINT("Call IOTSsend, ret: ",ret) 
   
-  // initialize the IOT Serial 2, interrupt setting
-  PRINTs(" ")
-  ret = IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT WIFServer ESP8266
-  ret = IOTSerial.IOTSflush(2); // flush to start clean
-  PRINTs("Init IOT Serial 2 to communicate with IOT WIFServer ESP8266 OK")
-  pinMode(IOT_PIN, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
- 
   // sets the digital pin WAKEUP_PIN as output and keep high level
   pinMode(WAKEUP_PIN, OUTPUT);          
   digitalWrite(WAKEUP_PIN, HIGH);
-      
+  
+  // initialize the IOT Serial 2, interrupt setting
+  PRINTs(" ")
+  ret = IOTSerial.IOTSbegin(2); // initialize the IOT Serial 2 to communicate with IOT Bluetooth server
+  ret = IOTSerial.IOTSflush(2); // flush to start clean
+  PRINTs("Init IOT Serial 2 to communicate with IOT Bluetooth server OK")
+  pinMode(IOT_PIN, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(IOT_PIN), IntrIOT, RISING);         // set IOT interrupt
+   
   interrupts(); // enable all interrupts
   PRINT("Init Interrupts OK, IntIOT: ",IntIOT)
   PRINT("Init Interrupts OK, IntMotion: ",IntMotion)
@@ -742,7 +740,7 @@ int robot_command (uint16_t cmd[], uint16_t resp[], uint8_t *resplen)
      }
      else
      {
-        Serial.print("makePicture error: "); Serial.println(ret);
+        PRINT("makePicture error: ",ret)
         lcd.setCursor(0,1); 
         lcd.print("error: "); lcd.print(ret);       
         error = 1;

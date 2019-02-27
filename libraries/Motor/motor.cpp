@@ -6,11 +6,11 @@
 #include <VL53L0X.h>     // TOF
 
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
-//#define LOGTRACE   // Enable trace
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
+#define LOGTRACE   // Enable trace
 #include <log.h>
-//File logFile;                     // The loging class
+File logFile;                     // The loging class
 
 CMPS12Class CMPS12;               // The Compass class
 SharpIRClass SharpIR;             // The IR sensor class
@@ -113,7 +113,7 @@ int motor_begin()
   
   IRServo.write(90);   // reset servo position
   delay(15*90);        // waits the servo to reach the position 
-  Serial.println(F("Init IR Servo OK"));  
+  PRINTs("Init IR Servo OK") 
 
 
   // initialize the 3 devices Time Of Flight VL53LOX: left, front and right
@@ -724,6 +724,7 @@ int check_around()
 
 void adjustMotor (int motor, int pid)
 {
+  PRINT("->adjustMotor ",motor)
   if (motor == LEFT_MOTOR) {
        if  ((SpeedMotorLeft - pid) > SPEEDNOMINAL){
              SpeedMotorLeft = SpeedMotorLeft - pid;
@@ -768,7 +769,9 @@ void adjustMotor (int motor, int pid)
   analogWrite(EnableMotorRight2Pin,  SpeedMotorRight); 
   analogWrite(EnableMotorLeft1Pin,  SpeedMotorLeft);
   analogWrite(EnableMotorLeft2Pin,  SpeedMotorLeft);
-   
+
+  PRINT("->SpeedMotorLeft: ",SpeedMotorLeft) 
+  PRINT("->SpeedMotorRight: ",SpeedMotorRight) 
 }
 
  

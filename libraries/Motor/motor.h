@@ -27,8 +27,8 @@
 #define SPEEDMAX     255     // 255=PWM max
 #define SPEEDNOMINAL  80     // speed at start
 #define SPEEDTURN     80     // speed at turn 
-#define SPEEDBACK     50     // speed at turn back
-#define SPEEDTICK     5      // speed increment&decrement for small turns
+#define SPEEDBACK     60     // speed at turn back
+#define SPEEDTICK     10     // speed increment&decrement for small turns
 
 #define BOTH_MOTOR  0
 #define LEFT_MOTOR  1
