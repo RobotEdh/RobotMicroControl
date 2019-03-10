@@ -1,9 +1,12 @@
 #include <Arduino.h>
 #include <MPU6050.h>
 
-
-#define ADDRESS_DEFAULT 0X68  
-
+// Logging mode
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define LOGTRACE   // Enable trace
+#include <log.h>
+//File logFile; 
 
 MPU6050Class::MPU6050Class(void)
 {
@@ -21,11 +24,11 @@ uint8_t MPU6050Class::MPU6050_CheckDeviceID()
 
 uint8_t MPU6050Class::MPU6050_init()
 {
-    Serial.println(">>>Start  MPU_init"); 
+    PRINTs(">>>Start  MPU_init") 
     
     // Setup I2C
     _address =ADDRESS_DEFAULT;  
-    Serial.print("_address: ");Serial.println(_address,HEX); 
+    PRINTx("_address: ",_address)
 
     
     // Reset
@@ -87,7 +90,7 @@ uint8_t MPU6050Class::MPU6050_init()
     _previousTime = 0;
     _a = 0.98;
   
-    Serial.println("<<<End OK MPU_init");
+    PRINTs("<<<End OK MPU_init")
 
     return 0;
 }
@@ -143,45 +146,45 @@ int16_t MPU6050Class::MPU6050_readReg16BitHL(uint8_t reg)
 
 double MPU6050Class::MPU6050_getTemperature()
 {
-  int16_t temperature = MPU6050_readReg16Bit(TEMP_OUT);
+  int16_t temperature = MPU6050_readReg16BitHL(TEMP_OUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)temperature / 340.0)+ 36.53); // refer to formula section 4.18
 }
 
 double MPU6050Class::MPU6050_getAccel_x()
 {
-  int16_t accel_x = MPU6050_readReg16Bit(ACCEL_XOUT);
+  int16_t accel_x = MPU6050_readReg16BitHL(ACCEL_XOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)accel_x / 16384.0) - _ax_zero);  // Full Scale Range ?2g => 16384 LSB/g
 }
 double MPU6050Class::MPU6050_getAccel_y()
 {
-  int16_t accel_y = MPU6050_readReg16Bit(ACCEL_YOUT);
+  int16_t accel_y = MPU6050_readReg16BitHL(ACCEL_YOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)accel_y / 16384.0) - _ay_zero); // Full Scale Range ?2g => 16384 LSB/g
 }
 double MPU6050Class::MPU6050_getAccel_z()
 {
-  int16_t accel_z = MPU6050_readReg16Bit(ACCEL_ZOUT);
+  int16_t accel_z = MPU6050_readReg16BitHL(ACCEL_ZOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)accel_z / 16384.0) - _az_zero); // Full Scale Range ?2g => 16384 LSB/g
 }
 
 double MPU6050Class::MPU6050_getGyro_x()
 {
-  int16_t gyro_x = MPU6050_readReg16Bit(GYRO_XOUT);
+  int16_t gyro_x = MPU6050_readReg16BitHL(GYRO_XOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)gyro_x / 131.0) - _gyrox_zero);  // Full Scale Range ? 250 ?/s => 131 LSB/?/s
 }
 double MPU6050Class::MPU6050_getGyro_y()
 {
-  int16_t gyro_y = MPU6050_readReg16Bit(GYRO_YOUT);
+  int16_t gyro_y = MPU6050_readReg16BitHL(GYRO_YOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)gyro_y / 131.0) - _gyroy_zero); // Full Scale Range ? 250 ?/s => 131 LSB/?/s
 }
 double MPU6050Class::MPU6050_getGyro_z()
 {
-  int16_t gyro_z = MPU6050_readReg16Bit(GYRO_ZOUT);
+  int16_t gyro_z = MPU6050_readReg16BitHL(GYRO_ZOUT);
   if (_last_status > 0) return (double)_last_status;
   else return (((double)gyro_z / 131.0) - _gyroz_zero); // Full Scale Range ? 250 ?/s => 131 LSB/?/s
 }
@@ -197,7 +200,7 @@ uint8_t MPU6050Class::MPU6050_calibrate()
   
   double d = 0.0;
   
-  Serial.println(">>>Start  MPU_calibrate"); 
+  PRINTs(">>>Start  MPU_calibrate")
     
   _ax_zero = 0.0;
   _ay_zero = 0.0;
@@ -240,14 +243,14 @@ uint8_t MPU6050Class::MPU6050_calibrate()
   _gyroy_zero = gyroy_tot/255.0;
   _gyroz_zero = gyroz_tot/255.0;
   
-  Serial.print("_ax_zero: ");Serial.println(_ax_zero);  
-  Serial.print("_ay_zero: ");Serial.println(_ay_zero);   
-  Serial.print("_az_zero: ");Serial.println(_az_zero);   
-  Serial.print("_gyrox_zero: ");Serial.println(_gyrox_zero);
-  Serial.print("_gyroy_zero: ");Serial.println(_gyroy_zero);   
-  Serial.print("_gyroz_zero: ");Serial.println(_gyroz_zero);
+  PRINT("_ax_zero: ",_ax_zero)  
+  PRINT("_ay_zero: ",_ay_zero)   
+  PRINT("_az_zero: ",_az_zero)   
+  PRINT("_gyrox_zero: ",_gyrox_zero)
+  PRINT("_gyroy_zero: ",_gyroy_zero)   
+  PRINT("_gyroz_zero: ",_gyroz_zero)
   
-  Serial.println(">>>End OK MPU_calibrate");
+  PRINTs(">>>End OK MPU_calibrate")
   return 0;        
 }
 
@@ -270,8 +273,8 @@ uint8_t MPU6050Class::MPU6050_get_roll_pitch_yaw(double angle[3])
      double az = MPU6050_getAccel_z();
      if (_last_status > 0) return _last_status;; 
              
-     a_roll  = atan2(ay, az) * 180.0/PI;  //The returned value of atan2 is in the range [-pi, +pi] radians => convert result in degree
-     a_pitch = atan2(-1.0*ax, sqrt(ay*ay + az*az)) * 180.0/PI; //The returned value of atan2 is in the range [-pi, +pi] radians  => convert result in degree
+     a_pitch  = atan2(ay, az) * 180.0/PI;  //The returned value of atan2 is in the range [-pi, +pi] radians => convert result in degree
+     a_roll = atan2(-1.0*ax, sqrt(ay*ay + az*az)) * 180.0/PI; //The returned value of atan2 is in the range [-pi, +pi] radians  => convert result in degree
 
      double gyrox = MPU6050_getGyro_x();
      if (_last_status > 0) return _last_status;

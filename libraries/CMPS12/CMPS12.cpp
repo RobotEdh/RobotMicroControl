@@ -1,6 +1,12 @@
 #include <Arduino.h>
 #include <CMPS12.h>
 
+// Logging mode
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define LOGTRACE   // Enable trace
+#include <log.h>
+//extern File logFile;                // The loging class
 
 CMPS12Class::CMPS12Class()
 {
@@ -18,6 +24,16 @@ uint8_t CMPS12Class::CMPS12_init(bool calibration)
     uint8_t calib = 0;
     _last_status = 0;
     _last_nb_receive = 0;
+    _previousTime = 0;
+    
+    _ax_zero = 0;  
+    _ay_zero = 0; 
+    _az_zero = 0; 
+    _gyrox_zero = 0;      
+    _gyroy_zero = 0;
+    _gyroz_zero = 0;
+    
+    _a = 0.98;
     _address = CMPS12_ADDRESS;
     
      
@@ -26,7 +42,7 @@ uint8_t CMPS12Class::CMPS12_init(bool calibration)
           return _last_status;
     }      
     else {
-         Serial.print("Revision: 0x");Serial.println(revision,HEX);
+         PRINTx("Revision: ",revision)
     }
     
     if (calibration) calib = CMPS12_calibrate();
@@ -37,15 +53,15 @@ uint8_t CMPS12Class::CMPS12_init(bool calibration)
 
 uint8_t CMPS12Class::CMPS12_calibrate()
 {    
-    Serial.println("Start calibration");
+    PRINTs("Start calibration")
 
-    Serial.println("Gyro - being in a stationary state - 5 s");
+    PRINTs("Gyro - being in a stationary state - 5 s")
     delay (5*1000); 
-    Serial.println("Accelerometer - tilting the module to roughly 45 and 90 degrees on one axis - 10s");
+    PRINTs("Accelerometer - tilting the module to roughly 45 and 90 degrees on one axis - 10s")
     delay (10*1000); 
-    Serial.println("Magnetometer - doing a few random movements - 10s"); 
+    PRINTs("Magnetometer - doing a few random movements - 10s")
     delay (10*1000); 
-    Serial.println("Stop calibration");
+    PRINTs("Stop calibration")
           
     uint8_t calibrate = CMPS12_checkCalibrate();
     if (_last_status >0) {
@@ -56,6 +72,72 @@ uint8_t CMPS12Class::CMPS12_calibrate()
     
 }
 
+uint8_t CMPS12Class::CMPS12_set_zero_values()
+{
+  int32_t ax_tot = 0;
+  int32_t ay_tot = 0;
+  int32_t az_tot = 0;
+  int32_t gyrox_tot = 0;
+  int32_t gyroy_tot = 0;
+  int32_t gyroz_tot = 0;
+  
+  int16_t value = 0;
+  
+  PRINTs(">>>Start CMPS12_set_zero_values")
+    
+  _ax_zero = 0.0;
+  _ay_zero = 0.0;
+  _az_zero = 0.0;
+  _gyrox_zero = 0.0;
+  _gyroy_zero = 0.0;
+  _gyroz_zero = 0.0;
+  
+  for (int i = 0; i < 255; i++) {
+     value = CMPS12_getAccel_x();
+     if (_last_status > 0) return _last_status; 
+     else ax_tot += value;
+        
+     value = CMPS12_getAccel_y();
+     if (_last_status > 0) return _last_status;
+     else ay_tot += value;
+        
+     value = CMPS12_getAccel_z();
+     if (_last_status > 0) return _last_status;
+     else az_tot += value;   
+        
+     value = CMPS12_getGyro_x();
+     if (_last_status > 0) return _last_status;
+     else gyrox_tot += value;
+        
+     value = CMPS12_getGyro_y();
+     if (_last_status > 0) return _last_status;   
+     else gyroy_tot += value; 
+            
+     value = CMPS12_getGyro_z();
+     if (_last_status > 0) return _last_status;
+     else gyroz_tot += value;     
+     
+     delay(5);  // 5 ms for Sample
+  }
+  _ax_zero = ax_tot/255;
+  _ay_zero = ay_tot/255;
+  _az_zero = (az_tot/255) - 1000.0;  // keep 1g
+  _gyrox_zero = gyrox_tot/255;
+  _gyroy_zero = gyroy_tot/255;
+  _gyroz_zero = gyroz_tot/255;
+  
+  PRINT("_ax_zero: ",_ax_zero)  
+  PRINT("_ay_zero: ",_ay_zero)   
+  PRINT("_az_zero: ",_az_zero)   
+  PRINT("_gyrox_zero: ",_gyrox_zero)
+  PRINT("_gyroy_zero: ",_gyroy_zero)   
+  PRINT("_gyroz_zero: ",_gyroz_zero)
+  
+  PRINTs(">>>End OK CMPS12_set_zero_values")
+  return 0;        
+}
+
+
 uint8_t CMPS12Class::CMPS12_checkCalibrate()
 {    
     uint8_t calibrate = CMPS12_getCalibrate();
@@ -63,14 +145,14 @@ uint8_t CMPS12Class::CMPS12_checkCalibrate()
          return _last_status;
     }      
     else {
-         if ((calibrate&0x03)==0x03) Serial.println("Magnetometer calibration OK");
-         else                        Serial.println("Magnetometer calibration KO");
-         if ((calibrate&0x0C)==0x0C) Serial.println("Accelerometer calibration OK");
-         else                        Serial.println("Accelerometer calibration KO");  
-         if ((calibrate&0x30)==0x30) Serial.println("Gyro calibration OK");
-         else                        Serial.println("Gyro calibration KO");    
-         if ((calibrate&0xC0)==0xC0) Serial.println("System calibration OK");  
-         else                        Serial.println("System calibration KO");       
+         if ((calibrate&0x03)==0x03) PRINTs("Magnetometer calibration OK")
+         else                        PRINTs("Magnetometer calibration KO")
+         if ((calibrate&0x0C)==0x0C) PRINTs("Accelerometer calibration OK")
+         else                        PRINTs("Accelerometer calibration KO")  
+         if ((calibrate&0x30)==0x30) PRINTs("Gyro calibration OK")
+         else                        PRINTs("Gyro calibration KO")    
+         if ((calibrate&0xC0)==0xC0) PRINTs("System calibration OK")  
+         else                        PRINTs("System calibration KO")       
     }
     
     if (calibrate == 0xFF)return 0;
@@ -237,7 +319,7 @@ int16_t CMPS12Class::CMPS12_getAccel_x()
 {
   int16_t accel_x = CMPS12_readReg16BitHL(OUT_ACCEL_X_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return accel_x; 
+  return (accel_x - _ax_zero); 
 }
 
 int16_t CMPS12Class::CMPS12_getAccel_y()
@@ -245,21 +327,21 @@ int16_t CMPS12Class::CMPS12_getAccel_y()
   
   int16_t accel_y = CMPS12_readReg16BitHL(OUT_ACCEL_Y_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return accel_y;  
+  return (accel_y - _ay_zero);  
 }
 
 int16_t CMPS12Class::CMPS12_getAccel_z()
 {
   int16_t accel_z = CMPS12_readReg16BitHL(OUT_ACCEL_Z_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return accel_z; 
+  return (accel_z - _az_zero); 
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_x()
 {
   int16_t gyro_x = CMPS12_readReg16BitHL(OUT_GYRO_X_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return gyro_x;  
+  return (gyro_x - _gyrox_zero);  
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_y()
@@ -267,14 +349,14 @@ int16_t CMPS12Class::CMPS12_getGyro_y()
   
   int16_t gyro_y = CMPS12_readReg16BitHL(OUT_GYRO_Y_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return gyro_y;  
+  return (gyro_y - _gyroy_zero);  
 }
 
 int16_t CMPS12Class::CMPS12_getGyro_z()
 {
   int16_t gyro_z = CMPS12_readReg16BitHL(OUT_GYRO_Z_H);
   if (_last_status >0) return (int16_t)_last_status;
-  return gyro_z;  
+  return (gyro_z - _gyroz_zero);  
 }
 
 
@@ -304,4 +386,76 @@ uint8_t CMPS12Class::CMPS12_getLast_nb_receive()
 uint8_t CMPS12Class::CMPS12_getAddress()
 {
   return _address;
+}
+
+
+uint8_t CMPS12Class::CMPS12_get_roll_pitch_yaw(double angle[3])
+{
+  return CMPS12_get_roll_pitch_yaw(angle, true);
+}
+
+uint8_t CMPS12Class::CMPS12_get_roll_pitch_yaw(double angle[3], bool compFilter)
+{
+     double a_roll  = 0.0;
+     double a_pitch = 0.0;
+     double g_roll  = 0.0;
+     double g_pitch = 0.0;
+     double g_yaw   = 0.0;
+     
+         
+     double ax = (double)CMPS12_getAccel_x();
+     if (_last_status > 0) return _last_status;
+
+     double ay = (double)CMPS12_getAccel_y();
+     if (_last_status > 0) return _last_status;
+         
+     double az = (double)CMPS12_getAccel_z();
+     if (_last_status > 0) return _last_status;; 
+             
+     a_pitch  = atan2(ay, az) * 180.0/PI;  //The returned value of atan2 is in the range [-pi, +pi] radians => convert result in degree
+     a_roll = atan2(-1.0*ax, sqrt(ay*ay + az*az)) * 180.0/PI; //The returned value of atan2 is in the range [-pi, +pi] radians  => convert result in degree
+
+     double gyrox = CMPS12_getGyro_x();
+     if (_last_status > 0) return _last_status;
+         
+     double gyroy = CMPS12_getGyro_y();
+     if (_last_status > 0) return _last_status;
+           
+     double gyroz = CMPS12_getGyro_z();
+     if (_last_status > 0) return _last_status;
+     
+     _currentTime = millis();  
+     if (_previousTime > 0) {
+        long dt = _currentTime - _previousTime;
+
+        // integrate the gyros angular velocity in degree/sec 
+        g_roll  = gyrox * (double)dt/1000.0;
+        g_pitch = gyroy * (double)dt/1000.0;
+        g_yaw   = gyroz * (double)dt/1000.0; 
+        
+        if (compFilter) {    
+           // adjust angles Roll & Pitch using complementary filter
+           angle[0] = _a * (_previous_roll  + g_roll)  + (1.0 - _a) * a_roll;
+           angle[1] = _a * (_previous_pitch + g_pitch) + (1.0 - _a) * a_pitch;    
+           angle[2] = g_yaw;
+        }
+        else
+        {
+           angle[0] = a_roll;
+           angle[1] = a_pitch;
+           angle[2] = g_yaw;
+        }           
+     }
+     else
+     {
+        angle[0] = a_roll;
+        angle[1] = a_pitch;
+        angle[2]  = 0.0;
+     }  
+      
+     _previousTime = _currentTime;
+     _previous_roll  =  angle[0];
+     _previous_pitch =  angle[1]; 
+     
+     return 0;
 }

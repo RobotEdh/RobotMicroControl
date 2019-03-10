@@ -33,6 +33,7 @@ void setup()
 void loop()
 {
     uint8_t status = 0;
+    double angle[3];
     
     double compass = CMPS12.CMPS12_getCompass();
     status = CMPS12.CMPS12_getStatus();
@@ -128,15 +129,26 @@ void loop()
        Serial.print("Error CMPS12_getTemperature: ");Serial.println(status);
     }    
     
+    status = CMPS12.CMPS12_get_roll_pitch_yaw(angle);  // double range [-180;+180] ROLL, PITCH, YAW
+    if (status > 0)
+    {
+       Serial.print("Error CMPS12_get_roll_pitch_yaw: ");Serial.println(status);
+    }
+    
+    
+      
     // display from Flash mem to avoir SRAM overload
     Serial.println(F("________________________________________________________________________"));
     Serial.print(F("compass 0-359.9 degrees: "));Serial.println(compass);
     Serial.print(F("compassHighResolution 0-359.9 degrees: "));Serial.println(compassHighResolution);  
     
+    Serial.print(F("roll in degrees from the horizontal plane (+/- 90 degrees): "));Serial.println(roll);
+    Serial.print(F("roll Calc: "));Serial.println(angle[0]);                   
+    
     Serial.print(F("pitch in degrees from the horizontal plane (+/- 90 degrees): "));Serial.println(pitch);
     Serial.print(F("pitch180 in degrees from the horizontal plane (+/-180 degrees): "));Serial.println(pitch180);
-    Serial.print(F("roll in degrees from the horizontal plane (+/- 90 degrees): "));Serial.println(roll);
-                
+    Serial.print(F("pitch Calc: "));Serial.println(angle[1]);    
+
     Serial.print(F("mag_x: "));Serial.println(mag_x);
     Serial.print(F("mag_y: "));Serial.println(mag_y);
     Serial.print(F("mag_z: "));Serial.println(mag_z);

@@ -57,7 +57,8 @@ class CMPS12Class
     uint8_t CMPS12_eraseProfil(void);   
     uint8_t CMPS12_getRevision(void);
     uint8_t CMPS12_getCalibrate(void);
-
+    uint8_t CMPS12_set_zero_values(void);
+    
     double  CMPS12_getCompass(void);
     double  CMPS12_getCompassHighResolution(void);
     int8_t  CMPS12_getPitch(void);
@@ -73,6 +74,9 @@ class CMPS12Class
     int16_t CMPS12_getGyro_y(void);
     int16_t CMPS12_getGyro_z(void);
     int16_t CMPS12_getTemperature(void);
+    
+    uint8_t CMPS12_get_roll_pitch_yaw(double angle[3]);
+    uint8_t CMPS12_get_roll_pitch_yaw(double angle[3], bool compFilter);
         
     double  CMPS12_getMagnitude(double x, double y, double z);
     uint8_t CMPS12_getStatus(void);
@@ -82,8 +86,12 @@ class CMPS12Class
   private:
     uint8_t _address;
     uint8_t _last_status;
-    uint8_t _last_nb_receive;     
+    uint8_t _last_nb_receive; 
+    long _previousTime, _currentTime;
+    int16_t _ax_zero, _ay_zero, _az_zero;
+    int16_t _gyrox_zero, _gyroy_zero, _gyroz_zero; 
+    double _previous_roll, _previous_pitch;
+    double _a;   
 };
 
 #endif
-
