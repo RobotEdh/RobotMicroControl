@@ -6,6 +6,7 @@
 
 #define MINPWM 127
 #define MAXPWM 255
+#define MAXPWMTHRO 200
 
 #define NBMOTORS 4
 const char szMotors[NBMOTORS][20]={    
@@ -15,17 +16,11 @@ const char szMotors[NBMOTORS][20]={
 "FRONT_LEFT"
 };
 
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__) //Code in here will only be compiled if an Arduino Uno (or older) is used.
- #define Motor1Pin 3
- #define Motor2Pin 5
- #define Motor3Pin 6
- #define Motor4Pin 9  // this PIN 9 is part of PORTB used alsoe for RC => ESC and RC can't used simultanously with Arduino Uno
-#else
- #define Motor1Pin 3
- #define Motor2Pin 4
- #define Motor3Pin 5
- #define Motor4Pin 6
-#endif
+#define Motor1Pin 3
+#define Motor2Pin 4
+#define Motor3Pin 5
+#define Motor4Pin 6
+
 
 
 class MotorESCClass

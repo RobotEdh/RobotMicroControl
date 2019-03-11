@@ -106,6 +106,8 @@ void MotorESCClass::MotorESC_writeAllMotors(int16_t value)    // Sends same comm
 //               0 or [MINPPM;MAXPPM] for THROTTLE
 void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
 {
+  int16_t maxMotor = 0;
+  int16_t minMotor = 0;
   int i;
   
   if (ESC_command[THROTTLE] == 0) 
@@ -115,7 +117,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   else
   {   
      int16_t throttle = map(ESC_command[THROTTLE], MINPPM, MAXPPM, MINPWM, MAXPWM);
-     throttle = constrain(throttle, MINPWM, 0.9*MAXPWM);  // to give room for PID ajustement
+     throttle = constrain(throttle, MINPWM, MAXPWMTHRO);  // to give room for PID ajustement
      PRINT("throttle: ",throttle)
      
      #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
@@ -127,11 +129,41 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     for(i=0; i< NBMOTORS; i++) {
        PRINTi("szMotors",i,szMotors[i])
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
-       PRINTi(">_motor",i,_motor[i])
+       PRINTi(">_motor mapped ",i,_motor[i])
        _motor[i] = _motor[i] + throttle;
-       _motor[i] = constrain(_motor[i], MINPWM, MAXPWM);
-       PRINTi(">_motor",i,_motor[i])
+       PRINTi(">_motor with throttle",i,_motor[i])
+       if((MAXPWM - _motor[i]) > maxMotor) maxMotor = MAXPWM - _motor[i];
+       PRINT(">maxMotor",maxMotor)
+       if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
+       PRINT(">minMotor",minMotor)
     }
+    
+    if (maxMotor > 0) {
+       for(i=0; i< NBMOTORS; i++) {
+          PRINTi("szMotors",i,szMotors[i])
+          _motor[i] = _motor[i] - maxMotor;
+          PRINTi(">_motor - maxMotor ",i,_motor[i])
+          if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
+          PRINT(">minMotor",minMotor)
+       }
+    }
+    
+    if (minMotor > 0) {
+       for(i=0; i< NBMOTORS; i++) {
+          PRINTi("szMotors",i,szMotors[i])
+          _motor[i] = _motor[i] + minMotor;
+          PRINTi(">_motor + maxMotor ",i,_motor[i])
+       }  
+    }
+    
+    if ((minMotor > 0) || (maxMotor > 0)) {
+       for(i=0; i< NBMOTORS; i++) {
+          PRINTi("szMotors",i,szMotors[i])
+          _motor[i] = constrain(_motor[i], MINPWM, MAXPWM);  // last cap if still needed after up and bottom cap
+          PRINTi(">_motor last cap ",i,_motor[i])
+       }  
+    }  
+      
   } 
 
   MotorESC_writeMotors();
