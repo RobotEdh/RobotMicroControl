@@ -71,15 +71,17 @@ void DroneClass::Drone_main() {
   int16_t angle[2]; // Roll & Pitch measured
   int16_t ESC_command[4];
    
-  double sampleTimeInSec = 0.0;
+  double sampleTime = 0.0;
   double anglePID[2] = {0.0,0.0};;
-  int16_t error       = 0;
-  int16_t delta_error = 0;
-  static int16_t last_error[2] = {0,0};
-  static int32_t sum_error[2]  = {0,0};
+  double error       = 0.0;
+  double delta_error[2] = {0.0,0.0};
+  static double last_error[2] = {0.0,0.0};
+  static double last_delta_error[2] = {0.0,0.0};
+  static double sum_error[2] = {0.0,0.0};
   const char szAngles[2][20]={"Roll","Pitch"};
   
-  currentTime = millis()
+  // Get RC commands every 20 ms
+  currentTime = millis();
   if ((currentTime > rcTime )|| (rcTime  == 0)) { // 50Hz: PPM frequency of the RC, no change happen within 20ms except first time
     rcTime = currentTime + 20;
     
@@ -88,7 +90,7 @@ void DroneClass::Drone_main() {
                                    //               0/1                  for AUX1, AUX2
   }
   
-  //**** Read IMU ****   
+  // Read IMU  
   angle[0] = (int16_t)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
@@ -96,7 +98,7 @@ void DroneClass::Drone_main() {
      PRINT("CMPS12_getRoll KO, I2C error: ",status)
   }
   
-  angle[1] = (int16_t) CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
+  angle[1] = (int16_t)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
@@ -104,30 +106,38 @@ void DroneClass::Drone_main() {
   }
 
    
-  // ROLL & PITCH
+  // Compute PID for ROLL & PITCH
   RC_commandRP[0]=RC_command[ROLL];
   RC_commandRP[1]=RC_command[PITCH];
   
   currentTimePID = millis();
-  sampleTimeInSec = (double)(lastTimePID - currentTimePID)/1000.0;
+  sampleTime = (double)(lastTimePID - currentTimePID);
   lastTimePID = currentTimePID;
-  for(int i=0;i<2;i++) {	
-    error =  RC_commandRP[i] - angle[i];
-    sum_error[i] += (int32_t) error; 
-    delta_error = (error - last_error[i]);
-    last_error[i] = error;
+  for (int i=0;i<2;i++) {	
+    error =  (double)(RC_commandRP[i] - angle[i]);
     
-    anglePID[i] = (Kp[i]*(double)error) + (Ki[i]*(double)sum_error[i]*SampleTimeInSec) + (Kd[i]*(double)delta_error/SampleTimeInSec);
+    sum_error[i] += error;
+    sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); // cap Integral
+    
+    delta_error[i] = (error - last_error[i]);
+    /// Low pass filter cut frequency for derivative calculation, cuts out the high frequency noise that can drive the controller crazy
+    delta_error[i] = last_delta_error[i] + (sampleTime / ( _filter + sampleTime)) * (delta_error[i] - last_delta_error[i]);
+
+    last_error[i] = error;
+    last_delta_error[i] = delta_error[i];
+    
+    anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
     
     PRINT("For ",szAngles[i])
     PRINTi("->angle",i,angle[i])
     PRINTi("->rcCommand",i,RC_commandRP[i])
     PRINTi("->error",i,error)
     PRINTi("->sum_error",i,sum_error[i])
-    PRINTi("->delta_error",i,delta_error)
+    PRINTi("->delta_error",i,delta_error[i])
     PRINTi("->anglePID",i,anglePID[i])
   }
 
+  // call MotorESC
   ESC_command[THROTTLE] = RC_command[THROTTLE];
   ESC_command[ROLL]     = (int16_t)anglePID[0];
   ESC_command[PITCH]    = (int16_t)anglePID[1];
