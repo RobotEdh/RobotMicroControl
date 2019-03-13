@@ -1,7 +1,13 @@
 
  Robot & Motor
  -------------
- The main programs for Arduino.
+ The main Robot programs for Arduino.
+ There are several sketchs dedicated for testing.
+ 
+ 
+ Drone & RC & MotorESC
+ ----------------------
+ The main Drone program for Arduino including hte management of the Radio Command (RC) and the Motor controller (Motor ESC)
  There are several sketchs dedicated for testing.
  
  
@@ -108,8 +114,8 @@
  
  CMPS12
 -------
- This lib handles the compass CMPS12 via I2C.
- One example shows how to diplay the magnometer figures and all the other accel&gyro&temperature data, the other examples show how to calibrate/erase calibrate.
+This lib handles the compass CMPS12 via I2C.
+One example shows how to diplay the magnometer figures and all the other accel&gyro&temperature data, the other examples show how to calibrate/erase calibrate.
  
  
  SDCard
@@ -124,11 +130,10 @@
  
  Other lib
 ----------
- + CMPS03: this is the Compass I have used before CMPS12
- + TEMT6000: this is the Ambient Light sensor I have used before BH1720
- + TMP102: this is the Temperature sensor I have used before DHT22
- + LIS3MDL: this is a lib to study a three-axis magnetic sensor. Not used for the time being.
- + MPU6050: this is a lib to study the MPU-6050 sensor. Not used for the time being.
+ + CMPS03: this is the Compass. Not used because I prefer CMPS12.
+ + TEMT6000: this is the Ambient Light sensor. Not used because I prefer BH1720.
+ + TMP102: this is the Temperature sensor. Not used because I prefer DHT22.
+ + LIS3MDL: this is a lib to study a three-axis magnetic sensor but it didn't worked as exepected.
+ + MPU6050: this is a lib to study the MPU-6050 sensor Not used because I prefer CMPS12.
  + Micro: this is a lib to manage an electret Micro but it didn't worked as exepected.
  + Sound: this is a lib to manage a Sound Detector but it didn't worked as exepected.
- + Drone, RC, MotorESC, MPU6050: my next project !!!
