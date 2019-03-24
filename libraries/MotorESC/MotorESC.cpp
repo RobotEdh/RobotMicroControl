@@ -2,11 +2,11 @@
 #include <MotorESC.h>
 
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
-//#define LOGTRACE   // Enable trace
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
+#define LOGTRACE   // Enable trace
 #include <log.h>
-//File logFile;   
+File logFile;   
 
 MotorESCClass::MotorESCClass()
 {
@@ -131,28 +131,22 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
        PRINTi(">_motor mapped ",i,_motor[i])
        _motor[i] = _motor[i] + throttle;
-       PRINTi(">_motor with throttle",i,_motor[i])
-       if((MAXPWM - _motor[i]) > maxMotor) maxMotor = MAXPWM - _motor[i];
-       PRINT(">maxMotor",maxMotor)
+       if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
-       PRINT(">minMotor",minMotor)
     }
     
     if (maxMotor > 0) {
+       PRINT(">maxMotor: ",maxMotor)
        for(i=0; i< NBMOTORS; i++) {
-          PRINTi("szMotors",i,szMotors[i])
           _motor[i] = _motor[i] - maxMotor;
-          PRINTi(">_motor - maxMotor ",i,_motor[i])
           if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
-          PRINT(">minMotor",minMotor)
        }
     }
     
     if (minMotor > 0) {
+       PRINT(">minMotor: ",minMotor) 
        for(i=0; i< NBMOTORS; i++) {
-          PRINTi("szMotors",i,szMotors[i])
           _motor[i] = _motor[i] + minMotor;
-          PRINTi(">_motor + maxMotor ",i,_motor[i])
        }  
     }
     

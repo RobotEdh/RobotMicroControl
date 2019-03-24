@@ -4,17 +4,27 @@
 #include <Drone.h>
 
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
-//#define LOGTRACE   // Enable trace
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
+#define LOGTRACE   // Enable trace
 #include <log.h>
-//extern File logFile;   
+extern File logFile;   
    
 CMPS12Class CMPS12;               // The Compass class    
 RCClass       RC;                 // The Radio Command class
 MotorESCClass MotorESC;           // The Motor ESC Class
 
+    
+uint32_t currentTime;
+static uint32_t PIDTime = 0;
+static uint32_t lastTime = 0;
+double sampleTime = 0.0;
+ 
+int16_t RC_command[NBCHANNELS];
+int16_t ESC_command[4];
+double anglePID[2] = {0.0,0.0};
 
+  
 DroneClass::DroneClass(void) {
 }
 
@@ -55,65 +65,72 @@ void DroneClass::Drone_init() {
   PRINTs("Init Motor ESC OK")
   
   PRINTs("<End OK Init Drone")
+  
+  PRINTflush
 }
 
 
 void DroneClass::Drone_main() {
   
+  // Compute PID according the sample period
+  currentTime = millis();
+  if ((currentTime > PIDTime )||(PIDTime  == 0)) { 
+     PIDTime = currentTime + samplePeriod;
+     if (lastTime > 0) {
+        sampleTime = (double)(currentTime - lastTime);
+        PRINT("sampleTime (ms): ",sampleTime)
+        
+        Drone_pid();
+        
+        // call MotorESC
+        ESC_command[THROTTLE] = RC_command[THROTTLE];
+        ESC_command[ROLL]     = (int16_t)anglePID[0];
+        ESC_command[PITCH]    = (int16_t)anglePID[1];
+        ESC_command[YAW]      = 0; 
+        MotorESC.MotorESC_RunMotors(ESC_command);
+        
+        PRINTflush
+     }       
+     lastTime = currentTime;   
+  }
+}
+
+void DroneClass::Drone_pid() {
+  
   uint8_t status = 0; 
-    
-  uint32_t currentTime, currentTimePID;
-  static uint32_t rcTime = 0;
-  static uint32_t lastTimePID = millis();
- 
-  int16_t RC_command[NBCHANNELS];
+
   int16_t RC_commandRP[2]; // commands Roll & Pitch
   int16_t angle[2]; // Roll & Pitch measured
-  int16_t ESC_command[4];
    
-  double sampleTime = 0.0;
-  double anglePID[2] = {0.0,0.0};;
   double error       = 0.0;
   double delta_error[2] = {0.0,0.0};
   static double last_error[2] = {0.0,0.0};
   static double last_delta_error[2] = {0.0,0.0};
   static double sum_error[2] = {0.0,0.0};
   const char szAngles[2][20]={"Roll","Pitch"};
+
+  // Get RC commands
+  RC.RC_getCommands(RC_command); // int16_t range [-90;+90]            for ROLL, PITCH, YAW
   
-  // Get RC commands every 20 ms
-  currentTime = millis();
-  if ((currentTime > rcTime )|| (rcTime  == 0)) { // 50Hz: PPM frequency of the RC, no change happen within 20ms except first time
-    rcTime = currentTime + 20;
-    
-    RC.RC_getCommands(RC_command); // int16_t range [-90;+90]            for ROLL, PITCH, YAW
-                                   //               0 or [MINPPM;MAXPPM] for THROTTLE
-                                   //               0/1                  for AUX1, AUX2
-  }
-  
-  // Read IMU  
+  // Read IMU
   angle[0] = (int16_t)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
      PRINT("CMPS12_getRoll KO, I2C error: ",status)
   }
-  
   angle[1] = (int16_t)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
      PRINT("CMPS12_getPitch KO, I2C error: ",status)
   }
-
    
   // Compute PID for ROLL & PITCH
   RC_commandRP[0]=RC_command[ROLL];
   RC_commandRP[1]=RC_command[PITCH];
   
-  currentTimePID = millis();
-  sampleTime = (double)(lastTimePID - currentTimePID);
-  lastTimePID = currentTimePID;
-  for (int i=0;i<2;i++) {	
+  for (int i=0;i<2;i++) {
     error =  (double)(RC_commandRP[i] - angle[i]);
     
     sum_error[i] += error;
@@ -131,16 +148,9 @@ void DroneClass::Drone_main() {
     PRINT("For ",szAngles[i])
     PRINTi("->angle",i,angle[i])
     PRINTi("->rcCommand",i,RC_commandRP[i])
-    PRINTi("->error",i,error)
+    PRINT("->error: ",error)
     PRINTi("->sum_error",i,sum_error[i])
     PRINTi("->delta_error",i,delta_error[i])
     PRINTi("->anglePID",i,anglePID[i])
-  }
-
-  // call MotorESC
-  ESC_command[THROTTLE] = RC_command[THROTTLE];
-  ESC_command[ROLL]     = (int16_t)anglePID[0];
-  ESC_command[PITCH]    = (int16_t)anglePID[1];
-  ESC_command[YAW]      = 0; 
-  MotorESC.MotorESC_RunMotors(ESC_command);
+  }  // end for
 }

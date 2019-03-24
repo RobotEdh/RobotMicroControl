@@ -1,19 +1,14 @@
-#include <MPU6050.h>
-#include <RC.h>
-#include <MotorESC.h>
+#include <Arduino.h> 
+#include <Wire.h>       // I2C protocol
 #include <Drone.h>
 
 DroneClass  Drone;     
 
 void setup()
 {
-  Serial.begin(9600); // initialize serial port
-  
-  Serial.println("Start Init" );  
-  
+  Wire.begin(); // initialize I2C
+   
   Drone.Drone_init();
- 
-  Serial.println("End Init" ); 
 }
 
 

@@ -95,7 +95,7 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
     lastk = thisk;    // Memorize the current state of PORT K
  
     
- }  // end of PCINT0_vect
+ }  // end of PCINT2_vect
  
 
 void RCClass::RC_init()
@@ -111,16 +111,16 @@ A13	  PCINT21 (PCMSK2 / PCIF2 / PCIE2) PK5
 A14	  PCINT22 (PCMSK2 / PCIF2 / PCIE2) PK6
 A15	  PCINT23 (PCMSK2 / PCIF2 / PCIE2) PK7
 */
-  PCMSK2 |= bit (PCINT16);  // want pin PCINT16
-  PCMSK2 |= bit (PCINT17);  // want pin PCINT17
-  PCMSK2 |= bit (PCINT18);  // want pin PCINT18
-  PCMSK2 |= bit (PCINT19);  // want pin PCINT19
-  PCMSK2 |= bit (PCINT20);  // want pin PCINT20
-  PCMSK2 |= bit (PCINT21);  // want pin PCINT21
-  PCIFR  |= bit (PCIF0);   // clear any outstanding interrupts
-  PCICR  |= bit (PCIE0);   // enable pin change interrupts
-  DDRK  = DDRK  & B11000000; // set pins 0 ->5 of PORTK as input 
-  PORTK = PORTK | B00111111; // activate pull-up resitors on pins 8 ? 13 of PORTK in order to avoid random values
+  PCMSK2 |= bit (PCINT16);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT16
+  PCMSK2 |= bit (PCINT17);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT17
+  PCMSK2 |= bit (PCINT18);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT18
+  PCMSK2 |= bit (PCINT19);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT19
+  PCMSK2 |= bit (PCINT20);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT20
+  PCMSK2 |= bit (PCINT21);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT21
+  PCIFR  |= bit (PCIF2);   // PCIFR – Pin Change Interrupt Flag Register => Bit 2 – PCIF2: clear any outstanding interrupts 2
+  PCICR  |= bit (PCIE2);   // PCICR – Pin Change Interrupt Control Register => Bit 2 – PCIE2: enable pin change interrupts 2
+  DDRK  = DDRK  & B11000000; // DDRK – Port K Data Direction Register => set pins 0-5 of PORTK as input 
+  PORTK = PORTK | B00111111; // activate pull-up resitors on pins 8 to 13 of PORTK in order to avoid random values
   uint8_t p = PINK;          // read PortB to clear any mismatch
   
   rcValue[THROTTLE] = MINPPM;
