@@ -10,17 +10,15 @@
 
 #define NBMOTORS 4
 const char szMotors[NBMOTORS][20]={    
-"REAR_RIGHT",
+"FRONT_LEFT",
 "FRONT_RIGHT",
-"REAR_LEFT",
-"FRONT_LEFT"
+"REAR_RIGHT",
+"REAR_LEFT"
 };
-
-#define Motor1Pin 3
-#define Motor2Pin 4
-#define Motor3Pin 5
-#define Motor4Pin 6
-
+#define Motor1Pin 5  //FRONT_LEFT
+#define Motor2Pin 6  //FRONT_RIGHT
+#define Motor3Pin 7  //REAR_RIGHT
+#define Motor4Pin 8  //REAR_LEFT
 
 
 class MotorESCClass

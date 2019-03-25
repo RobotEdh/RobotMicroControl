@@ -7,20 +7,22 @@ void setup()
   
   Serial.begin(9600); // initialize serial port
   
+  Serial.println("Start Init" );
   
- 
-  MotorESC.MotorESC_init();Serial.println("End Init" ); 
+  MotorESC.MotorESC_init();
+  
+  Serial.println("End Init" ); 
 
 }
 
 
 void loop()
 {
-  for(int i=0; i< 255; i++)
+  for(int i=130; i< 150; i++)
   {
       Serial.print("i: ");Serial.println(i);
       MotorESC.MotorESC_writeAllMotors(i);
-      delay(1000);
+      delay(500);
   }
    
   MotorESC.MotorESC_test();

@@ -64,8 +64,6 @@ void MotorESCClass::MotorESC_test()
   PRINTs("END TESTCASE 2")
  
 /* END TESTCASE 2 */
-
-  MotorESC_writeAllMotors(MINPWM);
   
   PRINTs("End OK ESC Init")   
 }
