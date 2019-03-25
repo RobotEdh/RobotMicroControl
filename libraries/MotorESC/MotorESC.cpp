@@ -25,13 +25,6 @@ void MotorESCClass::MotorESC_init()
   PRINTs(">Start Init ESC")
   PRINTs(">15 s to connect the ESC to power")
   delay(15*1000); /* 15 s to connect the ESC to power */
-  
-  PRINTs(">10s Run all motors")
-  MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
-  delay(10*1000);
-  
-  PRINTs(">Stop all motors")  
-  MotorESC_writeAllMotors(MINPWM);
 
   PRINTs("<End MotorESC_init")
 }
@@ -53,15 +46,25 @@ void MotorESCClass::MotorESC_test()
 
 /* END TESTCASE 1 */
 
-
 /* START TESTCASE 2: Spin all the motors together for 5s judging how much lift is provided  */
-  PRINTs("START TESTCASE 2: Spin all the motors together for 5s judging how much lift is provided")
+  PRINTs("START TESTCASE 2: Spin all the motors together near to minimum speed")
+  
+  for(int i=130; i< 150; i++)
+  {
+      Serial.print("i: ");Serial.println(i);
+      MotorESC.MotorESC_writeAllMotors(i);
+      delay(500);
+  }
+/* END TESTCASE 2 */
+
+/* START TESTCASE 3: Spin all the motors together for 5s judging how much lift is provided  */
+  PRINTs("START TESTCASE 3: Spin all the motors together for 10s judging how much lift is provided")
 
   MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
-  delay(5*1000); 
+  delay(10*1000); 
  
   MotorESC_writeAllMotors(MINPWM); // stop
-  PRINTs("END TESTCASE 2")
+  PRINTs("END TESTCASE 3")
  
 /* END TESTCASE 2 */
   

@@ -17,13 +17,6 @@ void setup()
 
 
 void loop()
-{
-  for(int i=130; i< 150; i++)
-  {
-      Serial.print("i: ");Serial.println(i);
-      MotorESC.MotorESC_writeAllMotors(i);
-      delay(500);
-  }
-   
+{ 
   MotorESC.MotorESC_test();
 }
