@@ -4,9 +4,10 @@
 #include <Arduino.h>
 #include <RC.h>
 
-#define MINPWM 127
+#define STOPPWM 127
+#define MINPWM 140
 #define MAXPWM 255
-#define MAXPWMTHRO 200
+#define MAXPWMTHRO 230
 
 #define NBMOTORS 4
 const char szMotors[NBMOTORS][20]={    
@@ -20,6 +21,7 @@ const char szMotors[NBMOTORS][20]={
 #define Motor3Pin 7  //REAR_RIGHT
 #define Motor4Pin 8  //REAR_LEFT
 
+#define LED_PIN         13 // LED for init, pint 13 for MEGA2560
 
 class MotorESCClass
 {

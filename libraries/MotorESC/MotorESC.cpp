@@ -16,15 +16,20 @@ void MotorESCClass::MotorESC_init()
 { 
   PRINTs("Start MotorESC_init")
 
+  pinMode(LED_PIN, OUTPUT);
+    
   pinMode(Motor1Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor2Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor3Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor4Pin, OUTPUT);  // set the analogig pin as output for PWM
-  MotorESC_writeAllMotors(MINPWM);
+  MotorESC_writeAllMotors(STOPPWM);
     
   PRINTs(">Start Init ESC")
   PRINTs(">15 s to connect the ESC to power")
+  
+  digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
   delay(15*1000); /* 15 s to connect the ESC to power */
+  digitalWrite(LED_PIN, LOW);  // turn on Led
 
   PRINTs("<End MotorESC_init")
 }
@@ -32,7 +37,7 @@ void MotorESCClass::MotorESC_init()
 void MotorESCClass::MotorESC_test()
 {
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
-  MotorESC_writeAllMotors(MINPWM);   // stop
+  MotorESC_writeAllMotors(STOPPWM);   // stop
   PRINTs("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way")
 
   for(int i=0; i< NBMOTORS; i++)
@@ -41,13 +46,13 @@ void MotorESCClass::MotorESC_test()
       MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
       delay(5*1000);
   }
-  MotorESC_writeAllMotors(MINPWM);  // stop
+  MotorESC_writeAllMotors(STOPPWM);  // stop
   PRINTs("END TESTCASE 1")
 
 /* END TESTCASE 1 */
 
 /* START TESTCASE 2: Spin all the motors together for 5s judging how much lift is provided  */
-  PRINTs("START TESTCASE 2: Spin all the motors together near to minimum speed")
+  PRINT("START TESTCASE 2: Spin all the motors together near to minimum speed MINPWMMOTOR: ",MINPWM)
   
   for(int i=130; i< 150; i++)
   {
@@ -63,7 +68,7 @@ void MotorESCClass::MotorESC_test()
   MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
   delay(10*1000); 
  
-  MotorESC_writeAllMotors(MINPWM); // stop
+  MotorESC_writeAllMotors(STOPPWM); // stop
   PRINTs("END TESTCASE 3")
  
 /* END TESTCASE 2 */
@@ -84,7 +89,7 @@ void MotorESCClass::MotorESC_writeMotors ()
 /**************************************************************************************/
 void MotorESCClass::MotorESC_writeOneMotor(uint8_t no, int16_t value) {   // Sends commands to one motor
   for (int i=0;i<NBMOTORS;i++) {
-    _motor[i]=MINPWM;  // stop all motors...
+    _motor[i]=STOPPWM;  // stop all motors...
   }
   _motor[no]=value; // ...except for the motor selected
    
@@ -113,7 +118,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   
   if (ESC_command[THROTTLE] == 0) 
   { 
-     for(i=0; i< NBMOTORS; i++) _motor[i] = MINPWM;
+     for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM;
   }
   else
   {   
