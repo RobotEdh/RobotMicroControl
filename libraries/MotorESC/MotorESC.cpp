@@ -52,7 +52,7 @@ void MotorESCClass::MotorESC_test()
   for(int i=130; i< 150; i++)
   {
       Serial.print("i: ");Serial.println(i);
-      MotorESC.MotorESC_writeAllMotors(i);
+      MotorESC_writeAllMotors(i);
       delay(500);
   }
 /* END TESTCASE 2 */
