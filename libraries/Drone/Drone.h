@@ -1,6 +1,11 @@
 #ifndef DRONE_h
 #define DRONE_h
 
+#include <CMPS12.h>     // Compas
+#include <RC.h>         // Radio Command
+#include <MotorESC.h>   // Motor ESC
+#include <DS1307.h>     // RTC
+
 class DroneClass
 {
   public:

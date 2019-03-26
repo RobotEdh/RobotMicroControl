@@ -1,6 +1,3 @@
-#include <CMPS12.h>     // Compas
-#include <RC.h>
-#include <MotorESC.h>
 #include <Drone.h>
 
 // Logging mode
@@ -13,6 +10,7 @@ extern File logFile;
 CMPS12Class CMPS12;               // The Compass class    
 RCClass       RC;                 // The Radio Command class
 MotorESCClass MotorESC;           // The Motor ESC Class
+DS1307Class DS1307;               // The RTC class  
 
     
 uint32_t currentTime;
@@ -24,6 +22,22 @@ int16_t RC_command[NBCHANNELS];
 int16_t ESC_command[4];
 double anglePID[2] = {0.0,0.0};
 
+void print_time()
+{
+  uint8_t status = 0;
+  DateTime_t now; 
+   
+   status = DS1307.DS1307_read_current_datetime(&now);
+   if (status > 0)
+   {
+      PRINT("DS1307_read_current_datetime KO, I2C error: ",status)
+   }
+   else
+   {
+      PRINTd
+      PRINTt
+   } 
+}
   
 DroneClass::DroneClass(void) {
 }
@@ -33,6 +47,26 @@ void DroneClass::Drone_init() {
   uint8_t status = 0; 
   PRINTbegin
   
+   // initialize RTC
+  PRINTs(" ")
+  status = DS1307.DS1307_init();
+  if (status == ERROR_RTC_STOPPED)
+  {
+     PRINTs("RTC stopped") 
+  }  
+  else if (status > 0)
+  {   
+     PRINT("Init DS1307 KO, I2C error:",status) 
+  }
+  else
+  {
+     uint8_t address = DS1307.DS1307_getAddress();
+     PRINTx("Init RTC DS1307 OK, address: ",address)
+ 
+     print_time();    
+  }
+   
+  PRINTs(" ")  
   PRINTs(">Start Init Drone")
 
  // initialize the Compass CMPS12
@@ -66,6 +100,7 @@ void DroneClass::Drone_init() {
   
   PRINTs("<End OK Init Drone")
   
+  print_time(); 
   PRINTflush
 }
 
