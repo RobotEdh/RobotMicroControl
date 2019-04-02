@@ -180,12 +180,12 @@ void DroneClass::Drone_pid() {
     
     anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
     
-    PRINT("For ",szAngles[i])
-    PRINTi("->angle",i,angle[i])
-    PRINTi("->rcCommand",i,RC_commandRP[i])
-    PRINT("->error: ",error)
-    PRINTi("->sum_error",i,sum_error[i])
-    PRINTi("->delta_error",i,delta_error[i])
-    PRINTi("->anglePID",i,anglePID[i])
+    PRINT("For|",szAngles[i])
+    PRINTi2("angle",i,angle[i])
+    PRINTi2("rcCommand",i,RC_commandRP[i])
+    PRINT("error|",error)
+    PRINTi2("sum_error",i,sum_error[i])
+    PRINTi2("delta_error",i,delta_error[i])
+    PRINTi2("anglePID",i,anglePID[i])
   }  // end for
 }

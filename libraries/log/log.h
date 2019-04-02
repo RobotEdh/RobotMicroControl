@@ -79,7 +79,9 @@
    #define PRINTx(s,v)  { PRINTTRACE logFile.print(F(s)); logFile.print(F("0x")); logFile.println(v, HEX); }
    #define PRINTb(s,v)  { PRINTTRACE logFile.print(F(s)); logFile.print(F("0b")); logFile.println(v, BIN); }
   
-   #define PRINTi(s,v1,v2)  { PRINTTRACE logFile.print(F(s)); logFile.print(F("["));logFile.print(v1);logFile.print(F("]: "));logFile.println(v2); }  
+   #define PRINTi(s,v1,v2)  { PRINTTRACE logFile.print(F(s)); logFile.print(F("["));logFile.print(v1);logFile.print(F("]: "));logFile.println(v2); } 
+   #define PRINTi2(s,v1,v2) { PRINTTRACE logFile.print(F(s)); logFile.print(F("["));logFile.print(v1);logFile.print(F("]|"));logFile.println(v2); }  
+  
    #define PRINTj(s,v1,v2)  { PRINTTRACE logFile.print(F(s)); logFile.print(F("["));logFile.print(v1);logFile.print(F("]: 0x"));logFile.println(v2,HEX); }   
    #define PRINT6(s,v1,v2,v3,v4,v5,v6) { PRINTTRACE logFile.print(F(s));logFile.print(v1,HEX);logFile.print(F(":"));logFile.print(v2,HEX);logFile.print(F(":"));logFile.print(v3,HEX);logFile.print(F(":"));logFile.print(v4,HEX);logFile.print(F(":"));logFile.print(v5,HEX);logFile.print(F(":"));logFile.println(v6,HEX); }     
    #define PRINTd { logFile.print(F("Date: "));logFile.print(now.days);logFile.print(F("/"));logFile.print(now.months);logFile.print(F("/"));logFile.println(now.year + 2000); }

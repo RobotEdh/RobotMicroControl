@@ -124,7 +124,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   {   
      int16_t throttle = map(ESC_command[THROTTLE], MINPPM, MAXPPM, MINPWM, MAXPWM);
      throttle = constrain(throttle, MINPWM, MAXPWMTHRO);  // to give room for PID ajustement
-     PRINT("throttle: ",throttle)
+     PRINT("throttle|",throttle)
      
      #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
     _motor[0] = PIDMIX(-1,+1,+1); //Front Left
@@ -133,16 +133,16 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     _motor[3] = PIDMIX(-1,-1,-1); //Rear Left
 
     for(i=0; i< NBMOTORS; i++) {
-       PRINTi("szMotors",i,szMotors[i])
+       PRINTi2("szMotors",i,szMotors[i])
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
-       PRINTi(">_motor mapped ",i,_motor[i])
+       PRINTi2("motor mapped",i,_motor[i])
        _motor[i] = _motor[i] + throttle;
        if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
     
     if (maxMotor > 0) {
-       PRINT(">maxMotor: ",maxMotor)
+       PRINT("maxMotor|",maxMotor)
        for(i=0; i< NBMOTORS; i++) {
           _motor[i] = _motor[i] - maxMotor;
           if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
@@ -150,7 +150,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     }
     
     if (minMotor > 0) {
-       PRINT(">minMotor: ",minMotor) 
+       PRINT("minMotor|",minMotor) 
        for(i=0; i< NBMOTORS; i++) {
           _motor[i] = _motor[i] + minMotor;
        }  
@@ -158,9 +158,9 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     
     if ((minMotor > 0) || (maxMotor > 0)) {
        for(i=0; i< NBMOTORS; i++) {
-          PRINTi("szMotors",i,szMotors[i])
+          PRINTi2("szMotors",i,szMotors[i])
           _motor[i] = constrain(_motor[i], MINPWM, MAXPWM);  // last cap if still needed after up and bottom cap
-          PRINTi(">_motor last cap ",i,_motor[i])
+          PRINTi2("motor last cap",i,_motor[i])
        }  
     }  
       
