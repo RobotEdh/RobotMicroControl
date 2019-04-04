@@ -127,10 +127,10 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
      PRINT("throttle|",throttle)
      
      #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
-    _motor[0] = PIDMIX(-1,+1,+1); //Front Left
-    _motor[1] = PIDMIX(+1,+1,-1); //Front Right
-    _motor[2] = PIDMIX(+1,-1,+1); //Rear Right
-    _motor[3] = PIDMIX(-1,-1,-1); //Rear Left
+    _motor[0] = PIDMIX(-1,-1,+1); //Front Left
+    _motor[1] = PIDMIX(+1,-1,-1); //Front Right
+    _motor[2] = PIDMIX(+1,+1,+1); //Rear Right
+    _motor[3] = PIDMIX(-1,+1,-1); //Rear Left
 
     for(i=0; i< NBMOTORS; i++) {
        PRINTi2("szMotors",i,szMotors[i])

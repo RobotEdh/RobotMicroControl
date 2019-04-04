@@ -162,11 +162,13 @@ void DroneClass::Drone_pid() {
   }
    
   // Compute PID for ROLL & PITCH
-  RC_commandRP[0]=RC_command[ROLL];
-  RC_commandRP[1]=RC_command[PITCH];
-  
+  //RC_commandRP[0]=RC_command[ROLL];
+  //RC_commandRP[1]=RC_command[PITCH];
+  RC_commandRP[0]=0;
+  RC_commandRP[1]=0;
+    
   for (int i=0;i<2;i++) {
-    error =  (double)(RC_commandRP[i] - angle[i]);
+    error =  angle[i] - (double)RC_commandRP[i];
     
     sum_error[i] += error;
     sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); // cap Integral

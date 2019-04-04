@@ -32,6 +32,8 @@
    #define PRINTb(s,v) { Serial.print(F(s)); Serial.print(F("0b")); Serial.println(v, BIN); }
     
    #define PRINTi(s,v1,v2)  { Serial.print(F(s)); Serial.print(F("["));Serial.print(v1);Serial.print(F("]: "));Serial.println(v2); }  
+   #define PRINTi2(s,v1,v2)  { Serial.print(F(s)); Serial.print(F("["));Serial.print(v1);Serial.print(F("]|"));Serial.println(v2); }  
+
    #define PRINTj(s,v1,v2)  { Serial.print(F(s)); Serial.print(F("["));Serial.print(v1);Serial.print(F("]: 0x"));Serial.println(v2,HEX); }
    #define PRINT6(s,v1,v2,v3,v4,v5,v6) { Serial.print(F(s));Serial.print(v1,HEX);Serial.print(F(":"));Serial.print(v2,HEX);Serial.print(F(":"));Serial.print(v3,HEX);Serial.print(F(":"));Serial.print(v4,HEX);Serial.print(F(":"));Serial.print(v5,HEX);Serial.print(F(":"));Serial.println(v6,HEX); }  
    #define PRINTd { Serial.print(F("Date: "));Serial.print(now.days);Serial.print(F("/"));Serial.print(now.months);Serial.print(F("/"));Serial.println(now.year + 2000); }
