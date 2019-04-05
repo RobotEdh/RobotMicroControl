@@ -29,22 +29,27 @@ void loop()
   {
       Serial.println(szMotors[i]);
       MotorESC.MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
-      delay(5*1000);
+      delay(10*1000);
   }
   MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
   Serial.println("END TESTCASE 1");
+  delay(1*1000);
 
 /* END TESTCASE 1 */
 
-/* START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM */
-  Serial.print("START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM: ");Serial.println(STOPPWM);
+/* START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM */
+  Serial.print("START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM: ");Serial.println(MINPWM);
   
-  for(int pwm=STOPPWM-10; pwm< STOPPWM+10; pwm++)
+  for(int pwm=MINPWM-2; pwm< MINPWM+2; pwm++)
   {
       Serial.print("PWM: ");Serial.println(pwm);
       MotorESC.MotorESC_writeAllMotors(pwm);
-      delay(500);
+      delay(5000);
   }
+  MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
+  Serial.println("END TESTCASE 2");
+  delay(1*1000);
+ 
 /* END TESTCASE 2 */
 
 /* START TESTCASE 3: Spin all the motors together for 10s at mid PWM = (MINPWM+MAXPWM)/2 judging how much lift is provided */
@@ -55,8 +60,10 @@ void loop()
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
   Serial.println("END TESTCASE 3");
+  delay(1*1000);
  
 /* END TESTCASE 3 */
   
    Serial.println("End OK ESC Tests");   
+   delay(10*1000);    
 }
