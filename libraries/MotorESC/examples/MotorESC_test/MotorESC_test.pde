@@ -10,6 +10,7 @@ void setup()
   Serial.println("Start Init" );
   
   MotorESC.MotorESC_init();
+  delay(10*1000);
   
   Serial.println("End Init" ); 
 
