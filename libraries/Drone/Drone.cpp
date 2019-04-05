@@ -204,8 +204,8 @@ void DroneClass::Drone_pid() {
     
     // Yaw range: 0-359 degrees
     if (i == 2) {  // only for Yaw
-       if (error > 180.0)      error =  error - 360.0;
-       else if (error < 180.0) error =  360.0 + error; 
+       if (error > 180.0)     - error =  error - 360.0;
+       else if (error < -180.0) error =  360.0 + error; 
     }
     
     sum_error[i] += error;
