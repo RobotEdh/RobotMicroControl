@@ -134,7 +134,7 @@ void DroneClass::Drone_main() {
         ESC_command[THROTTLE] = RC_command[THROTTLE];
         ESC_command[ROLL]     = (int16_t)anglePID[0];
         ESC_command[PITCH]    = (int16_t)anglePID[1];
-        ESC_command[YAW]      = (int16_t)anglePID[2]
+        ESC_command[YAW]      = (int16_t)anglePID[2];
         MotorESC.MotorESC_RunMotors(ESC_command);
         
         PRINTflush
@@ -192,7 +192,7 @@ void DroneClass::Drone_pid() {
   if (RC_commandRP[3] > 359.9)    RC_commandRP[3] =  RC_commandRP[3] - 359.9;
   else if (RC_commandRP[3] < 0.0) RC_commandRP[3] =  359.9 + RC_commandRP[3];  
     
-  if (RC_command[THROTTLE == 0) // reset PID
+  if (RC_command[THROTTLE] == 0) // reset PID
   {           
      for (int j=0;j<3;j++) {
          sum_error[j] = 0.0; 
