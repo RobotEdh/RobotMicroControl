@@ -149,7 +149,8 @@ void RCClass::RC_getCommands(int16_t RC_command[NBCHANNELS])
   
   for (int i = 0; i < NBCHANNELS; i++) {         // read data from all channels
         RC_data = (double)RC_readRaw(i);
-        if ((i == ROLL) || (i == PITCH) ||(i == YAW)) RC_command[i] = (int16_t)(RC_data - MIDPPM)* 90.0 * 2.0 /(MAXPPM -MINPPM); // roll, pitch, yaw convert to range [-180;+180]
+        if ((i == ROLL) || (i == PITCH)) RC_command[i] = (int16_t)(RC_data - MIDPPM)* 45.0 * 2.0 /(MAXPPM -MINPPM); // roll, pitch, yaw convert to range [-45;+45]
+        else if (i == YAW)               RC_command[i] = (int16_t)(RC_data - MIDPPM)* 90.0 * 2.0 /(MAXPPM -MINPPM); // roll, pitch, yaw convert to range [-90;+90]        
         else if (i == THROTTLE) { if (RC_data < 1.1*MINPPM) RC_command[i] = 0; else RC_command[i] = (int16_t)RC_data;}           // throttle 
         else if (i == AUX1) { if (RC_data > 0.9*MAXPPM)     RC_command[i] = 1; else RC_command[i] = 0;}                          // aux1
         else if (i == AUX2) { if (RC_data > 0.9*MAXPPMAUX2) RC_command[i] = 1; else RC_command[i] = 0;}                          // aux2    

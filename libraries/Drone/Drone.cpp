@@ -19,8 +19,9 @@ static uint32_t lastTime = 0;
 double sampleTime = 0.0;
  
 int16_t RC_command[NBCHANNELS];
-int16_t ESC_command[4];
-double anglePID[2] = {0.0,0.0};
+int16_t ESC_command[NBMOTORS];
+double YawInit = 0.0;
+double anglePID[3] = {0.0,0.0,0.0};
 
 void print_time()
 {
@@ -88,6 +89,18 @@ void DroneClass::Drone_init() {
         PRINT("Init CMPS12 KO, I2C error: ",status)
      }    
   }
+  
+  YawInit = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
+  status = CMPS12.CMPS12_getStatus();
+  if (status > 0)
+  {           
+     PRINT("CMPS12_getCompassHighResolution KO, I2C error: ",status)
+  }
+  else
+  {           
+        PRINT("YawInit: ",YawInit)
+  }
+        
   PRINTs(" ")
   PRINTs("Init RC")
   RC.RC_init();
@@ -121,7 +134,7 @@ void DroneClass::Drone_main() {
         ESC_command[THROTTLE] = RC_command[THROTTLE];
         ESC_command[ROLL]     = (int16_t)anglePID[0];
         ESC_command[PITCH]    = (int16_t)anglePID[1];
-        ESC_command[YAW]      = 0; 
+        ESC_command[YAW]      = (int16_t)anglePID[2]
         MotorESC.MotorESC_RunMotors(ESC_command);
         
         PRINTflush
@@ -134,41 +147,62 @@ void DroneClass::Drone_pid() {
   
   uint8_t status = 0; 
 
-  int16_t RC_commandRP[2]; // commands Roll & Pitch
-  int16_t angle[2]; // Roll & Pitch measured
+  double RC_commandRP[3]; // commands Roll & Pitch & Yaw
+  double angle[3]; // Roll & Pitch & Yaw measured
    
-  double error       = 0.0;
-  double delta_error[2] = {0.0,0.0};
-  static double last_error[2] = {0.0,0.0};
-  static double last_delta_error[2] = {0.0,0.0};
-  static double sum_error[2] = {0.0,0.0};
-  const char szAngles[2][20]={"Roll","Pitch"};
+  double error = 0.0;
+  double delta_error[3] = {0.0,0.0,0.0};
+  static double last_error[3] = {0.0,0.0,0.0};
+  static double last_delta_error[3] = {0.0,0.0,0.0};
+  static double sum_error[3] = {0.0,0.0,0.0};
+  const char szAngles[3][20]={"Roll","Pitch","Yaw"};
 
   // Get RC commands
-  RC.RC_getCommands(RC_command); // int16_t range [-90;+90]            for ROLL, PITCH, YAW
+  RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
   
   // Read IMU
-  angle[0] = (int16_t)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
+  angle[0] = (double)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
      PRINT("CMPS12_getRoll KO, I2C error: ",status)
   }
-  angle[1] = (int16_t)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
+  
+  angle[1] = (double)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
      PRINT("CMPS12_getPitch KO, I2C error: ",status)
   }
-   
+       
+  angle[2] = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
+  status = CMPS12.CMPS12_getStatus();
+  if (status > 0)
+  {           
+     PRINT("CMPS12_getCompassHighResolution KO, I2C error: ",status)
+  }  
+  
   // Compute PID for ROLL & PITCH
-  //RC_commandRP[0]=RC_command[ROLL];
-  //RC_commandRP[1]=RC_command[PITCH];
-  RC_commandRP[0]=0;
-  RC_commandRP[1]=0;
+  //RC_commandRP[0]= (double)RC_command[ROLL];
+  //RC_commandRP[1]= (double)RC_command[PITCH];
+  //RC_commandRP[2]= (double)RC_command[YAW] + YawInit;
+  RC_commandRP[0]=0.0;
+  RC_commandRP[1]=0.0;
+  RC_commandRP[3]=YawInit;
+  if (RC_commandRP[3] > 359.9)    RC_commandRP[3] =  RC_commandRP[3] - 359.9;
+  else if (RC_commandRP[3] < 0.0) RC_commandRP[3] =  359.9 + RC_commandRP[3];  
     
-  for (int i=0;i<2;i++) {
-    error =  angle[i] - (double)RC_commandRP[i];
+  if (RC_command[THROTTLE == 0) // reset PID
+  {           
+     for (int j=0;j<3;j++) {
+         sum_error[j] = 0.0; 
+         last_error[j] = 0.0;
+         last_delta_error[j] = 0.0;
+     }   
+  }
+      
+  for (int i=0;i<3;i++) {
+    error =  angle[i] - RC_commandRP[i];
     
     sum_error[i] += error;
     sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); // cap Integral
@@ -191,3 +225,4 @@ void DroneClass::Drone_pid() {
     PRINTi2("anglePID",i,anglePID[i])
   }  // end for
 }
+   
