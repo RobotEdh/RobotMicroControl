@@ -33,48 +33,6 @@ void MotorESCClass::MotorESC_init()
 
   PRINTs("<End MotorESC_init")
 }
-
-void MotorESCClass::MotorESC_test()
-{
-/* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
-  MotorESC_writeAllMotors(STOPPWM);   // stop
-  PRINTs("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way")
-
-  for(int i=0; i< NBMOTORS; i++)
-  {
-      PRINTi("szMotors",i,szMotors[i])
-      MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
-      delay(5*1000);
-  }
-  MotorESC_writeAllMotors(STOPPWM);  // stop
-  PRINTs("END TESTCASE 1")
-
-/* END TESTCASE 1 */
-
-/* START TESTCASE 2: Spin all the motors together for 5s judging how much lift is provided  */
-  PRINT("START TESTCASE 2: Spin all the motors together near to minimum speed MINPWMMOTOR: ",MINPWM)
-  
-  for(int i=130; i< 150; i++)
-  {
-      Serial.print("i: ");Serial.println(i);
-      MotorESC_writeAllMotors(i);
-      delay(500);
-  }
-/* END TESTCASE 2 */
-
-/* START TESTCASE 3: Spin all the motors together for 5s judging how much lift is provided  */
-  PRINTs("START TESTCASE 3: Spin all the motors together for 10s judging how much lift is provided")
-
-  MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
-  delay(10*1000); 
- 
-  MotorESC_writeAllMotors(STOPPWM); // stop
-  PRINTs("END TESTCASE 3")
- 
-/* END TESTCASE 2 */
-  
-  PRINTs("End OK ESC Init")   
-}
  
 void MotorESCClass::MotorESC_writeMotors ()
 { 
