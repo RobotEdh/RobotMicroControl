@@ -185,14 +185,12 @@ void DroneClass::Drone_pid() {
   // Compute PID for ROLL & PITCH
   //RC_commandRP[0]= (double)RC_command[ROLL];
   //RC_commandRP[1]= (double)RC_command[PITCH];
-  //RC_commandRP[2]= (double)RC_command[YAW] + YawInit;
+  //RC_commandRP[2]= (double)RC_command[YAW] - YawInit;
   RC_commandRP[0]=0.0;
   RC_commandRP[1]=0.0;
-  RC_commandRP[3]=YawInit;
-  if (RC_commandRP[3] > 359.9)    RC_commandRP[3] =  RC_commandRP[3] - 359.9;
-  else if (RC_commandRP[3] < 0.0) RC_commandRP[3] =  359.9 + RC_commandRP[3];  
+  RC_commandRP[2]=YawInit;
     
-  if (RC_command[THROTTLE] == 0) // reset PID
+  if (RC_command[THROTTLE] == 0) // reset PID if no throttle
   {           
      for (int j=0;j<3;j++) {
          sum_error[j] = 0.0; 
@@ -203,6 +201,12 @@ void DroneClass::Drone_pid() {
       
   for (int i=0;i<3;i++) {
     error =  angle[i] - RC_commandRP[i];
+    
+    // Yaw range: 0-359 degrees
+    if (i == 2) {  // only for Yaw
+       if (error > 180.0)      error =  error - 360.0;
+       else if (error < 180.0) error =  360.0 + error; 
+    }
     
     sum_error[i] += error;
     sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); // cap Integral

@@ -88,8 +88,8 @@ void loop()
   angle[2] = angle[2] - YawInit;
   Serial.print("angle[2]: ");Serial.println(angle[2]);
   
-  if (angle[2] > 359.9)    angle[2] =  angle[2] - 359.9;
-  else if (angle[2] < 0.0) angle[2] =  359.9 + angle[2]; 
+  if (angle[2] > 180.0)      angle[2] =  angle[2] - 360.0;
+  else if (angle[2] < 180.0) angle[2] =  360.0 + angle[2]; 
   Serial.print("angle[2]: ");Serial.println(angle[2]);
   
   #define PIDMIX(X,Y,Z) (int16_t)angle[0]*X + (int16_t)angle[1]*Y + (int16_t)angle[2]*Z
