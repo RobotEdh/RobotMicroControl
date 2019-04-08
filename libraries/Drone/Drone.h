@@ -7,8 +7,11 @@
 #include <DS1307.h>     // RTC
 
 
-#define LOGDATASIZE 512 //multiple of block size 512/8=64
+#define LOGDATASIZE 508 //multiple of block size 512/8=64 minus 4 bytes for Start and Stop
 #define LOGFREQ 5 //log every 5 cycles
+
+const uint8_t startlog[2]={0xFA,0xFB};
+const uint8_t stoplog[2] ={0xFC,0xFD};   
 
 class DroneClass
 {

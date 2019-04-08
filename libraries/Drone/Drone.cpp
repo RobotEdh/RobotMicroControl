@@ -3,7 +3,7 @@
 // Logging mode
 //#define  LOGSERIAL
 #define LOGSDCARD  // log to SD Card
-#define LOGTRACE   // Enable trace
+//#define LOGTRACE   // Enable trace
 #include <log.h>
 extern File logFile;   
    
@@ -137,11 +137,11 @@ void DroneClass::Drone_main() {
   
   // Compute PID according the sample period
   currentTime = millis();
-  if ((currentTime > PIDTime )||(PIDTime  == 0)) { 
+  if ((currentTime >= PIDTime )||(PIDTime  == 0)) { 
      PIDTime = currentTime + samplePeriod;
      if (lastTime > 0) {
         sampleTime = (double)(currentTime - lastTime);
-        PRINT("sampleTime (ms): ",sampleTime)
+        if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
         
         Drone_pid();
         
@@ -152,7 +152,7 @@ void DroneClass::Drone_main() {
         ESC_command[YAW]      = (int16_t)anglePID[2];
         MotorESC.MotorESC_RunMotors(ESC_command);
         
-        //PRINTflush
+        PRINTflush
      }       
      lastTime = currentTime;   
   }
@@ -171,8 +171,6 @@ void DroneClass::Drone_pid() {
   static double last_delta_error[3] = {0.0,0.0,0.0};
   static double sum_error[3] = {0.0,0.0,0.0};
   const char szAngles[3][20]={"Roll","Pitch","Yaw"};
-  
-  int t = 0;
 
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
@@ -237,15 +235,15 @@ void DroneClass::Drone_pid() {
     
     anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
     
-    PRINT("For|",szAngles[i])
+  /*  PRINT("For|",szAngles[i])
     PRINTi2("angle",i,angle[i])
     PRINTi2("rcCommand",i,RC_commandRP[i])
     PRINT("error|",error)
     PRINTi2("sum_error",i,sum_error[i])
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
-    
-    if ((tlog%LOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz 
+  */  
+    if ((tlog%LOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
        record[t].tlog = (uint8_t)tlog;
        record[t].angleType = (uint8_t)i;
        record[t].angle = (int8_t)angle[i];
@@ -256,12 +254,13 @@ void DroneClass::Drone_pid() {
        record[t].anglePID = (int8_t)anglePID[i]; 
        t++;
        if (t == LOGDATASIZE) { // need to dump
-          t = 0;  
-          logFile.write((const uint8_t *)&record,sizeof(record));                                                         
+          t = 0; 
+          logFile.write(startlog,2);  
+          logFile.write((const uint8_t *)&record,sizeof(record));
+          logFile.write(stoplog,2);                                            
        }
     }
-    tlog ++;
- 
   }  // end for
+  tlog ++;
 }
    
