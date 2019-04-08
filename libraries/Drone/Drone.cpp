@@ -13,10 +13,25 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 DS1307Class DS1307;               // The RTC class  
 
     
+typedef struct record_type
+{
+     uint8_t tlog;
+     uint8_t angleType;
+     int8_t angle;
+     int8_t RC_commandRP;
+     int8_t error;
+     int8_t sum_error;
+     int8_t delta_error;
+     int8_t anglePID;
+};
+record_type record[LOGDATASIZE];
+
 uint32_t currentTime;
 static uint32_t PIDTime = 0;
 static uint32_t lastTime = 0;
 double sampleTime = 0.0;
+static int tlog = 0;
+static int t = 0;
  
 int16_t RC_command[NBCHANNELS];
 int16_t ESC_command[NBMOTORS];
@@ -137,7 +152,7 @@ void DroneClass::Drone_main() {
         ESC_command[YAW]      = (int16_t)anglePID[2];
         MotorESC.MotorESC_RunMotors(ESC_command);
         
-        PRINTflush
+        //PRINTflush
      }       
      lastTime = currentTime;   
   }
@@ -156,6 +171,8 @@ void DroneClass::Drone_pid() {
   static double last_delta_error[3] = {0.0,0.0,0.0};
   static double sum_error[3] = {0.0,0.0,0.0};
   const char szAngles[3][20]={"Roll","Pitch","Yaw"};
+  
+  int t = 0;
 
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
@@ -227,6 +244,24 @@ void DroneClass::Drone_pid() {
     PRINTi2("sum_error",i,sum_error[i])
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
+    
+    if ((tlog%LOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz 
+       record[t].tlog = (uint8_t)tlog;
+       record[t].angleType = (uint8_t)i;
+       record[t].angle = (int8_t)angle[i];
+       record[t].RC_commandRP = (int8_t)RC_commandRP[i];
+       record[t].error = (int8_t)error;
+       record[t].sum_error = (int8_t)sum_error[i];
+       record[t].delta_error = (int8_t)delta_error[i];
+       record[t].anglePID = (int8_t)anglePID[i]; 
+       t++;
+       if (t == LOGDATASIZE) { // need to dump
+          t = 0;  
+          logFile.write((const uint8_t *)&record,sizeof(record));                                                         
+       }
+    }
+    tlog ++;
+ 
   }  // end for
 }
    
