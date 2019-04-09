@@ -10,8 +10,8 @@
 #define PIDLOGDATASIZE 511 //multiple of block size 512 minus 7 bytes for Start and Stop
 #define PIDLOGFREQ 5 //log every 5 cycles
 
-const uint8_t startPIDLog[4]={0xFA,0xFB};
-const uint8_t stopPIDLog[3] ={0xFC,0xFD,0x00,,0x00,0x00};   
+const uint8_t startPIDLog[2]={0xFA,0xFB};
+const uint8_t stopPIDLog[5] ={0xFC,0xFD,0x00,0x00,0x00};   
 
 class DroneClass
 {
