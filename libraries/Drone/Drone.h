@@ -7,11 +7,11 @@
 #include <DS1307.h>     // RTC
 
 
-#define PIDLOGDATASIZE 511 //multiple of block size 512/8=64 minus 8 bytes for Start and Stop
+#define PIDLOGDATASIZE 511 //multiple of block size 512 minus 7 bytes for Start and Stop
 #define PIDLOGFREQ 5 //log every 5 cycles
 
 const uint8_t startPIDLog[4]={0x00,0x00,0xFA,0xFB};
-const uint8_t stopPIDLog[4] ={0xFC,0xFD,0x00,0x00};   
+const uint8_t stopPIDLog[3] ={0xFC,0xFD,0x00};   
 
 class DroneClass
 {

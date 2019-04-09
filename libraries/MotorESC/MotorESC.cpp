@@ -10,7 +10,6 @@ File logFile;
 
 typedef struct motor_record_type
 {
-     uint8_t tlog;
      uint8_t throttle;
      uint8_t motor0;
      uint8_t motor1;
@@ -111,7 +110,6 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
     if ((motor_tlog%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-          motor_record[motor_t].tlog = (uint8_t)(motor_tlog/MOTORLOGFREQ);
           motor_record[motor_t].throttle = (uint8_t)throttle;
           motor_record[motor_t].motor0 = (uint8_t)_motor[0];
           motor_record[motor_t].motor1 = (uint8_t)_motor[1];

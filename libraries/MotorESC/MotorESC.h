@@ -18,7 +18,7 @@
 #define LED_PIN         13 // LED for init, pint 13 for MEGA2560
 
 
-#define MOTORLOGDATASIZE 170 //multiple of block size 512 minus 4 bytes for Start and Stop
+#define MOTORLOGDATASIZE 170 //multiple of block size 512 minus 5 bytes for Start and Stop
 #define MOTORLOGFREQ 5 //log every 5 cycles
 
 const uint8_t startMotorLog[2]={0xFB,0xFC};

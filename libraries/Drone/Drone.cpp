@@ -15,7 +15,6 @@ DS1307Class DS1307;               // The RTC class
     
 typedef struct PID_record_type
 {
-     uint8_t tlog;
      uint8_t angleType;
      int8_t angle;
      int8_t RC_commandRP;
@@ -243,7 +242,6 @@ void DroneClass::Drone_pid() {
     PRINTi2("anglePID",i,anglePID[i])
   */  
     if ((PID_tlog%PIDLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-       PID_record[PID_t].tlog = (uint8_t)(PID_tlog/PIDLOGFREQ);
        PID_record[PID_t].angleType = (uint8_t)i;
        PID_record[PID_t].angle = (int8_t)angle[i];
        PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
