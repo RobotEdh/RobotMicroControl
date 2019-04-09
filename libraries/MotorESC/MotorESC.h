@@ -10,18 +10,19 @@
 #define MAXPWMTHRO 230
 
 #define NBMOTORS 4
-const char szMotors[NBMOTORS][20]={    
-"FRONT_LEFT",
-"FRONT_RIGHT",
-"REAR_RIGHT",
-"REAR_LEFT"
-};
 #define Motor1Pin 5  //FRONT_LEFT
 #define Motor2Pin 6  //FRONT_RIGHT
 #define Motor3Pin 7  //REAR_RIGHT
 #define Motor4Pin 8  //REAR_LEFT
 
 #define LED_PIN         13 // LED for init, pint 13 for MEGA2560
+
+
+#define MOTORLOGDATASIZE 170 //multiple of block size 512 minus 4 bytes for Start and Stop
+#define MOTORLOGFREQ 5 //log every 5 cycles
+
+const uint8_t startMotorLog[2]={0xFB,0xFC};
+const uint8_t stopMotorLog[2] ={0xFD,0xFE};  
 
 class MotorESCClass
 {

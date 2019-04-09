@@ -4,9 +4,23 @@
 // Logging mode
 //#define  LOGSERIAL
 #define LOGSDCARD  // log to SD Card
-#define LOGTRACE   // Enable trace
+//#define LOGTRACE   // Enable trace
 #include <log.h>
-File logFile;   
+File logFile; 
+
+typedef struct motor_record_type
+{
+     uint8_t tlog;
+     uint8_t throttle;
+     uint8_t motor0;
+     uint8_t motor1;
+     uint8_t motor2;
+     uint8_t motor3;     
+};
+motor_record_type motor_record[MOTORLOGDATASIZE];
+
+static int motor_tlog = 0;
+static int motor_t = 0;  
 
 MotorESCClass::MotorESCClass()
 {
@@ -82,7 +96,6 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   {   
      int16_t throttle = map(ESC_command[THROTTLE], MINPPM, MAXPPM, MINPWM, MAXPWM);
      throttle = constrain(throttle, MINPWM, MAXPWMTHRO);  // to give room for PID ajustement
-     PRINT("throttle|",throttle)
      
      #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
     _motor[0] = PIDMIX(-1,-1,+1); //Front Left
@@ -91,13 +104,28 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     _motor[3] = PIDMIX(-1,+1,-1); //Rear Left
 
     for(i=0; i< NBMOTORS; i++) {
-       PRINTi2("szMotors",i,szMotors[i])
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
-       PRINTi2("motor mapped",i,_motor[i])
        _motor[i] = _motor[i] + throttle;
+       //PRINTi2("motor",i,_motor[i]) 
        if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
+    if ((motor_tlog%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+          motor_record[motor_t].tlog = (uint8_t)(motor_tlog/MOTORLOGFREQ);
+          motor_record[motor_t].throttle = (uint8_t)throttle;
+          motor_record[motor_t].motor0 = (uint8_t)_motor[0];
+          motor_record[motor_t].motor1 = (uint8_t)_motor[1];
+          motor_record[motor_t].motor2 = (uint8_t)_motor[2];
+          motor_record[motor_t].motor3 = (uint8_t)_motor[3];                    
+          motor_t++;
+          if (motor_t == MOTORLOGDATASIZE) { // need to dump
+             motor_t = 0; 
+             logFile.write(startMotorLog,sizeof(startMotorLog));  
+             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record));
+             logFile.write(stopMotorLog,sizeof(stopMotorLog));                                            
+          }
+    } 
+    motor_tlog ++;
     
     if (maxMotor > 0) {
        PRINT("maxMotor|",maxMotor)
@@ -116,7 +144,6 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     
     if ((minMotor > 0) || (maxMotor > 0)) {
        for(i=0; i< NBMOTORS; i++) {
-          PRINTi2("szMotors",i,szMotors[i])
           _motor[i] = constrain(_motor[i], MINPWM, MAXPWM);  // last cap if still needed after up and bottom cap
           PRINTi2("motor last cap",i,_motor[i])
        }  

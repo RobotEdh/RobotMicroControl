@@ -10,14 +10,6 @@
 #define YAW        3
 #define AUX1       4
 #define AUX2       5
-const char szChannels[NBCHANNELS][20]={    
-"Throttle",
-"Roll",
-"Pitch",
-"Yaw",
-"AUX1",
-"AUX2"
-};
 
 #define MAXPPM      1920.0
 #define MAXPPMAUX2  1520.0 

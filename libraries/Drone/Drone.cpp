@@ -13,7 +13,7 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 DS1307Class DS1307;               // The RTC class  
 
     
-typedef struct record_type
+typedef struct PID_record_type
 {
      uint8_t tlog;
      uint8_t angleType;
@@ -24,14 +24,14 @@ typedef struct record_type
      int8_t delta_error;
      int8_t anglePID;
 };
-record_type record[LOGDATASIZE];
+PID_record_type PID_record[PIDLOGDATASIZE];
 
 uint32_t currentTime;
 static uint32_t PIDTime = 0;
 static uint32_t lastTime = 0;
 double sampleTime = 0.0;
-static int tlog = 0;
-static int t = 0;
+static int PID_tlog = 0;
+static int PID_t = 0;
  
 int16_t RC_command[NBCHANNELS];
 int16_t ESC_command[NBMOTORS];
@@ -170,7 +170,6 @@ void DroneClass::Drone_pid() {
   static double last_error[3] = {0.0,0.0,0.0};
   static double last_delta_error[3] = {0.0,0.0,0.0};
   static double sum_error[3] = {0.0,0.0,0.0};
-  const char szAngles[3][20]={"Roll","Pitch","Yaw"};
 
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
@@ -235,7 +234,7 @@ void DroneClass::Drone_pid() {
     
     anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
     
-  /*  PRINT("For|",szAngles[i])
+  /*  
     PRINTi2("angle",i,angle[i])
     PRINTi2("rcCommand",i,RC_commandRP[i])
     PRINT("error|",error)
@@ -243,24 +242,24 @@ void DroneClass::Drone_pid() {
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
   */  
-    if ((tlog%LOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-       record[t].tlog = (uint8_t)tlog;
-       record[t].angleType = (uint8_t)i;
-       record[t].angle = (int8_t)angle[i];
-       record[t].RC_commandRP = (int8_t)RC_commandRP[i];
-       record[t].error = (int8_t)error;
-       record[t].sum_error = (int8_t)sum_error[i];
-       record[t].delta_error = (int8_t)delta_error[i];
-       record[t].anglePID = (int8_t)anglePID[i]; 
-       t++;
-       if (t == LOGDATASIZE) { // need to dump
-          t = 0; 
-          logFile.write(startlog,2);  
-          logFile.write((const uint8_t *)&record,sizeof(record));
-          logFile.write(stoplog,2);                                            
+    if ((PID_tlog%PIDLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+       PID_record[PID_t].tlog = (uint8_t)(PID_tlog/PIDLOGFREQ);
+       PID_record[PID_t].angleType = (uint8_t)i;
+       PID_record[PID_t].angle = (int8_t)angle[i];
+       PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
+       PID_record[PID_t].error = (int8_t)error;
+       PID_record[PID_t].sum_error = (int8_t)sum_error[i];
+       PID_record[PID_t].delta_error = (int8_t)delta_error[i];
+       PID_record[PID_t].anglePID = (int8_t)anglePID[i]; 
+       PID_t++;
+       if (PID_t == PIDLOGDATASIZE) { // need to dump
+          PID_t = 0; 
+          logFile.write(startPIDLog,sizeof(startPIDLog));  
+          logFile.write((const uint8_t *)&PID_record,sizeof(PID_record));
+          logFile.write(stopPIDLog,sizeof(stopPIDLog));                                            
        }
     }
   }  // end for
-  tlog ++;
+  PID_tlog ++;
 }
    
