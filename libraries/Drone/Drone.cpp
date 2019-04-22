@@ -37,6 +37,8 @@ int16_t ESC_command[NBMOTORS];
 double YawInit = 0.0;
 double anglePID[3] = {0.0,0.0,0.0};
 
+bool init_OK = true;
+
 void print_time()
 {
   uint8_t status = 0;
@@ -57,6 +59,28 @@ void print_time()
 DroneClass::DroneClass(void) {
 }
 
+uint8_t DroneClass::Yaw_init() {
+  
+  uint8_t status = 0; 
+  double SumYawInit = 0.0;
+  
+  for (int i=0;i<3;i++) {
+     YawInit = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
+     if (status > 0)
+     {           
+        PRINT("CMPS12_getCompassHighResolution KO, I2C error: ",status)
+        return status;
+     }
+     SumYawInit += YawInit;
+  }
+  
+  YawInit = SumYawInit/3.0;
+  PRINT("YawInit: ",YawInit)
+  
+  return 0;
+  
+}
+  
 void DroneClass::Drone_init() {
    
   uint8_t status = 0; 
@@ -101,18 +125,15 @@ void DroneClass::Drone_init() {
      else 
      {           
         PRINT("Init CMPS12 KO, I2C error: ",status)
+        init_OK = false;
      }    
   }
   
-  YawInit = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
-  status = CMPS12.CMPS12_getStatus();
+  status = Yaw_init ();
   if (status > 0)
   {           
-     PRINT("CMPS12_getCompassHighResolution KO, I2C error: ",status)
-  }
-  else
-  {           
-        PRINT("YawInit: ",YawInit)
+     PRINT("Yaw_init KO, Error: ",status)
+     init_OK = false;
   }
         
   PRINTs(" ")
@@ -145,10 +166,20 @@ void DroneClass::Drone_main() {
         Drone_pid();
         
         // call MotorESC
-        ESC_command[THROTTLE] = RC_command[THROTTLE];
-        ESC_command[ROLL]     = (int16_t)anglePID[0];
-        ESC_command[PITCH]    = (int16_t)anglePID[1];
-        ESC_command[YAW]      = (int16_t)anglePID[2];
+        if (!init_OK ) {
+           ESC_command[THROTTLE] = 0;
+           ESC_command[ROLL]     = 0;
+           ESC_command[PITCH]    = 0;
+           ESC_command[YAW]      = 0;
+           PRINTs(" init KO => ESC_command = 0")
+        }
+        else       
+        {
+           ESC_command[THROTTLE] = RC_command[THROTTLE];
+           ESC_command[ROLL]     = (int16_t)anglePID[0];
+           ESC_command[PITCH]    = (int16_t)anglePID[1];
+           ESC_command[YAW]      = (int16_t)anglePID[2];
+        }   
         MotorESC.MotorESC_RunMotors(ESC_command);
         
         PRINTflush
@@ -172,6 +203,22 @@ void DroneClass::Drone_pid() {
 
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
+  
+  if (RC_command[THROTTLE] == 0) // reset PID and Yaw init if no throttle
+  {           
+     for (int j=0;j<3;j++) {
+         sum_error[j] = 0.0; 
+         last_error[j] = 0.0;
+         last_delta_error[j] = 0.0;
+     } 
+     
+     status = Yaw_init ();
+     if (status > 0)
+     {           
+        PRINT("Yaw_init KO, Error: ",status)
+        init_OK = false;
+     }  
+  }
   
   // Read IMU
   angle[0] = (double)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
@@ -202,15 +249,6 @@ void DroneClass::Drone_pid() {
   RC_commandRP[0]=0.0;
   RC_commandRP[1]=0.0;
   RC_commandRP[2]=YawInit;
-    
-  if (RC_command[THROTTLE] == 0) // reset PID if no throttle
-  {           
-     for (int j=0;j<3;j++) {
-         sum_error[j] = 0.0; 
-         last_error[j] = 0.0;
-         last_delta_error[j] = 0.0;
-     }   
-  }
       
   for (int i=0;i<3;i++) {
     error =  angle[i] - RC_commandRP[i];
@@ -233,14 +271,14 @@ void DroneClass::Drone_pid() {
     
     anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
     
-  /*  
+  #ifdef LOGSERIAL  
     PRINTi2("angle",i,angle[i])
     PRINTi2("rcCommand",i,RC_commandRP[i])
     PRINT("error|",error)
     PRINTi2("sum_error",i,sum_error[i])
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
-  */  
+  #else  
     if ((PID_tlog%PIDLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
        PID_record[PID_t].angleType = (uint8_t)i;
        PID_record[PID_t].angle = (int8_t)angle[i];
@@ -257,6 +295,7 @@ void DroneClass::Drone_pid() {
           logFile.write(stopPIDLog,sizeof(stopPIDLog));                                            
        }
     }
+#endif    
   }  // end for
   PID_tlog ++;
 }

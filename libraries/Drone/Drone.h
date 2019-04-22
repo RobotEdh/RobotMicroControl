@@ -17,10 +17,11 @@ class DroneClass
 {
   public:
     DroneClass();
-  
-    void Drone_init(void);
-    void Drone_pid(void);
-    void Drone_main(void);
+    
+    uint8_t Yaw_init(void);
+    void    Drone_init(void);
+    void    Drone_pid(void);
+    void    Drone_main(void);
 
   private:
     const uint32_t samplePeriod = 20;  // 20 ms (50Hz)

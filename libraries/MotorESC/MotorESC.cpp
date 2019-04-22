@@ -105,10 +105,13 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
     for(i=0; i< NBMOTORS; i++) {
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
        _motor[i] = _motor[i] + throttle;
-       //PRINTi2("motor",i,_motor[i]) 
+#ifdef LOGSERIAL
+       PRINTi2("motor",i,_motor[i]) 
+#endif
        if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
+#ifndef LOGSERIAL
     if ((motor_tlog%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
           motor_record[motor_t].throttle = (uint8_t)throttle;
           motor_record[motor_t].motor0 = (uint8_t)_motor[0];
@@ -123,6 +126,8 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
              logFile.write(stopMotorLog,sizeof(stopMotorLog));                                            
           }
     } 
+#endif
+    
     motor_tlog ++;
     
     if (maxMotor > 0) {
