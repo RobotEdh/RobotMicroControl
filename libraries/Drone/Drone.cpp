@@ -38,6 +38,7 @@ double YawInit = 0.0;
 double anglePID[3] = {0.0,0.0,0.0};
 
 bool init_OK = true;
+bool go = false;
 
 void print_time()
 {
@@ -204,8 +205,9 @@ void DroneClass::Drone_pid() {
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
   
-  if (RC_command[THROTTLE] == 0) // reset PID and Yaw init if no throttle
+  if ((RC_command[THROTTLE] > 0) && (!go)) // reset PID and Yaw init if before starting
   {           
+     go = true; 
      for (int j=0;j<3;j++) {
          sum_error[j] = 0.0; 
          last_error[j] = 0.0;
@@ -219,7 +221,11 @@ void DroneClass::Drone_pid() {
         init_OK = false;
      }  
   }
-  
+  else if (RC_command[THROTTLE] == 0)
+  { 
+     go = false; 
+     return;
+  } 
   // Read IMU
   angle[0] = (double)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();

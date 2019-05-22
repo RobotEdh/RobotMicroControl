@@ -27,7 +27,7 @@ MotorESCClass::MotorESCClass()
         
 void MotorESCClass::MotorESC_init()
 { 
-  PRINTs("Start MotorESC_init")
+  PRINTs(">Start MotorESC_init")
 
   pinMode(LED_PIN, OUTPUT);
     
@@ -37,13 +37,12 @@ void MotorESCClass::MotorESC_init()
   pinMode(Motor4Pin, OUTPUT);  // set the analogig pin as output for PWM
   MotorESC_writeAllMotors(STOPPWM);
     
-  PRINTs(">Start Init ESC")
-  PRINTs(">15 s to connect the ESC to power")
-  
+  PRINTs("you have 15 s to connect the ESC to power...") 
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
   delay(15*1000); /* 15 s to connect the ESC to power */
   digitalWrite(LED_PIN, LOW);  // turn on Led
-
+  PRINTs("... done")
+  
   PRINTs("<End MotorESC_init")
 }
  
@@ -90,6 +89,17 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   if (ESC_command[THROTTLE] == 0) 
   { 
      for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM;
+     if (motor_t > 0) { // force dump
+             motor_record[motor_t].throttle = 0;
+             motor_record[motor_t].motor0 = (uint8_t)_motor[0];
+             motor_record[motor_t].motor1 = (uint8_t)_motor[1];
+             motor_record[motor_t].motor2 = (uint8_t)_motor[2];
+             motor_record[motor_t].motor3 = (uint8_t)_motor[3];
+             motor_t = 0; 
+             logFile.write(startMotorLog,sizeof(startMotorLog));  
+             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record));
+             logFile.write(stopMotorLog,sizeof(stopMotorLog));                                            
+     }
   }
   else
   {   
