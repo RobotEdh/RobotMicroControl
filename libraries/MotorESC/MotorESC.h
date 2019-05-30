@@ -18,11 +18,11 @@
 #define LED_PIN         13 // LED for init, pint 13 for MEGA2560
 
 
-#define MOTORLOGDATASIZE 204 //multiple of block size 512 minus 4 bytes for Start and Stop
-#define MOTORLOGFREQ 5 //log every 5 cycles
+#define MOTORLOGDATASIZE 113 //multiple of block size 512 (struct 9 bytes * 113 = 1017 + 7 bytes start/stop)
+#define MOTORLOGFREQ 5 //record every 5 ticks ie 100 ms at 50Hz
 
 const uint8_t startMotorLog[2]={0xFB,0xFC};
-const uint8_t stopMotorLog[2] ={0xFD,0xFE};  
+const uint8_t stopMotorLog[5] ={0xFD,0xFE,0x00,0x00,0x00};  
 
 class MotorESCClass
 {
@@ -34,7 +34,7 @@ class MotorESCClass
    void MotorESC_test(void);
    void MotorESC_writeOneMotor(uint8_t no, int16_t value);   
    void MotorESC_writeAllMotors(int16_t value);
-   void MotorESC_RunMotors(int16_t ESC_command[4]);
+   void MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick);
     
   private:
   void MotorESC_writeMotors(void);

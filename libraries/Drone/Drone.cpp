@@ -22,18 +22,17 @@ typedef struct PID_record_type
      int8_t sum_error;
      int8_t delta_error;
      int8_t anglePID;
+     uint32_t tick;
+     
 };
 PID_record_type PID_record[PIDLOGDATASIZE];
 
-uint32_t currentTime;
-static uint32_t PIDTime = 0;
-static uint32_t lastTime = 0;
-double sampleTime = 0.0;
-static int PID_tlog = 0;
-static int PID_t = 0;
- 
+uint32_t tick = 0;
+uint32_t PIDTime = 0;
+uint32_t lastTime = 0;
+int PID_t = 0;
+double sampleTime = 0.0; 
 int16_t RC_command[NBCHANNELS];
-int16_t ESC_command[NBMOTORS];
 double YawInit = 0.0;
 double anglePID[3] = {0.0,0.0,0.0};
 
@@ -155,14 +154,17 @@ void DroneClass::Drone_init() {
 
 
 void DroneClass::Drone_main() {
-  
+    
+  int16_t ESC_command[NBMOTORS];
+   
   // Compute PID according the sample period
-  currentTime = millis();
+  uint32_t currentTime = millis();
   if ((currentTime >= PIDTime )||(PIDTime  == 0)) { 
      PIDTime = currentTime + samplePeriod;
      if (lastTime > 0) {
         sampleTime = (double)(currentTime - lastTime);
         if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
+        tick++;
         
         Drone_pid();
         
@@ -181,7 +183,7 @@ void DroneClass::Drone_main() {
            ESC_command[PITCH]    = (int16_t)anglePID[1];
            ESC_command[YAW]      = (int16_t)anglePID[2];
         }   
-        MotorESC.MotorESC_RunMotors(ESC_command);
+        MotorESC.MotorESC_RunMotors(ESC_command, tick);
         
         PRINTflush
      }       
@@ -203,7 +205,7 @@ void DroneClass::Drone_pid() {
   static double sum_error[3] = {0.0,0.0,0.0};
 
   // Get RC commands
-  RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
+  RC.RC_getCommands(RC_command); // int16_t range [-45;+45] for ROLL, PITCH and range [-90;+90] for YAW
   
   if ((RC_command[THROTTLE] > 0) && (!go)) // reset PID and Yaw init if before starting
   {           
@@ -223,10 +225,18 @@ void DroneClass::Drone_pid() {
   }
   else if (RC_command[THROTTLE] == 0)
   { 
+     if (PID_t > 0) { // force dump
+          logFile.write(startPIDLog,sizeof(startPIDLog));  
+          logFile.write((const uint8_t *)&PID_record,sizeof(PID_record) * PID_t / PIDLOGDATASIZE);  // dump PID_t records
+          logFile.write(stopPIDLog,sizeof(stopPIDLog)); 
+          PID_t = 0;                                            
+     }
+     
      go = false; 
      return;
   } 
-  // Read IMU
+  
+  // Read CMPS12
   angle[0] = (double)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
@@ -254,24 +264,29 @@ void DroneClass::Drone_pid() {
   //RC_commandRP[2]= (double)RC_command[YAW] - YawInit;
   RC_commandRP[0]=0.0;
   RC_commandRP[1]=0.0;
-  RC_commandRP[2]=YawInit;
+  RC_commandRP[2]=0.0;
       
   for (int i=0;i<3;i++) {
-    error =  angle[i] - RC_commandRP[i];
-    
-    // Yaw range: 0-359 degrees
+     
     if (i == 2) {  // only for Yaw
-       if (error > 180.0)       error =  error - 360.0;
-       else if (error < -180.0) error =  360.0 + error; 
+       //subtract YawInit and convert range: 0-359 degrees  to -180, +180
+       if (angle[2] - YawInit > 180.0)       angle[2] += - YawInit - 360.0;   
+       else if (angle[2] - YawInit < -180.0) angle[2] += - YawInit + 360.0;
+       else                                  angle[2] += - YawInit;  
     }
     
+    error =  angle[i] - RC_commandRP[i];  // Roll and Pitch
+    
     sum_error[i] += error;
-    sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); // cap Integral
+    
+    // cap Integral
+    sum_error[i] = constrain(sum_error[i],-_IMax,_IMax); 
     
     delta_error[i] = (error - last_error[i]);
+    
     /// Low pass filter cut frequency for derivative calculation, cuts out the high frequency noise that can drive the controller crazy
     delta_error[i] = last_delta_error[i] + (sampleTime / ( _filter + sampleTime)) * (delta_error[i] - last_delta_error[i]);
-
+    
     last_error[i] = error;
     last_delta_error[i] = delta_error[i];
     
@@ -285,7 +300,8 @@ void DroneClass::Drone_pid() {
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
   #else  
-    if ((PID_tlog%PIDLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+    if ((tick%PIDLOGFREQ) == 0 ) { // record every 5 ticks ie 100 ms at 50Hz
+       PID_record[PID_t].tick = tick;
        PID_record[PID_t].angleType = (uint8_t)i;
        PID_record[PID_t].angle = (int8_t)angle[i];
        PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
@@ -303,6 +319,5 @@ void DroneClass::Drone_pid() {
     }
 #endif    
   }  // end for
-  PID_tlog ++;
 }
    

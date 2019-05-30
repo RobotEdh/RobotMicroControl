@@ -7,8 +7,8 @@
 #include <DS1307.h>     // RTC
 
 
-#define PIDLOGDATASIZE 511 //multiple of block size 512 minus 7 bytes for Start and Stop
-#define PIDLOGFREQ 5 //log every 5 cycles
+#define PIDLOGDATASIZE 139 //multiple of block size 512 (struct 11 bytes * 139 = 1529 + 7 bytes start/stop)
+#define PIDLOGFREQ 5 //record every 5 ticks ie 100 ms at 50Hz
 
 const uint8_t startPIDLog[2]={0xFA,0xFB};
 const uint8_t stopPIDLog[5] ={0xFC,0xFD,0x00,0x00,0x00};   

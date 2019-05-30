@@ -14,11 +14,11 @@ typedef struct motor_record_type
      uint8_t motor0;
      uint8_t motor1;
      uint8_t motor2;
-     uint8_t motor3;     
+     uint8_t motor3;
+     uint32_t tick;     
 };
 motor_record_type motor_record[MOTORLOGDATASIZE];
 
-static int motor_tlog = 0;
 static int motor_t = 0;  
 
 MotorESCClass::MotorESCClass()
@@ -80,7 +80,7 @@ void MotorESCClass::MotorESC_writeAllMotors(int16_t value)    // Sends same comm
 
 // int16_t range [-180;+180]          for ROLL, PITCH, YAW
 //               0 or [MINPPM;MAXPPM] for THROTTLE
-void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
+void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
 {
   int16_t maxMotor = 0;
   int16_t minMotor = 0;
@@ -90,15 +90,16 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
   { 
      for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM;
      if (motor_t > 0) { // force dump
+             motor_record[motor_t].tick = tick;
              motor_record[motor_t].throttle = 0;
              motor_record[motor_t].motor0 = (uint8_t)_motor[0];
              motor_record[motor_t].motor1 = (uint8_t)_motor[1];
              motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-             motor_record[motor_t].motor3 = (uint8_t)_motor[3];
-             motor_t = 0; 
+             motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
              logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record));
-             logFile.write(stopMotorLog,sizeof(stopMotorLog));                                            
+             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record) * motor_t /MOTORLOGDATASIZE);  // dump motor_t records
+             logFile.write(stopMotorLog,sizeof(stopMotorLog)); 
+             motor_t = 0;                                           
      }
   }
   else
@@ -122,7 +123,8 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
 #ifndef LOGSERIAL
-    if ((motor_tlog%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+    if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+          motor_record[motor_t].tick = tick;
           motor_record[motor_t].throttle = (uint8_t)throttle;
           motor_record[motor_t].motor0 = (uint8_t)_motor[0];
           motor_record[motor_t].motor1 = (uint8_t)_motor[1];
@@ -137,8 +139,6 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4])
           }
     } 
 #endif
-    
-    motor_tlog ++;
     
     if (maxMotor > 0) {
        PRINT("maxMotor|",maxMotor)
