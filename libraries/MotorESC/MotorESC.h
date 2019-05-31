@@ -19,7 +19,7 @@
 
 
 #define MOTORLOGDATASIZE 113 //multiple of block size 512 (struct 9 bytes * 113 = 1017 + 7 bytes start/stop)
-#define MOTORLOGFREQ 5 //record every 5 ticks ie 100 ms at 50Hz
+#define MOTORLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
 
 const uint8_t startMotorLog[2]={0xFB,0xFC};
 const uint8_t stopMotorLog[5] ={0xFD,0xFE,0xFE,0xFE,0xFE};  
