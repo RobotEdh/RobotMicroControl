@@ -75,7 +75,7 @@ uint8_t DroneClass::Yaw_init() {
   }
   
   YawInit = SumYawInit/3.0;
-  PRINT("YawInit: ",YawInit)
+  //PRINT("YawInit: ",YawInit)
   
   return 0;
   
@@ -163,7 +163,7 @@ void DroneClass::Drone_main() {
      PIDTime = currentTime + samplePeriod;
      if (lastTime > 0) {
         sampleTime = (double)(currentTime - lastTime);
-        if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
+        //if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
         tick++;
         
         Drone_pid();
