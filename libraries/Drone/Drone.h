@@ -11,7 +11,7 @@
 #define PIDLOGFREQ 5 //record every 5 ticks ie 100 ms at 50Hz
 
 const uint8_t startPIDLog[2]={0xFA,0xFB};
-const uint8_t stopPIDLog[5] ={0xFC,0xFD,0x00,0x00,0x00};   
+const uint8_t stopPIDLog[5] ={0xFC,0xFD,0xFD,0xFD,0xFD};   
 
 class DroneClass
 {

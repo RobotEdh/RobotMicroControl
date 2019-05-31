@@ -13,7 +13,7 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 DS1307Class DS1307;               // The RTC class  
 
     
-typedef struct PID_record_type
+typedef struct PID_record_type  // 11 bytes
 {
      uint8_t angleType;
      int8_t angle;
@@ -227,7 +227,7 @@ void DroneClass::Drone_pid() {
   { 
      if (PID_t > 0) { // force dump
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record,sizeof(PID_record) * PID_t / PIDLOGDATASIZE);  // dump PID_t records
+          logFile.write((const uint8_t *)&PID_record,  11* PID_t);  // dump PID_t records
           logFile.write(stopPIDLog,sizeof(stopPIDLog)); 
           PID_t = 0;                                            
      }
@@ -311,10 +311,10 @@ void DroneClass::Drone_pid() {
        PID_record[PID_t].anglePID = (int8_t)anglePID[i]; 
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump
-          PID_t = 0; 
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record,sizeof(PID_record));
-          logFile.write(stopPIDLog,sizeof(stopPIDLog));                                            
+          logFile.write((const uint8_t *)&PID_record, 11*PID_t);
+          logFile.write(stopPIDLog,sizeof(stopPIDLog));  
+          PID_t = 0;                                           
        }
     }
 #endif    

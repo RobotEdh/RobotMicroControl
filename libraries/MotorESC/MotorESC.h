@@ -22,7 +22,7 @@
 #define MOTORLOGFREQ 5 //record every 5 ticks ie 100 ms at 50Hz
 
 const uint8_t startMotorLog[2]={0xFB,0xFC};
-const uint8_t stopMotorLog[5] ={0xFD,0xFE,0x00,0x00,0x00};  
+const uint8_t stopMotorLog[5] ={0xFD,0xFE,0xFE,0xFE,0xFE};  
 
 class MotorESCClass
 {

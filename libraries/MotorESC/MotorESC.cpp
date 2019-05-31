@@ -8,7 +8,7 @@
 #include <log.h>
 File logFile; 
 
-typedef struct motor_record_type
+typedef struct motor_record_type  // 9 bytes
 {
      uint8_t throttle;
      uint8_t motor0;
@@ -96,8 +96,9 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
              motor_record[motor_t].motor1 = (uint8_t)_motor[1];
              motor_record[motor_t].motor2 = (uint8_t)_motor[2];
              motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
+             motor_t++; 
              logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record) * motor_t /MOTORLOGDATASIZE);  // dump motor_t records
+             logFile.write((const uint8_t *)&motor_record, 9*motor_t);  // dump motor_t records
              logFile.write(stopMotorLog,sizeof(stopMotorLog)); 
              motor_t = 0;                                           
      }
@@ -132,10 +133,10 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
           motor_record[motor_t].motor3 = (uint8_t)_motor[3];                    
           motor_t++;
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
-             motor_t = 0; 
              logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record,sizeof(motor_record));
-             logFile.write(stopMotorLog,sizeof(stopMotorLog));                                            
+             logFile.write((const uint8_t *)&motor_record, 9*motor_t);
+             logFile.write(stopMotorLog,sizeof(stopMotorLog));
+             motor_t = 0;                                             
           }
     } 
 #endif
