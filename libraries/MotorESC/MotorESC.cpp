@@ -98,7 +98,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
              motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
              motor_t++; 
              logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record, sizeof(motor_record));  
+             logFile.write((const uint8_t *)&motor_record, 1017);  
              logFile.write(stopMotorLog,sizeof(stopMotorLog)); 
              motor_t = 0;                                           
      }
@@ -134,7 +134,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
           motor_t++;
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
              logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record, sizeof(motor_record));
+             logFile.write((const uint8_t *)&motor_record, 1017);
              logFile.write(stopMotorLog,sizeof(stopMotorLog));
              motor_t = 0;                                             
           }

@@ -194,6 +194,7 @@ void DroneClass::Drone_main() {
 void DroneClass::Drone_pid() {
   
   uint8_t status = 0; 
+  int count = -1;
 
   double RC_commandRP[3]; // commands Roll & Pitch & Yaw
   double angle[3]; // Roll & Pitch & Yaw measured
@@ -227,7 +228,8 @@ void DroneClass::Drone_pid() {
   { 
      if (PID_t > 0) { // force dump
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record,  sizeof(PID_record));  
+          count = logFile.write((const uint8_t *)&PID_record,  1529);  
+          if (count =! 1529) PRINT("bad count written: ",count);
           logFile.write(stopPIDLog,sizeof(stopPIDLog)); 
           PID_t = 0;                                            
      }
@@ -312,7 +314,8 @@ void DroneClass::Drone_pid() {
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record,  sizeof(PID_record));
+          count = logFile.write((const uint8_t *)&PID_record,  1529);
+          if (count =! 1529) PRINT("bad count written: ",count);
           logFile.write(stopPIDLog,sizeof(stopPIDLog));  
           PID_t = 0;                                           
        }
