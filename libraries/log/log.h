@@ -69,7 +69,7 @@
    #include <sdcard.h>
    #define  CS_PIN  10  
     
-   #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT);logFile.println(F(" ")); logFile.println(F("BEGIN LOG")); logFile.println(F("*********"));logFile.println(F(" "));
+   #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT|O_SYNC);logFile.println(F(" ")); logFile.println(F("BEGIN LOG")); logFile.println(F("*********"));logFile.println(F(" "));
    #define PRINTflush   logFile.flush();
    #define PRINTend     logFile.println(F(" "));logFile.println(F("END LOG"));logFile.println(F("*******"));logFile.println(F(" "));logFile.close();
    

@@ -103,6 +103,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
              motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
              motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
              motor_t++; 
+             for(z=motor_t; z< MOTORLOGDATASIZE+1; z++) motor_record_block.motor_record[motor_t].tick = 0;// reset end tab
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
              if (count != 512) PRINT("bad count written: ",count);  
              motor_t = 0;                                           

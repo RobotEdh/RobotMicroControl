@@ -231,7 +231,8 @@ void DroneClass::Drone_pid() {
   }
   else if (RC_command[THROTTLE] == 0)
   { 
-     if (PID_t > 0) { // force dump 
+     if (PID_t > 0) { // force dump
+          for(z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
           if (count != 512) PRINT("bad count written: ",count);
           PID_t = 0;                                            
