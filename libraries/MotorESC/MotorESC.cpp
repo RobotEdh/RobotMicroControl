@@ -8,7 +8,7 @@
 #include <log.h>
 File logFile; 
 
-typedef struct motor_record_type  // 9 bytes
+struct motor_record_type  // 9 bytes
 {
      uint8_t throttle;
      uint8_t motor0;
@@ -17,9 +17,14 @@ typedef struct motor_record_type  // 9 bytes
      uint8_t motor3;
      uint32_t tick;     
 };
-motor_record_type motor_record[MOTORLOGDATASIZE];
 
-static int motor_t = 0;  
+struct motor_record_block_type {  //(struct 9 bytes * 56 = 504 + 8 bytes start/stop)
+     const uint8_t startMotorLog[2]={0xFB,0xFC};
+     motor_record_type motor_record[MOTORLOGDATASIZE];
+     const uint8_t stopMotorLog[6] ={0xFD,0xFE,0xFE,0xFE,0xFE,0xFE};  
+};
+motor_record_block_type motor_record_block;
+int motor_t = 0;  
 
 MotorESCClass::MotorESCClass()
 {
@@ -85,21 +90,21 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   int16_t maxMotor = 0;
   int16_t minMotor = 0;
   int i;
+  int count = -1;
   
   if (ESC_command[THROTTLE] == 0) 
   { 
      for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM;
      if (motor_t > 0) { // force dump
-             motor_record[motor_t].tick = tick;
-             motor_record[motor_t].throttle = 0;
-             motor_record[motor_t].motor0 = (uint8_t)_motor[0];
-             motor_record[motor_t].motor1 = (uint8_t)_motor[1];
-             motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-             motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
+             motor_record_block.motor_record[motor_t].tick = tick;
+             motor_record_block.motor_record[motor_t].throttle = 0;
+             motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
+             motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
+             motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
+             motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
              motor_t++; 
-             logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record, 1017);  
-             logFile.write(stopMotorLog,sizeof(stopMotorLog)); 
+             count = logFile.write((const uint8_t *)&motor_record_block, 512);
+             if (count != 512) PRINT("bad count written: ",count);  
              motor_t = 0;                                           
      }
   }
@@ -125,17 +130,16 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
     }
 #ifndef LOGSERIAL
     if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-          motor_record[motor_t].tick = tick;
-          motor_record[motor_t].throttle = (uint8_t)throttle;
-          motor_record[motor_t].motor0 = (uint8_t)_motor[0];
-          motor_record[motor_t].motor1 = (uint8_t)_motor[1];
-          motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-          motor_record[motor_t].motor3 = (uint8_t)_motor[3];                    
+          motor_record_block.motor_record[motor_t].tick = tick;
+          motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
+          motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
+          motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
+          motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
+          motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];                    
           motor_t++;
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
-             logFile.write(startMotorLog,sizeof(startMotorLog));  
-             logFile.write((const uint8_t *)&motor_record, 1017);
-             logFile.write(stopMotorLog,sizeof(stopMotorLog));
+             count = logFile.write((const uint8_t *)&motor_record_block, 512);
+             if (count != 512) PRINT("bad count written: ",count);
              motor_t = 0;                                             
           }
     } 

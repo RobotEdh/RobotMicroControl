@@ -9,10 +9,7 @@
 
 #define PIDLOGDATASIZE 46 //multiple of block size 512 (struct 11 bytes * 46 = 506 + 6 bytes start/stop)
 #define PIDLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
-
-const uint8_t startPIDLog[2]={0xFA,0xFB};
-const uint8_t stopPIDLog[4] ={0xFC,0xFD,0xFD,0xFD};   
-
+  
 class DroneClass
 {
   public:

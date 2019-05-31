@@ -13,7 +13,7 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 DS1307Class DS1307;               // The RTC class  
 
     
-typedef struct PID_record_type  // 11 bytes
+struct PID_record_type  // 11 bytes
 {
      uint8_t angleType;
      int8_t angle;
@@ -25,12 +25,17 @@ typedef struct PID_record_type  // 11 bytes
      uint32_t tick;
      
 };
-PID_record_type PID_record[PIDLOGDATASIZE];
+struct PID_record_block_type {  //(struct 11 bytes * 46 = 506 + 6 bytes start/stop)
+     const uint8_t startPIDLog[2]={0xFA,0xFB};
+     PID_record_type PID_record[PIDLOGDATASIZE];
+     const uint8_t stopPIDLog[4] ={0xFC,0xFD,0xFD,0xFD}; 
+};
+PID_record_block_type PID_record_block;
+int PID_t = 0;
 
 uint32_t tick = 0;
 uint32_t PIDTime = 0;
 uint32_t lastTime = 0;
-int PID_t = 0;
 double sampleTime = 0.0; 
 int16_t RC_command[NBCHANNELS];
 double YawInit = 0.0;
@@ -226,11 +231,9 @@ void DroneClass::Drone_pid() {
   }
   else if (RC_command[THROTTLE] == 0)
   { 
-     if (PID_t > 0) { // force dump
-          logFile.write(startPIDLog,sizeof(startPIDLog));  
-          count = logFile.write((const uint8_t *)&PID_record,  1529);  
-          if (count =! 1529) PRINT("bad count written: ",count);
-          logFile.write(stopPIDLog,sizeof(stopPIDLog)); 
+     if (PID_t > 0) { // force dump 
+          count = logFile.write((const uint8_t *)&PID_record_block,  512);  
+          if (count != 512) PRINT("bad count written: ",count);
           PID_t = 0;                                            
      }
      
@@ -303,20 +306,18 @@ void DroneClass::Drone_pid() {
     PRINTi2("anglePID",i,anglePID[i])
   #else  
     if ((tick%PIDLOGFREQ) == 0 ) { // record every 5 ticks ie 100 ms at 50Hz
-       PID_record[PID_t].tick = tick;
-       PID_record[PID_t].angleType = (uint8_t)i;
-       PID_record[PID_t].angle = (int8_t)angle[i];
-       PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
-       PID_record[PID_t].error = (int8_t)error;
-       PID_record[PID_t].sum_error = (int8_t)sum_error[i];
-       PID_record[PID_t].delta_error = (int8_t)delta_error[i];
-       PID_record[PID_t].anglePID = (int8_t)anglePID[i]; 
+       PID_record_block.PID_record[PID_t].tick = tick;
+       PID_record_block.PID_record[PID_t].angleType = (uint8_t)i;
+       PID_record_block.PID_record[PID_t].angle = (int8_t)angle[i];
+       PID_record_block.PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
+       PID_record_block.PID_record[PID_t].error = (int8_t)error;
+       PID_record_block.PID_record[PID_t].sum_error = (int8_t)sum_error[i];
+       PID_record_block.PID_record[PID_t].delta_error = (int8_t)delta_error[i];
+       PID_record_block.PID_record[PID_t].anglePID = (int8_t)anglePID[i]; 
        PID_t++;
-       if (PID_t == PIDLOGDATASIZE) { // need to dump
-          logFile.write(startPIDLog,sizeof(startPIDLog));  
-          count = logFile.write((const uint8_t *)&PID_record,  1529);
-          if (count =! 1529) PRINT("bad count written: ",count);
-          logFile.write(stopPIDLog,sizeof(stopPIDLog));  
+       if (PID_t == PIDLOGDATASIZE) { // need to dump 
+          count = logFile.write((const uint8_t *)&PID_record_block, 512);
+          if (count != 512) PRINT("bad count written: ",count);
           PID_t = 0;                                           
        }
     }

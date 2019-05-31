@@ -21,8 +21,6 @@
 #define MOTORLOGDATASIZE 56 //multiple of block size 512 (struct 9 bytes * 56 = 504 + 8 bytes start/stop)
 #define MOTORLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
 
-const uint8_t startMotorLog[2]={0xFB,0xFC};
-const uint8_t stopMotorLog[6] ={0xFD,0xFE,0xFE,0xFE,0xFE,0xFE};  
 
 class MotorESCClass
 {
