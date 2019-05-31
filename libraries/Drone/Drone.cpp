@@ -227,7 +227,7 @@ void DroneClass::Drone_pid() {
   { 
      if (PID_t > 0) { // force dump
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record,  11* PID_t);  // dump PID_t records
+          logFile.write((const uint8_t *)&PID_record,  sizeof(PID_record));  
           logFile.write(stopPIDLog,sizeof(stopPIDLog)); 
           PID_t = 0;                                            
      }
@@ -312,7 +312,7 @@ void DroneClass::Drone_pid() {
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump
           logFile.write(startPIDLog,sizeof(startPIDLog));  
-          logFile.write((const uint8_t *)&PID_record, 11*PID_t);
+          logFile.write((const uint8_t *)&PID_record,  sizeof(PID_record));
           logFile.write(stopPIDLog,sizeof(stopPIDLog));  
           PID_t = 0;                                           
        }
