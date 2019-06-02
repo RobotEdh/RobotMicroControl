@@ -3,6 +3,7 @@
 // Logging mode
 //#define  LOGSERIAL
 #define LOGSDCARD  // log to SD Card
+#define AUTOFLUSH // auto flush following each write
 //#define LOGTRACE   // Enable trace
 #include <log.h>
 extern File logFile;   
@@ -80,7 +81,7 @@ uint8_t DroneClass::Yaw_init() {
   }
   
   YawInit = SumYawInit/3.0;
-  //PRINT("YawInit: ",YawInit)
+  PRINT("YawInit: ",YawInit)
   
   return 0;
   
@@ -154,7 +155,6 @@ void DroneClass::Drone_init() {
   PRINTs("<End OK Init Drone")
   
   print_time(); 
-  PRINTflush
 }
 
 
@@ -168,7 +168,7 @@ void DroneClass::Drone_main() {
      PIDTime = currentTime + samplePeriod;
      if (lastTime > 0) {
         sampleTime = (double)(currentTime - lastTime);
-        //if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
+        if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
         tick++;
         
         Drone_pid();
@@ -190,7 +190,6 @@ void DroneClass::Drone_main() {
         }   
         MotorESC.MotorESC_RunMotors(ESC_command, tick);
         
-        PRINTflush
      }       
      lastTime = currentTime;   
   }
@@ -232,7 +231,7 @@ void DroneClass::Drone_pid() {
   else if (RC_command[THROTTLE] == 0)
   { 
      if (PID_t > 0) { // force dump
-          for(z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
+          for(int z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
           if (count != 512) PRINT("bad count written: ",count);
           PID_t = 0;                                            
@@ -281,7 +280,7 @@ void DroneClass::Drone_pid() {
        else                                  angle[2] += - YawInit;  
     }
     
-    error =  angle[i] - RC_commandRP[i];  // Roll and Pitch
+    error =  RC_commandRP[i] - angle[i] ; // error > 0 means increase command.
     
     sum_error[i] += error;
     

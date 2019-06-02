@@ -61,10 +61,11 @@ while (not eof):
               char4 = fichier.read(1)
               fourbytes = fichier.read(4) # tick 32 bytes
               if (int.from_bytes(fourbytes, byteorder='little',signed=True) > 0):
-                print(int.from_bytes(fourbytes, byteorder='little',signed=True))
                 motorcount = motorcount + 2+3+4    
                 TlogMotor[iMotor,0] = int.from_bytes(fourbytes, byteorder='little',signed=False)
                 TlogMotor[iMotor,1] = int.from_bytes(char0, byteorder='little',signed=False)
+                if (TlogMotor[iMotor,1] < 120):
+                    TlogMotor[iMotor,1] = 120
                 TlogMotor[iMotor,2] = int.from_bytes(char1, byteorder='little',signed=False)
                 TlogMotor[iMotor,3] = int.from_bytes(char2, byteorder='little',signed=False)
                 TlogMotor[iMotor,4] = int.from_bytes(char3, byteorder='little',signed=False)
@@ -81,8 +82,7 @@ while (not eof):
               char5 = fichier.read(1)
               char6 = fichier.read(1)
               fourbytes = fichier.read(4) # tick 32 bytes
-              if (int.from_bytes(fourbytes, byteorder='little',signed=True) > 0):
-                print(int.from_bytes(fourbytes, byteorder='little',signed=True))     
+              if (int.from_bytes(fourbytes, byteorder='little',signed=True) > 0):    
                 pidcount = pidcount + 2+ 5 + 4 
                 TlogPID[iPID,0] = int.from_bytes(fourbytes, byteorder='little',signed=True)
                 TlogPID[iPID,1] = int.from_bytes(char0, byteorder='little',signed=True)
@@ -94,7 +94,7 @@ while (not eof):
                 TlogPID[iPID,7] = int.from_bytes(char6, byteorder='little',signed=True)
                 iPID = iPID +1
                 if (ord(char0) == 0):                  #Roll
-                    TlogPIDRoll[iPIDRoll,0] = int.from_bytes(fourbytes, byteorder='big',signed=True)
+                    TlogPIDRoll[iPIDRoll,0] = int.from_bytes(fourbytes, byteorder='little',signed=True)
                     TlogPIDRoll[iPIDRoll,1] = int.from_bytes(char1, byteorder='little',signed=True)
                     TlogPIDRoll[iPIDRoll,2] = int.from_bytes(char2, byteorder='little',signed=True)
                     TlogPIDRoll[iPIDRoll,3] = int.from_bytes(char3, byteorder='little',signed=True)
@@ -133,23 +133,36 @@ print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
-print (TlogMotor[:,0])
-print (TlogMotor[:,1])
-plt.title('Angles')
-plt.plot(TlogPIDRoll[:,0], TlogPIDRoll[:,6],'r.-' ,label='Roll',linewidth=1,markersize=1)
-plt.plot(TlogPIDPitch[:,0],TlogPIDPitch[:,6],'g.-',label='Pitch',linewidth=1,markersize=1)
-plt.plot(TlogPIDYaw[:,0], TlogPIDYaw[:,6],'b.-',label='Yaw',linewidth=1,markersize=1)
-#plt.axis([0,iPIDRoll,-30,30])
+
+print("TlogPIDRoll[0:20,1]: ",TlogPIDRoll[0:20,1])
+print("TlogPIDRoll[0:20,2]: ",TlogPIDRoll[0:20,2])
+print("TlogPIDRoll[0:20,3]: ",TlogPIDRoll[0:20,3])
+print("TlogPIDRoll[0:20,4]: ",TlogPIDRoll[0:20,4])
+print("TlogPIDRoll[0:20,5]: ",TlogPIDRoll[0:20,5])
+print("TlogPIDRoll[0:20,6]: ",TlogPIDRoll[0:20,6])
+
+plt.title('Roll')
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,1],'k*-' ,label='Roll',linewidth=1,markersize=1)
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'r.-' ,label='RollPID',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+plt.title('Pitch')
+plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,1],'k*-',label='Pitch',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,6],'g.-',label='PitchPID',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+plt.title('Yaw')
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,1],'k*-',label='Yaw',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'b.-',label='YawPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 
 plt.title('Motors')
-plt.plot(TlogMotor[:,0],TlogMotor[:,1],'y+',label='Throttle',linewidth=1,markersize=1)
-#plt.plot(TlogMotor[:,0],TlogMotor[:,2],'r.-',label='Front Left',linewidth=1,markersize=1)
-#plt.plot(TlogMotor[:,0],TlogMotor[:,3],'g.-',label='Front Right',linewidth=1,markersize=1)
-#plt.plot(TlogMotor[:,0],TlogMotor[:,4],'b.-',label='Rear Right',linewidth=1,markersize=1)
-#plt.plot(TlogMotor[:,0],TlogMotor[:,5],'y.-',label='Rear Left',linewidth=1,markersize=1)
-#plt.axis([0,iMotor,0,255])
+plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,1],'k+-',label='Throttle',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,2],'r+',label='Front Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,3],'g+',label='Front Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,4],'b+',label='Rear Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,5],'y+',label='Rear Left',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 fichier.close()
