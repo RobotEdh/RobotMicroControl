@@ -7,7 +7,6 @@
 #include <DS1307.h>     // RTC
 
 
-#define PIDLOGDATASIZE 46 //multiple of block size 512 (struct 11 bytes * 46 = 506 + 6 bytes start/stop)
 #define PIDLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
   
 class DroneClass

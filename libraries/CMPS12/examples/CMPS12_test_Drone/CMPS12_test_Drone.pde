@@ -60,7 +60,7 @@ void loop()
   }
   else
   {           
-        Serial.print("angle[0]: ");Serial.println(angle[0]);  
+        Serial.print("Roll: ");Serial.println(angle[0]);  
   }
   
   angle[1] = (int16_t)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
@@ -71,7 +71,7 @@ void loop()
   }
   else
   {           
-        Serial.print("angle[1]: ");Serial.println(angle[1]);  
+        Serial.print("Pitch: ");Serial.println(angle[1]);  
   }
   
   angle[2] = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
@@ -82,15 +82,14 @@ void loop()
   }
   else
   {           
-        Serial.print("angle[2]: ");Serial.println(angle[2]);  
+        Serial.print("Yaw: ");Serial.println(angle[2]);  
   }  
   
-  angle[2] = angle[2] - YawInit;
-  Serial.print("angle[2]: ");Serial.println(angle[2]);
-  
-  if (angle[2] > 180.0)       angle[2] =  angle[2] - 360.0;
-  else if (angle[2] < -180.0) angle[2] =  360.0 + angle[2]; 
-  Serial.print("angle[2]: ");Serial.println(angle[2]);
+  //subtract YawInit and convert range: 0-359 degrees  to -180, +180
+  if (angle[2] - YawInit > 180.0)       angle[2] += - YawInit - 360.0;   
+  else if (angle[2] - YawInit < -180.0) angle[2] += - YawInit + 360.0;
+  else                                  angle[2] += - YawInit; 
+  Serial.print("Yaw adjusted: ");Serial.println(angle[2]);
   
   #define PIDMIX(X,Y,Z) (int16_t)angle[0]*X + (int16_t)angle[1]*Y + (int16_t)angle[2]*Z
   int16_t motor[4];
@@ -100,10 +99,10 @@ void loop()
     "REAR_RIGHT",
     "REAR_LEFT"
   };
-  motor[0] = PIDMIX(-1,-1,+1); //Front Left
-  motor[1] = PIDMIX(+1,-1,-1); //Front Right
-  motor[2] = PIDMIX(+1,+1,+1); //Rear Right
-  motor[3] = PIDMIX(-1,+1,-1); //Rear Left
+  motor[0] = PIDMIX(-1,-1,-1); //Front Left
+  motor[1] = PIDMIX(+1,-1,+1); //Front Right
+  motor[2] = PIDMIX(+1,+1,-1); //Rear Right
+  motor[3] = PIDMIX(-1,+1,+1); //Rear Left
     
   for(int i=0; i< 4; i++) {
       Serial.print(szMotors[i]);Serial.print(": ");Serial.println(motor[i]); 

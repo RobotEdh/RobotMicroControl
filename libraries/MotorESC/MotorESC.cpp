@@ -115,10 +115,10 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
      throttle = constrain(throttle, MINPWM, MAXPWMTHRO);  // to give room for PID ajustement
      
      #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
-    _motor[0] = PIDMIX(-1,-1,+1); //Front Left
-    _motor[1] = PIDMIX(+1,-1,-1); //Front Right
-    _motor[2] = PIDMIX(+1,+1,+1); //Rear Right
-    _motor[3] = PIDMIX(-1,+1,-1); //Rear Left
+    _motor[0] = PIDMIX(-1,-1,-1); //Front Left
+    _motor[1] = PIDMIX(+1,-1,+1); //Front Right
+    _motor[2] = PIDMIX(+1,+1,-1); //Rear Right
+    _motor[3] = PIDMIX(-1,+1,+1); //Rear Left
 
     for(i=0; i< NBMOTORS; i++) {
        _motor[i] = map(_motor[i], -90, 90, -(MAXPWM-MINPWM)/2, (MAXPWM-MINPWM)/2);
@@ -131,23 +131,25 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
     }
 #ifndef LOGSERIAL
     if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-          motor_record_block.motor_record[motor_t].tick = tick;
           motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
           motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
           motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
           motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-          motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];                    
+          motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];
+          motor_record_block.motor_record[motor_t].tick = tick;                    
           motor_t++;
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
-             if (count != 512) PRINT("bad count written: ",count);
+             if (count != 512) PRINTi2("bad count written: ",tick,count)
              motor_t = 0;                                             
           }
     } 
 #endif
     
     if (maxMotor > 0) {
+#ifdef LOGSERIAL        
        PRINT("maxMotor|",maxMotor)
+#endif       
        for(i=0; i< NBMOTORS; i++) {
           _motor[i] = _motor[i] - maxMotor;
           if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
@@ -155,7 +157,9 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
     }
     
     if (minMotor > 0) {
-       PRINT("minMotor|",minMotor) 
+#ifdef LOGSERIAL        
+       PRINT("minMotor|",minMotor)
+#endif        
        for(i=0; i< NBMOTORS; i++) {
           _motor[i] = _motor[i] + minMotor;
        }  
@@ -164,9 +168,27 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
     if ((minMotor > 0) || (maxMotor > 0)) {
        for(i=0; i< NBMOTORS; i++) {
           _motor[i] = constrain(_motor[i], MINPWM, MAXPWM);  // last cap if still needed after up and bottom cap
+#ifdef LOGSERIAL          
           PRINTi2("motor last cap",i,_motor[i])
-       }  
-    }  
+#endif          
+       }
+#ifndef LOGSERIAL
+    if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+          motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
+          motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
+          motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
+          motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
+          motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];
+          motor_record_block.motor_record[motor_t].tick = tick;                    
+          motor_t++;
+          if (motor_t == MOTORLOGDATASIZE) { // need to dump
+             count = logFile.write((const uint8_t *)&motor_record_block, 512);
+             if (count != 512) PRINTi2("bad count written: ",tick,count)
+             motor_t = 0;                                             
+          }
+    } 
+#endif         
+    } // end if ((minMotor > 0) || (maxMotor > 0))
       
   } 
 

@@ -14,7 +14,7 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 DS1307Class DS1307;               // The RTC class  
 
     
-struct PID_record_type  // 11 bytes
+struct PID_record_type  // 12 bytes
 {
      uint8_t angleType;
      int8_t angle;
@@ -23,18 +23,20 @@ struct PID_record_type  // 11 bytes
      int8_t sum_error;
      int8_t delta_error;
      int8_t anglePID;
+     uint8_t sampleTime;
      uint32_t tick;
      
 };
-struct PID_record_block_type {  //(struct 11 bytes * 46 = 506 + 6 bytes start/stop)
+#define PIDLOGDATASIZE 42
+struct PID_record_block_type {  //(struct 12 bytes * 42 = 504 + 8 bytes start/stop)
      const uint8_t startPIDLog[2]={0xFA,0xFB};
      PID_record_type PID_record[PIDLOGDATASIZE];
-     const uint8_t stopPIDLog[4] ={0xFC,0xFD,0xFD,0xFD}; 
+     const uint8_t stopPIDLog[6] ={0xFC,0xFD,0xFD,0xFD,0xFD,0xFD}; 
 };
 PID_record_block_type PID_record_block;
 int PID_t = 0;
 
-uint32_t tick = 0;
+uint32_t tick = 1;
 uint32_t PIDTime = 0;
 uint32_t lastTime = 0;
 double sampleTime = 0.0; 
@@ -43,7 +45,7 @@ double YawInit = 0.0;
 double anglePID[3] = {0.0,0.0,0.0};
 
 bool init_OK = true;
-bool go = false;
+int go = -1;
 
 void print_time()
 {
@@ -111,11 +113,10 @@ void DroneClass::Drone_init() {
      print_time();    
   }
    
-  PRINTs(" ")  
   PRINTs(">Start Init Drone")
 
  // initialize the Compass CMPS12
-  PRINTs("Init Compass CMPS12")
+  PRINTs("Start Init Compass CMPS12")
   uint8_t calib = CMPS12.CMPS12_init();
   if(calib == 0) 
   { 
@@ -142,13 +143,11 @@ void DroneClass::Drone_init() {
      init_OK = false;
   }
         
-  PRINTs(" ")
-  PRINTs("Init RC")
+  PRINTs("Start Init RC")
   RC.RC_init();
   PRINTs("Init RC OK")
   
-  PRINTs(" ")
-  PRINTs("Init Motor ESC")
+  PRINTs("Start Init Motor ESC")
   MotorESC.MotorESC_init();
   PRINTs("Init Motor ESC OK")
   
@@ -164,12 +163,10 @@ void DroneClass::Drone_main() {
    
   // Compute PID according the sample period
   uint32_t currentTime = millis();
-  if ((currentTime >= PIDTime )||(PIDTime  == 0)) { 
+  if ((currentTime >= PIDTime )||(PIDTime == 0)) { 
      PIDTime = currentTime + samplePeriod;
      if (lastTime > 0) {
         sampleTime = (double)(currentTime - lastTime);
-        if ((uint32_t) sampleTime >  samplePeriod) PRINT("sampleTime (ms): ",sampleTime)
-        tick++;
         
         Drone_pid();
         
@@ -191,7 +188,8 @@ void DroneClass::Drone_main() {
         MotorESC.MotorESC_RunMotors(ESC_command, tick);
         
      }       
-     lastTime = currentTime;   
+     lastTime = currentTime;
+     if (go > -1)tick++;   
   }
 }
 
@@ -212,9 +210,9 @@ void DroneClass::Drone_pid() {
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-45;+45] for ROLL, PITCH and range [-90;+90] for YAW
   
-  if ((RC_command[THROTTLE] > 0) && (!go)) // reset PID and Yaw init if before starting
+  if ((RC_command[THROTTLE] > 0) && (go != 1)) // reset PID and Yaw init if before starting
   {           
-     go = true; 
+     go = 1; 
      for (int j=0;j<3;j++) {
          sum_error[j] = 0.0; 
          last_error[j] = 0.0;
@@ -226,41 +224,46 @@ void DroneClass::Drone_pid() {
      {           
         PRINT("Yaw_init KO, Error: ",status)
         init_OK = false;
-     }  
+     }
+     else PRINTi2("Yaw_init: ",tick,YawInit) 
   }
-  else if (RC_command[THROTTLE] == 0)
+  else if ((RC_command[THROTTLE] == 0) && (go != -1))  // already started
   { 
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
-          if (count != 512) PRINT("bad count written: ",count);
+          if (count != 512) PRINTi2("bad count written: ",tick,count)
           PID_t = 0;                                            
      }
      
-     go = false; 
+     go = 0; 
      return;
   } 
-  
+  else if (go == -1)
+  {
+      return;  // not started yet
+  } 
+   
   // Read CMPS12
   angle[0] = (double)CMPS12.CMPS12_getRoll ();  // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
-     PRINT("CMPS12_getRoll KO, I2C error: ",status)
+     PRINTi2("CMPS12_getRoll KO, I2C error: ",tick,status)
   }
   
   angle[1] = (double)CMPS12.CMPS12_getPitch (); // signed byte giving angle in degrees from the horizontal plane (+/- 90 degrees)
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
-     PRINT("CMPS12_getPitch KO, I2C error: ",status)
+     PRINTi2("CMPS12_getPitch KO, I2C error: ",tick,status)
   }
        
   angle[2] = CMPS12.CMPS12_getCompassHighResolution();  //  0-359 degrees
   status = CMPS12.CMPS12_getStatus();
   if (status > 0)
   {           
-     PRINT("CMPS12_getCompassHighResolution KO, I2C error: ",status)
+     PRINTi2("CMPS12_getCompassHighResolution KO, I2C error: ",tick,status)
   }  
   
   // Compute PID for ROLL & PITCH
@@ -280,7 +283,7 @@ void DroneClass::Drone_pid() {
        else                                  angle[2] += - YawInit;  
     }
     
-    error =  RC_commandRP[i] - angle[i] ; // error > 0 means increase command.
+    error = angle[i] - RC_commandRP[i]; 
     
     sum_error[i] += error;
     
@@ -290,12 +293,12 @@ void DroneClass::Drone_pid() {
     delta_error[i] = (error - last_error[i]);
     
     /// Low pass filter cut frequency for derivative calculation, cuts out the high frequency noise that can drive the controller crazy
-    delta_error[i] = last_delta_error[i] + (sampleTime / ( _filter + sampleTime)) * (delta_error[i] - last_delta_error[i]);
+    delta_error[i] = last_delta_error[i] + (samplePeriod / ( _filter + samplePeriod)) * (delta_error[i] - last_delta_error[i]);
     
     last_error[i] = error;
     last_delta_error[i] = delta_error[i];
     
-    anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*sampleTime) + (_Kd[i]*delta_error[i]/sampleTime);
+    anglePID[i] = (_Kp[i]*error) + (_Ki[i]*sum_error[i]*samplePeriod) + (_Kd[i]*delta_error[i]/samplePeriod);
     
   #ifdef LOGSERIAL  
     PRINTi2("angle",i,angle[i])
@@ -306,7 +309,6 @@ void DroneClass::Drone_pid() {
     PRINTi2("anglePID",i,anglePID[i])
   #else  
     if ((tick%PIDLOGFREQ) == 0 ) { // record every 5 ticks ie 100 ms at 50Hz
-       PID_record_block.PID_record[PID_t].tick = tick;
        PID_record_block.PID_record[PID_t].angleType = (uint8_t)i;
        PID_record_block.PID_record[PID_t].angle = (int8_t)angle[i];
        PID_record_block.PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
@@ -314,10 +316,12 @@ void DroneClass::Drone_pid() {
        PID_record_block.PID_record[PID_t].sum_error = (int8_t)sum_error[i];
        PID_record_block.PID_record[PID_t].delta_error = (int8_t)delta_error[i];
        PID_record_block.PID_record[PID_t].anglePID = (int8_t)anglePID[i]; 
+       PID_record_block.PID_record[PID_t].sampleTime = (uint8_t)sampleTime;
+       PID_record_block.PID_record[PID_t].tick = tick;
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump 
           count = logFile.write((const uint8_t *)&PID_record_block, 512);
-          if (count != 512) PRINT("bad count written: ",count);
+          if (count != 512) PRINTi2("bad count written: ",tick,count)
           PID_t = 0;                                           
        }
     }
