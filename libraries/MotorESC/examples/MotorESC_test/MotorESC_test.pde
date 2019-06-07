@@ -1,6 +1,6 @@
 #include <MotorESC.h>
  
-MotorESCClass MotorESC;     
+MotorESCClass MotorESC;  
 
 void setup()
 {
@@ -19,7 +19,9 @@ void setup()
 
 void loop()
 { 
-   
+ int delta = 20;
+ const char *szMotors[] = {"Front Left", "Front Right", "Rear Right", "Rear Left"};
+
   Serial.println("Beging ESC Tests");
     
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
@@ -30,12 +32,12 @@ void loop()
   {
       Serial.println(szMotors[i]);
       MotorESC.MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
+      if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, STOPPWM);
       delay(10*1000);
   }
   MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
   Serial.println("END TESTCASE 1");
   delay(1*1000);
-
 /* END TESTCASE 1 */
 
 /* START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM */
@@ -50,20 +52,63 @@ void loop()
   MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
   Serial.println("END TESTCASE 2");
   delay(1*1000);
- 
-/* END TESTCASE 2 */
+ /* END TESTCASE 2 */
 
-/* START TESTCASE 3: Spin all the motors together for 10s at mid PWM = (MINPWM+MAXPWM)/2 judging how much lift is provided */
-   Serial.print("START TESTCASE 3: Spin all the motors together for 10s at mid PWM = (MINPWM+MAXPWM)/2 judging how much lift is provided");;Serial.println((MINPWM+MAXPWM)/2);
+/* START TESTCASE 3: Front up */
+   Serial.print("START TESTCASE 3: Front up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
 
-  MotorESC.MotorESC_writeAllMotors((MINPWM+MAXPWM)/2);
+  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) + delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) + delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) - delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) - delta); //Rear Left
   delay(10*1000); 
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
   Serial.println("END TESTCASE 3");
   delay(1*1000);
+ /* END TESTCASE 3 */
+
+/* START TESTCASE 4: Rear up */
+   Serial.print("START TESTCASE 4: Rear up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+
+  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) - delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) - delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) + delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) + delta); //Rear Left
+  delay(10*1000); 
  
-/* END TESTCASE 3 */
+  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  Serial.println("END TESTCASE 4");
+  delay(1*1000);
+ /* END TESTCASE 4 */
+
+/* START TESTCASE 5: Left up */
+   Serial.print("START TESTCASE 5: Left up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+
+  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) + delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) - delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) - delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) + delta); //Rear Left
+  delay(10*1000); 
+ 
+  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  Serial.println("END TESTCASE 5");
+  delay(1*1000);
+/* END TESTCASE 5 */
+
+/* START TESTCASE 6: Right up */
+   Serial.print("START TESTCASE 6: Right up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+
+  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) - delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) + delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) + delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) - delta); //Rear Left
+  delay(10*1000); 
+ 
+  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  Serial.println("END TESTCASE 6");
+  delay(1*1000);
+ /* END TESTCASE 6 */
   
    Serial.println("End OK ESC Tests");   
    delay(10*1000);    

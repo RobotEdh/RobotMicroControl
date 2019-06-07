@@ -17,8 +17,8 @@ struct motor_record_type  // 9 bytes
      uint8_t motor3;
      uint32_t tick;     
 };
-
-struct motor_record_block_type {  //(struct 9 bytes * 56 = 504 + 8 bytes start/stop)
+#define MOTORLOGDATASIZE 56 //multiple of block size 512 (struct 9 bytes * 56 = 504 + 8 bytes start/stop)
+struct motor_record_block_type {  //(struct 9 bytes
      const uint8_t startMotorLog[2]={0xFB,0xFC};
      motor_record_type motor_record[MOTORLOGDATASIZE];
      const uint8_t stopMotorLog[6] ={0xFD,0xFE,0xFE,0xFE,0xFE,0xFE};  
@@ -63,11 +63,7 @@ void MotorESCClass::MotorESC_writeMotors ()
 /************          Writes the command to one Motor               ******************/
 /**************************************************************************************/
 void MotorESCClass::MotorESC_writeOneMotor(uint8_t no, int16_t value) {   // Sends commands to one motor
-  for (int i=0;i<NBMOTORS;i++) {
-    _motor[i]=STOPPWM;  // stop all motors...
-  }
-  _motor[no]=value; // ...except for the motor selected
-   
+  _motor[no]=value;
   MotorESC_writeMotors();
 }
 
@@ -83,8 +79,9 @@ void MotorESCClass::MotorESC_writeAllMotors(int16_t value)    // Sends same comm
   MotorESC_writeMotors();
 }
 
-// int16_t range [-180;+180]          for ROLL, PITCH, YAW
-//               0 or [MINPPM;MAXPPM] for THROTTLE
+/**************************************************************************************/
+/************          Run Motors according PID                      ******************/
+/**************************************************************************************/
 void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
 {
   int16_t maxMotor = 0;
