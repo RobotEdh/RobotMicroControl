@@ -19,7 +19,8 @@ void setup()
 
 void loop()
 { 
- int delta = 20;
+ int throttle = 150;
+ int delta = 10;
  const char *szMotors[] = {"Front Left", "Front Right", "Rear Right", "Rear Left"};
 
   Serial.println("Beging ESC Tests");
@@ -31,7 +32,7 @@ void loop()
   for(int i=0; i< NBMOTORS; i++)
   {
       Serial.println(szMotors[i]);
-      MotorESC.MotorESC_writeOneMotor(i, (MINPWM+MAXPWM)/2);
+      MotorESC.MotorESC_writeOneMotor(i, throttle);
       if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, STOPPWM);
       delay(10*1000);
   }
@@ -55,12 +56,12 @@ void loop()
  /* END TESTCASE 2 */
 
 /* START TESTCASE 3: Front up */
-   Serial.print("START TESTCASE 3: Front up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+   Serial.print("START TESTCASE 3: Front up, throttle: ");Serial.print(throttle); Serial.print(" delta: ");Serial.println(delta);
 
-  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) + delta); //Front Left
-  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) + delta); //Front Right
-  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) - delta); //Rear Right
-  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) - delta); //Rear Left
+  MotorESC.MotorESC_writeOneMotor(0,throttle + delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,throttle + delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,throttle - delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
@@ -69,12 +70,12 @@ void loop()
  /* END TESTCASE 3 */
 
 /* START TESTCASE 4: Rear up */
-   Serial.print("START TESTCASE 4: Rear up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+   Serial.print("START TESTCASE 4: Rear up, throttle: ");Serial.print(throttle); Serial.print(" delta: ");Serial.println(delta);
 
-  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) - delta); //Front Left
-  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) - delta); //Front Right
-  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) + delta); //Rear Right
-  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) + delta); //Rear Left
+  MotorESC.MotorESC_writeOneMotor(0,throttle - delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,throttle - delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,throttle + delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
@@ -83,12 +84,12 @@ void loop()
  /* END TESTCASE 4 */
 
 /* START TESTCASE 5: Left up */
-   Serial.print("START TESTCASE 5: Left up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+   Serial.print("START TESTCASE 5: Left up, throttle: ");Serial.print(throttle); Serial.print(" delta: ");Serial.println(delta);
 
-  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) + delta); //Front Left
-  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) - delta); //Front Right
-  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) - delta); //Rear Right
-  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) + delta); //Rear Left
+  MotorESC.MotorESC_writeOneMotor(0,throttle + delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,throttle - delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,throttle - delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
@@ -97,12 +98,12 @@ void loop()
 /* END TESTCASE 5 */
 
 /* START TESTCASE 6: Right up */
-   Serial.print("START TESTCASE 6: Right up, throttle: ");Serial.print((MINPWM+MAXPWM)/2); Serial.print(" delta: ");Serial.println(delta);
+   Serial.print("START TESTCASE 6: Right up, throttle: ");Serial.print(throttle); Serial.print(" delta: ");Serial.println(delta);
 
-  MotorESC.MotorESC_writeOneMotor(0,((MINPWM+MAXPWM)/2) - delta); //Front Left
-  MotorESC.MotorESC_writeOneMotor(1,((MINPWM+MAXPWM)/2) + delta); //Front Right
-  MotorESC.MotorESC_writeOneMotor(2,((MINPWM+MAXPWM)/2) + delta); //Rear Right
-  MotorESC.MotorESC_writeOneMotor(3,((MINPWM+MAXPWM)/2) - delta); //Rear Left
+  MotorESC.MotorESC_writeOneMotor(0,throttle - delta); //Front Left
+  MotorESC.MotorESC_writeOneMotor(1,throttle + delta); //Front Right
+  MotorESC.MotorESC_writeOneMotor(2,throttle + delta); //Rear Right
+  MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
   MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
