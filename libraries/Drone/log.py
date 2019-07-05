@@ -17,6 +17,7 @@ iPIDPitch = 0
 iPIDYaw = 0
 iMotor = 0
 MaxTick = 0
+isampleTime = 0
 iMaxsampleTime = 0
 
 eof = False
@@ -100,6 +101,7 @@ while (not eof):
                 TlogPID[iPID,8] = int.from_bytes(char7, byteorder='little',signed=True)
                 if (TlogPID[iPID,0]>MaxTick):
                     MaxTick = TlogPID[iPID,0]
+                isampleTime = isampleTime + 1
                 if (TlogPID[iPID,8]>20):
                     iMaxsampleTime = iMaxsampleTime + 1
                 iPID = iPID +1
@@ -143,29 +145,18 @@ print("************************* End log ***************************************
 print("Max Tick: ",MaxTick)
 print("count PID: ",iPID)
 print("count Max sample Time: ",iMaxsampleTime)
+print("count Sample Time: ",isampleTime)
+print("ratio Max Sample Time: ",iMaxsampleTime*100/isampleTime)
 print("count PID Roll: ",iPIDRoll)
 print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
 
-
-print("TlogPIDPitch[0:20,0]: ",TlogPIDPitch[0:20,0])
-print("TlogPIDPitch[0:20,1]: ",TlogPIDPitch[0:20,1])
-print("TlogPIDPitch[0:20,2]: ",TlogPIDPitch[0:20,2])
-print("TlogPIDPitch[0:20,3]: ",TlogPIDPitch[0:20,3])
-print("TlogPIDPitch[0:20,4]: ",TlogPIDPitch[0:20,4])
-print("TlogPIDPitch[0:20,5]: ",TlogPIDPitch[0:20,5])
-print("TlogPIDPitch[0:20,6]: ",TlogPIDPitch[0:20,6])
-
-print("TlogMotor[0:20,0]: ",TlogMotor[0:20,0])
-print("TlogMotor[0:20,1]: ",TlogMotor[0:20,1])
-print("TlogMotor[0:20,2]: ",TlogMotor[0:20,2])
-print("TlogMotor[0:20,3]: ",TlogMotor[0:20,3])
-print("TlogMotor[0:20,4]: ",TlogMotor[0:20,4])
-print("TlogMotor[0:20,5]: ",TlogMotor[0:20,5])
-
-
+plt.title('Sample Time')
+plt.plot(TlogPID[0:iPID,0], TlogPID[0:iPID,8],'k*-' ,label='Sample Time',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
 plt.title('Roll')
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,1],'k*-' ,label='Roll',linewidth=1,markersize=1)
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'r.-' ,label='RollPID',linewidth=1,markersize=1)

@@ -56,7 +56,7 @@
    #define PRINTb(s,v) { Serial1.print(F(s)); Serial1.print(F("0b")); Serial1.println(v, BIN); }
  
    #define PRINTi(s,v1,v2)  { Serial1.print(F(s)); Serial1.print(F("["));Serial1.print(v1);Serial1.print(F("]: "));Serial1.println(v2); } 
-   #define PRINTi2(s,v1,v2) { Serial1.print(F(s)); Serial1.print(F("["));Serial1.print(v1);Serial1.print(F("|"));Serial1.println(v2); }  
+   #define PRINTi2(s,v1,v2) { Serial1.print(F(s)); Serial1.print(F("["));Serial1.print(v1);Serial1.print(F("]|"));Serial1.println(v2); }  
        
    #define PRINTj(s,v1,v2)  { Serial1.print(F(s)); Serial1.print(F("["));Serial1.print(v1);Serial1.print(F("]: 0x"));Serial1.println(v2,HEX); }
    #define PRINT6(s,v1,v2,v3,v4,v5,v6) { Serial1.print(F(s));Serial1.print(v1,HEX);Serial1.print(F(":"));Serial1.print(v2,HEX);Serial1.print(F(":"));Serial1.print(v3,HEX);Serial1.print(F(":"));Serial1.print(v4,HEX);Serial1.print(F(":"));Serial1.print(v5,HEX);Serial1.print(F(":"));Serial1.println(v6,HEX); }  
