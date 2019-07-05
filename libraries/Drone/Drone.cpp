@@ -83,7 +83,6 @@ uint8_t DroneClass::Yaw_init() {
   }
   
   YawInit = SumYawInit/3.0;
-  PRINT("YawInit: ",YawInit)
   
   return 0;
   
@@ -142,6 +141,7 @@ void DroneClass::Drone_init() {
      PRINT("Yaw_init KO, Error: ",status)
      init_OK = false;
   }
+  else PRINT("YawInit: ",YawInit)
         
   PRINTs("Start Init RC")
   RC.RC_init();
@@ -224,8 +224,7 @@ void DroneClass::Drone_pid() {
      {           
         PRINT("Yaw_init KO, Error: ",status)
         init_OK = false;
-     }
-     else PRINTi2("Yaw_init: ",tick,YawInit) 
+     } 
   }
   else if ((RC_command[THROTTLE] == 0) && (go != -1))  // already started
   { 
