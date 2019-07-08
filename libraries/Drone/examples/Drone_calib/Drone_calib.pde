@@ -28,17 +28,16 @@ void setup()
 void loop()
 {
     int16_t RC_command[NBCHANNELS];
-    int16_t ESC_command[NBMOTORS]; 
+	int16_t value = -1;
 
     // Get RC commands
-    RC.RC_getCommands(RC_command); // int16_t range [-90;+90]for ROLL, PITCH and range [-90;+90] for YAW
+    RC.RC_getCommands(RC_command); 
              
     // call MotorESC
-    ESC_command[THROTTLE] = RC_command[THROTTLE];
-    ESC_command[ROLL] = 0;
-    ESC_command[PITCH] = 0; 
-    ESC_command[YAW] = 0;
+	if (RC_command[THROTTLE] == 0) value = 0;   // min value PWM
+	else                           value = 255; // max value PWM
     
-    Serial.print("ESC_command[THROTTLE] : ");Serial.println(ESC_command[THROTTLE]); 
-    MotorESC.MotorESC_RunMotors(ESC_command,0);
+    Serial.print("Throttle received: ");Serial.println(RC_command[THROTTLE]); 
+	Serial.print("Value set to the motors: ");Serial.println(value); 
+    MotorESC.MotorESC_writeAllMotors(value);
 }

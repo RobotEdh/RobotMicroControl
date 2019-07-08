@@ -20,6 +20,7 @@ void loop()
 {
   long starttime;
   int16_t RC_command[NBCHANNELS];
+  const char *szChannels[] = {"THROTTLE", "ROLL", "PITCH", "YAW", "AUX1", "AUX2"};
   
   Serial.println("move tick for 5s to get RC Commands"); 
   delay(5*1000);

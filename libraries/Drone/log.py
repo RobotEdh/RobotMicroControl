@@ -19,6 +19,7 @@ iMotor = 0
 MaxTick = 0
 isampleTime = 0
 iMaxsampleTime = 0
+previous_tick = 0
 
 eof = False
 while (not eof):
@@ -89,8 +90,11 @@ while (not eof):
               char7 = fichier.read(1) # sampleTime
               fourbytes = fichier.read(4) # tick 32 bytes
               if(int.from_bytes(fourbytes, byteorder='little',signed=False) > 900000000):
-                print("Data error, tick > 900000000: ",fourbytes)    
+                print("Data error, tick > 900000000, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False))
+              if(int.from_bytes(fourbytes, byteorder='little',signed=False) < previous_tick):
+                print("Data error, tick < previous tick, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False))                
               if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 900000000)):    # tick>0
+                previous_tick = int.from_bytes(fourbytes, byteorder='little',signed=False)
                 piddumpsize = piddumpsize+2+6+4 
                 TlogPID[iPID,0] = int.from_bytes(fourbytes, byteorder='little',signed=False) # tick
                 TlogPID[iPID,1] = int.from_bytes(char0, byteorder='little',signed=False) # angle type
@@ -125,7 +129,7 @@ while (not eof):
                     TlogPIDPitch[iPIDPitch,4] = int.from_bytes(char4, byteorder='little',signed=True) # sum_error
                     TlogPIDPitch[iPIDPitch,5] = int.from_bytes(char5, byteorder='little',signed=True) # delta_error
                     TlogPIDPitch[iPIDPitch,6] = int.from_bytes(char6, byteorder='little',signed=True) # anglePID
-                    TlogPIDPitch[iPIDPitch,7] = int.from_bytes(char7, byteorder='little',signed=True)
+                    TlogPIDPitch[iPIDPitch,7] = int.from_bytes(char7, byteorder='little',signed=True) # sampleTime
                     iPIDPitch = iPIDPitch +1
                 elif (ord(char0) == 2):                  #Yaw
                     TlogPIDYaw[iPIDYaw,0] = int.from_bytes(fourbytes, byteorder='little',signed=False) # tick
@@ -154,23 +158,25 @@ print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
+print(TlogPIDYaw[0:iPIDYaw,1])
+
 plt.title('Sample Time')
 plt.plot(TlogPID[0:iPID,0], TlogPID[0:iPID,8],'k*' ,label='Sample Time',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 plt.title('Roll')
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,1],'k*' ,label='Roll',linewidth=1,markersize=1)
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'r.' ,label='RollPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,1],'k*-' ,label='Roll',linewidth=1,markersize=1)
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'r.-' ,label='RollPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 plt.title('Pitch')
-plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,1],'k*',label='Pitch',linewidth=1,markersize=1)
-plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,6],'g.',label='PitchPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,1],'k*-',label='Pitch',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,6],'g.-',label='PitchPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 plt.title('Yaw')
-plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,1],'k*',label='Yaw',linewidth=1,markersize=1)
-plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'b.',label='YawPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,1],'k*-',label='Yaw',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'b.-',label='YawPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 

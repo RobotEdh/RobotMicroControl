@@ -26,17 +26,17 @@ void loop()
   Serial.println("Beging ESC Tests");
     
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);   // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2);   // stop
   Serial.println("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way");
 
   for(int i=0; i< NBMOTORS; i++)
   {
       Serial.println(szMotors[i]);
       MotorESC.MotorESC_writeOneMotor(i, throttle);
-      if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, STOPPWM);
+      if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, MINPWM-2);
       delay(10*1000);
   }
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2);  // stop
   Serial.println("END TESTCASE 1");
   delay(1*1000);
 /* END TESTCASE 1 */
@@ -50,7 +50,7 @@ void loop()
       MotorESC.MotorESC_writeAllMotors(pwm);
       delay(5000);
   }
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2);  // stop
   Serial.println("END TESTCASE 2");
   delay(1*1000);
  /* END TESTCASE 2 */
@@ -64,7 +64,7 @@ void loop()
   MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2); // stop
   Serial.println("END TESTCASE 3");
   delay(1*1000);
  /* END TESTCASE 3 */
@@ -78,7 +78,7 @@ void loop()
   MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2); // stop
   Serial.println("END TESTCASE 4");
   delay(1*1000);
  /* END TESTCASE 4 */
@@ -92,7 +92,7 @@ void loop()
   MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2); // stop
   Serial.println("END TESTCASE 5");
   delay(1*1000);
 /* END TESTCASE 5 */
@@ -106,7 +106,7 @@ void loop()
   MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM-2); // stop
   Serial.println("END TESTCASE 6");
   delay(1*1000);
  /* END TESTCASE 6 */

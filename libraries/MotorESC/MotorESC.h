@@ -4,10 +4,12 @@
 #include <Arduino.h>
 #include <RC.h>
 
-#define STOPPWM 127
-#define MINPWM 140
+#define MINPWM 141
 #define MAXPWM 255
+#define MINPWMTHRO 141
 #define MAXPWMTHRO 230
+#define MINPWMANGLE 141
+#define MAXPWMANGLE 230
 
 #define NBMOTORS 4
 #define Motor1Pin 5  //FRONT_LEFT
