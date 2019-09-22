@@ -11,16 +11,23 @@ void setup()
   Wire.begin(); // initialize I2C
    
   Serial.begin(9600); // initialize serial port
-  Serial.print("Start init"); 
+  Serial.println("Start init"); 
   
   pinMode(Motor1Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor2Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor3Pin, OUTPUT);  // set the analogig pin as output for PWM
   pinMode(Motor4Pin, OUTPUT);  // set the analogig pin as output for PWM
-      
+  MotorESC.MotorESC_writeAllMotors(MAXPWM);  
+  
+  Serial.println("you have 15 s to connect the ESC to power..."); 
+  digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
+  delay(15*1000); /* 15 s to connect the ESC to power */
+  digitalWrite(LED_PIN, LOW);  // turn on Led
+  Serial.println("... done"); 
+   
   RC.RC_init(); 
   
-  Serial.print("End init");
+  Serial.println("End init");
   
 }
 
@@ -34,8 +41,8 @@ void loop()
     RC.RC_getCommands(RC_command); 
              
     // call MotorESC
-	if (RC_command[THROTTLE] == 0) value = 0;   // min value PWM
-	else                           value = 255; // max value PWM
+	if (RC_command[THROTTLE] == 0) value = MINPWM-2;   // min value PWM
+	else                           value = MAXPWM; // max value PWM
     
     Serial.print("Throttle received: ");Serial.println(RC_command[THROTTLE]); 
 	Serial.print("Value set to the motors: ");Serial.println(value); 
