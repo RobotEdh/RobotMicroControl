@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Servo.h>
 #include <MotorESC.h>
 
 // Logging mode
@@ -7,6 +8,12 @@
 //#define LOGTRACE   // Enable trace
 #include <log.h>
 File logFile; 
+
+
+Servo Motor1;
+Servo Motor2;
+Servo Motor3;
+Servo Motor4;
 
 struct motor_record_type  // 9 bytes
 {
@@ -36,11 +43,12 @@ void MotorESCClass::MotorESC_init()
 
   pinMode(LED_PIN, OUTPUT);
     
-  pinMode(Motor1Pin, OUTPUT);  // set the analogig pin as output for PWM
-  pinMode(Motor2Pin, OUTPUT);  // set the analogig pin as output for PWM
-  pinMode(Motor3Pin, OUTPUT);  // set the analogig pin as output for PWM
-  pinMode(Motor4Pin, OUTPUT);  // set the analogig pin as output for PWM
-  MotorESC_writeAllMotors(MINPWM-2);
+  Motor1.attach(Motor1Pin, MINPWM, MAXPWM); 
+  Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
+  Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
+  Motor4.attach(Motor4Pin, MINPWM, MAXPWM); 
+  
+  MotorESC_writeAllMotors(MINPWM);
     
   PRINTs("you have 15 s to connect the ESC to power...") 
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
@@ -53,10 +61,10 @@ void MotorESCClass::MotorESC_init()
  
 void MotorESCClass::MotorESC_writeMotors ()
 { 
-  analogWrite(Motor1Pin, _motor[0]);
-  analogWrite(Motor2Pin, _motor[1]);    
-  analogWrite(Motor3Pin, _motor[2]);
-  analogWrite(Motor4Pin, _motor[3]); 
+  Motor1.writeMicroseconds(_motor[0]);
+  Motor2.writeMicroseconds(_motor[1]);    
+  Motor3.writeMicroseconds(_motor[2]);
+  Motor4.writeMicroseconds(_motor[3]); 
 }
   
 /**************************************************************************************/

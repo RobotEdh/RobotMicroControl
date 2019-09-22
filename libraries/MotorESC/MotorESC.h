@@ -2,14 +2,15 @@
 #define MotorESC_h
 
 #include <Arduino.h>
+#include <Servo.h>
 #include <RC.h>
 
-#define MINPWM 141
-#define MAXPWM 255
-#define MINPWMTHRO 141
-#define MAXPWMTHRO 230
-#define MINPWMANGLE 141
-#define MAXPWMANGLE 230
+#define MINPWM 1000
+#define MAXPWM 2000
+#define MINPWMTHRO 1200
+#define MAXPWMTHRO 1800
+#define MINPWMANGLE 1200
+#define MAXPWMANGLE 1800
 
 #define NBMOTORS 4
 #define Motor1Pin 5  //FRONT_LEFT
@@ -21,7 +22,6 @@
 
 #define MOTORLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
 
-
 class MotorESCClass
 {
   public:
@@ -29,8 +29,8 @@ class MotorESCClass
    MotorESCClass();
    
    void MotorESC_init(void);
-   void MotorESC_test(void);
-   void MotorESC_writeOneMotor(uint8_t no, int16_t value);   
+   void MotorESC_test(void); 
+   void MotorESCClass::MotorESC_writeOneMotor(uint8_t no, int16_t value);
    void MotorESC_writeAllMotors(int16_t value);
    void MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick);
    
