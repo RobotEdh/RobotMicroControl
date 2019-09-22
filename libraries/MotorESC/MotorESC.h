@@ -5,7 +5,8 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define MINPWM 1000
+#define STOPPWM 1000
+#define MINPWM 1080
 #define MAXPWM 2000
 #define MINPWMTHRO 1200
 #define MAXPWMTHRO 1800
@@ -30,7 +31,7 @@ class MotorESCClass
    
    void MotorESC_init(void);
    void MotorESC_test(void); 
-   void MotorESCClass::MotorESC_writeOneMotor(uint8_t no, int16_t value);
+   void MotorESC_writeOneMotor(uint8_t no, int16_t value);
    void MotorESC_writeAllMotors(int16_t value);
    void MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick);
    

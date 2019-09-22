@@ -48,13 +48,11 @@ void MotorESCClass::MotorESC_init()
   Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
   Motor4.attach(Motor4Pin, MINPWM, MAXPWM); 
   
-  MotorESC_writeAllMotors(MINPWM);
-    
-  PRINTs("you have 15 s to connect the ESC to power...") 
+  MotorESC_writeAllMotors(STOPPWM);
+
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
   delay(15*1000); /* 15 s to connect the ESC to power */
   digitalWrite(LED_PIN, LOW);  // turn on Led
-  PRINTs("... done")
   
   PRINTs("<End MotorESC_init")
 }
@@ -99,7 +97,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   
   if (ESC_command[THROTTLE] == 0) 
   { 
-     for(i=0; i< NBMOTORS; i++) _motor[i] = MINPPM - 2; // minus to be sure we stop
+     for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM; //stop
 #ifndef LOGSERIAL     
 	 if (motor_t > 0) { // force dump
              motor_record_block.motor_record[motor_t].tick = tick;
