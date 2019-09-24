@@ -37,26 +37,51 @@ MotorESCClass::MotorESCClass()
 {
 }
         
-void MotorESCClass::MotorESC_init()
+void MotorESCClass::MotorESC_init(int16_t value, int8_t motor)
 { 
   PRINTs(">Start MotorESC_init")
 
   pinMode(LED_PIN, OUTPUT);
-    
-  Motor1.attach(Motor1Pin, MINPWM, MAXPWM); 
-  Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
-  Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
-  Motor4.attach(Motor4Pin, MINPWM, MAXPWM); 
   
-  MotorESC_writeAllMotors(STOPPWM);
-
+  switch (motor) {
+  case -1:
+      Motor1.attach(Motor1Pin, STOPPWM, MAXPWM); 
+      Motor2.attach(Motor2Pin, STOPPWM, MAXPWM); 
+      Motor3.attach(Motor3Pin, STOPPWM, MAXPWM); 
+      Motor4.attach(Motor4Pin, STOPPWM, MAXPWM); 
+      
+      MotorESC_writeAllMotors(value);
+    break;
+  case 0:
+    Motor1.attach(Motor1Pin, STOPPWM, MAXPWM);
+    MotorESC_writeOneMotor (0, value);
+    break;
+  case 1:
+    Motor2.attach(Motor2Pin, STOPPWM, MAXPWM);
+    MotorESC_writeOneMotor (1, value);
+    break;
+  case 2:
+    Motor3.attach(Motor3Pin, STOPPWM, MAXPWM);
+    MotorESC_writeOneMotor (2, value);
+    break;
+   case 3:
+    Motor4.attach(Motor4Pin, STOPPWM, MAXPWM);
+    MotorESC_writeOneMotor (3, value);
+    break;       
+  }
+    
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
-  delay(15*1000); /* 15 s to connect the ESC to power */
+  if (value == STOPPWM) delay(15*1000); /* 15s to connect the ESC to power */
   digitalWrite(LED_PIN, LOW);  // turn on Led
   
   PRINTs("<End MotorESC_init")
 }
- 
+
+void MotorESCClass::MotorESC_init()
+{ 
+    MotorESC_init(STOPPWM, -1);
+}    
+     
 void MotorESCClass::MotorESC_writeMotors ()
 { 
   Motor1.writeMicroseconds(_motor[0]);

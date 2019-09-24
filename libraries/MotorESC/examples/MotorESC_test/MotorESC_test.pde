@@ -6,14 +6,7 @@ void setup()
 {
   
   Serial.begin(9600); // initialize serial port
-  
-  Serial.println("Start Init" );
-  
-  MotorESC.MotorESC_init();
-  delay(10*1000);
-  
-  Serial.println("End Init" ); 
-  
+
   displayInstructions();
 
 }
@@ -21,13 +14,15 @@ void setup()
 void displayInstructions()
 {  
     Serial.println("READY - PLEASE SEND INSTRUCTIONS AS FOLLOWING :");
-    Serial.println("A : Send max throttle to motor 1 only");
-    Serial.println("B : Send max throttle to motor 2 only"); 
-    Serial.println("C : Send max throttle to motor 3 only"); 
-    Serial.println("D : Send max throttle to motor 4 only");  
-    Serial.println("0 : Send min throttle all motors");
-    Serial.println("1 : Send max throttle all motors");
-    Serial.println("2 : Run test function");
+    Serial.println("A : Init");
+    Serial.println("B : Program/Calib all motors");
+    Serial.println("C : Program/Calib motor 1"); 
+    Serial.println("D : Program/Calib motor 2"); 
+    Serial.println("E : Program/Calib motor 3"); 
+    Serial.println("F : Program/Calib motor 4");   
+    Serial.println("0 : Send STOPPWM");
+    Serial.println("1 : Send MAXPWM");
+    Serial.println("2 : Run tests");
     
 }
 
@@ -58,11 +53,11 @@ void test()
 /* START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM */
   Serial.print("START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM: ");Serial.println(STOPPWM);
   
-  for(int pwm=STOPPWM-20; pwm< STOPPWM+20; pwm+=20)
+  for(int pwm=STOPPWM-20; pwm<STOPPWM+200; pwm+=20)
   {
       Serial.print("PWM: ");Serial.println(pwm);
       MotorESC.MotorESC_writeAllMotors(pwm);
-      delay(5000);
+      delay(5*1000);
   }
   MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
   Serial.println("END TESTCASE 2");
@@ -125,8 +120,7 @@ void test()
   delay(1*1000);
  /* END TESTCASE 6 */
   
-   Serial.println("End OK ESC Tests");   
-   delay(10*1000);    
+   Serial.println("End OK ESC Tests");     
 }
 
 
@@ -137,42 +131,64 @@ void loop() {
         switch (data) {     
             
             // A
-            case 65 : Serial.print("Sending maximum throttle motor1");
-                      MotorESC.MotorESC_writeAllMotors(STOPPWM);
-                      MotorESC.MotorESC_writeOneMotor(1,MAXPWM); 
+            case 65 : Serial.println("Init");
+                      Serial.println("15s to connect ESC to power");
+                      
+                      MotorESC.MotorESC_init();
+                      
+                      Serial.println("End Init" ); 
             break; 
                      
             // B
-            case 66 : Serial.print("Sending maximum throttle motor2");
-                      MotorESC.MotorESC_writeAllMotors(STOPPWM);
-                      MotorESC.MotorESC_writeOneMotor(2,MAXPWM); 
+            case 66 : Serial.println("Program/Calib all motors");
+                                        
+                      MotorESC.MotorESC_init(MAXPWM, -1);
+                      
+                      Serial.println("End Program/Calib" );  
             break; 
-            
             // C
-            case 67 : Serial.print("Sending maximum throttle motor3");
-                      MotorESC.MotorESC_writeAllMotors(STOPPWM);
-                      MotorESC.MotorESC_writeOneMotor(3,MAXPWM); 
-            break;
-            
+            case 67 : Serial.println("Program/Calib motor 1");
+                                        
+                      MotorESC.MotorESC_init(MAXPWM, 0);
+                      
+                      Serial.println("End Program/Calib" );  
+            break;            
             // D
-            case 68 : Serial.print("Sending maximum throttle motor4");
-                      MotorESC.MotorESC_writeAllMotors(STOPPWM);
-                      MotorESC.MotorESC_writeOneMotor(4,MAXPWM); 
+            case 68 : Serial.println("Program/Calib motor 2");
+                                        
+                      MotorESC.MotorESC_init(MAXPWM, 1);
+                      
+                      Serial.println("End Program/Calib" );  
             break;
-                        
+            // E
+            case 69 : Serial.println("Program/Calib motor 3");
+                                        
+                      MotorESC.MotorESC_init(MAXPWM, 2);
+                      
+                      Serial.println("End Program/Calib" );  
+            break;            
+            // F
+            case 70 : Serial.println("Program/Calib motor 4");
+                                        
+                      MotorESC.MotorESC_init(MAXPWM, 3);
+                      
+                      Serial.println("End Program/Calib" );  
+            break; 
+                                       
             // 0
-            case 48 : Serial.println("Sending minimum throttle");
+            case 48 : Serial.println("Sending STOPPWM");
                       MotorESC.MotorESC_writeAllMotors(STOPPWM);
             break;
 
             // 1
-            case 49 : Serial.println("Sending maximum throttle");
+            case 49 : Serial.println("Sending MAXPWM");
                       MotorESC.MotorESC_writeAllMotors(MAXPWM); 
             break;
 
             // 2
-            case 50 : Serial.print("Running test");
+            case 50 : Serial.println("Running tests");
                       test();
+                      Serial.println("End tests");
             break;
         }
     }
