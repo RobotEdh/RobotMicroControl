@@ -144,35 +144,35 @@ void loop() {
                                         
                       MotorESC.MotorESC_init(MAXPWM, -1);
                       
-                      Serial.println("End Program/Calib" );  
+                      Serial.println("End Program/Calib");  
             break; 
             // C
             case 67 : Serial.println("Program/Calib motor 1");
                                         
                       MotorESC.MotorESC_init(MAXPWM, 0);
                       
-                      Serial.println("End Program/Calib" );  
+                      Serial.println("End Program/Calib");  
             break;            
             // D
             case 68 : Serial.println("Program/Calib motor 2");
                                         
                       MotorESC.MotorESC_init(MAXPWM, 1);
                       
-                      Serial.println("End Program/Calib" );  
+                      Serial.println("End Program/Calib");  
             break;
             // E
             case 69 : Serial.println("Program/Calib motor 3");
                                         
                       MotorESC.MotorESC_init(MAXPWM, 2);
                       
-                      Serial.println("End Program/Calib" );  
+                      Serial.println("End Program/Calib");  
             break;            
             // F
             case 70 : Serial.println("Program/Calib motor 4");
                                         
                       MotorESC.MotorESC_init(MAXPWM, 3);
                       
-                      Serial.println("End Program/Calib" );  
+                      Serial.println("End Program/Calib");  
             break; 
                                        
             // 0
