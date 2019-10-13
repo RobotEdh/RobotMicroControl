@@ -123,7 +123,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   if (ESC_command[THROTTLE] == 0) 
   { 
      for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM; //stop
-#ifndef LOGSERIAL     
+#ifdef LOGSDCARD     
 	 if (motor_t > 0) { // force dump
              motor_record_block.motor_record[motor_t].tick = tick;
              motor_record_block.motor_record[motor_t].throttle = 0;
@@ -143,22 +143,20 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   {   
      int16_t throttle = map(ESC_command[THROTTLE], MINPPM, MAXPPM, MINPWMTHRO, MAXPWMTHRO);  // MINPWMTHRO,  MAXPWMTHRO to give room for PID adjustment
      
-     #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
+     #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z + throttle
     _motor[0] = PIDMIX(-1,-1,-1); //Front Left
     _motor[1] = PIDMIX(+1,-1,+1); //Front Right
     _motor[2] = PIDMIX(+1,+1,-1); //Rear Right
     _motor[3] = PIDMIX(-1,+1,+1); //Rear Left
 
     for(i=0; i< NBMOTORS; i++) {
-       _motor[i] = map(_motor[i], -90, 90, MINPWMANGLE, MAXPWMANGLE);
-       _motor[i] = _motor[i] + throttle;
 #ifdef LOGSERIAL
        PRINTi2("motor",i,_motor[i]) 
 #endif
        if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }
-#ifndef LOGSERIAL
+#ifdef LOGSDCARD
     if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
           motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
           motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
@@ -201,7 +199,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
           PRINTi2("motor last cap",i,_motor[i])
 #endif          
        }
-#ifndef LOGSERIAL
+#ifdef LOGSDCARD
        motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
        motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
        motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];

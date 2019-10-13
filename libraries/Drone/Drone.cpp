@@ -228,13 +228,14 @@ void DroneClass::Drone_pid() {
   }
   else if ((RC_command[THROTTLE] == 0) && (go != -1))  // already started
   { 
+#ifdef LOGSDCARD     
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
           if (count != 512) PRINTi2("bad count written: ",tick,count)
           PID_t = 0;                                            
      }
-     
+#endif     
      go = 0; 
      return;
   } 

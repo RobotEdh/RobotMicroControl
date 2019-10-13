@@ -10,8 +10,6 @@
 #define MAXPWM 1832
 #define MINPWMTHRO 1250
 #define MAXPWMTHRO 1750
-#define MINPWMANGLE 1250
-#define MAXPWMANGLE 1750
 
 #define NBMOTORS 4
 #define Motor1Pin 5  //FRONT_LEFT
