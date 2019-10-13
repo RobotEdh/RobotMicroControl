@@ -5,13 +5,13 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define STOPPWM 1000
-#define MINPWM 1080
-#define MAXPWM 2000
-#define MINPWMTHRO 1200
-#define MAXPWMTHRO 1800
-#define MINPWMANGLE 1200
-#define MAXPWMANGLE 1800
+#define STOPPWM 1140
+#define MINPWM 1148
+#define MAXPWM 1832
+#define MINPWMTHRO 1250
+#define MAXPWMTHRO 1750
+#define MINPWMANGLE 1250
+#define MAXPWMANGLE 1750
 
 #define NBMOTORS 4
 #define Motor1Pin 5  //FRONT_LEFT
