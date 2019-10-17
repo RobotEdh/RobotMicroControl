@@ -142,17 +142,43 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   else
   {   
      int16_t throttle = map(ESC_command[THROTTLE], MINPPM, MAXPPM, MINPWMTHRO, MAXPWMTHRO);  // MINPWMTHRO,  MAXPWMTHRO to give room for PID adjustment
-     
-     #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z + throttle
-    _motor[0] = PIDMIX(-1,-1,-1); //Front Left
-    _motor[1] = PIDMIX(+1,-1,+1); //Front Right
-    _motor[2] = PIDMIX(+1,+1,-1); //Rear Right
-    _motor[3] = PIDMIX(-1,+1,+1); //Rear Left
-
-    for(i=0; i< NBMOTORS; i++) {
 #ifdef LOGSERIAL
-       PRINTi2("motor",i,_motor[i]) 
-#endif
+       PRINT("throttle",throttle) 
+#endif  
+     // assure consistency between the impact of the throttle and of the PID
+     int16_t pid = 0;
+     #define PIDMIX(X,Y,Z) ESC_command[ROLL]*X + ESC_command[PITCH]*Y + ESC_command[YAW]*Z
+     
+     pid = PIDMIX(-1,-1,-1); //Front Left
+     _motor[0] = map(pid, -MAXABSPID, MAXABSPID, -MAXABSPWMPID, MAXABSPWMPID) + throttle;
+#ifdef LOGSERIAL
+       PRINTi2("motor",0,_motor[0]) 
+       PRINT("pid",pid) 
+#endif     
+
+     pid = PIDMIX(+1,-1,+1); //Front Right
+     _motor[1] = map(pid, -MAXABSPID, MAXABSPID, -MAXABSPWMPID, MAXABSPWMPID) + throttle;    
+#ifdef LOGSERIAL
+       PRINTi2("motor",1,_motor[1]) 
+       PRINT("pid",pid) 
+#endif         
+
+     pid = PIDMIX(+1,+1,-1); //Rear Right
+     _motor[2] = map(pid, -MAXABSPID, MAXABSPID, -MAXABSPWMPID, MAXABSPWMPID) + throttle;     
+#ifdef LOGSERIAL
+       PRINTi2("motor",2,_motor[2]) 
+       PRINT("pid",pid) 
+#endif         
+
+     pid = PIDMIX(-1,+1,+1); //Rear Left
+     _motor[3] = map(pid, -MAXABSPID, MAXABSPID, -MAXABSPWMPID, MAXABSPWMPID) + throttle;
+ #ifdef LOGSERIAL
+       PRINTi2("motor",3,_motor[3]) 
+       PRINT("pid",pid) 
+#endif        
+
+    
+    for(i=0; i< NBMOTORS; i++) {
        if((_motor[i]-MAXPWM) > maxMotor) maxMotor = _motor[i]-MAXPWM;
        if((MINPWM - _motor[i]) > minMotor) minMotor = MINPWM - _motor[i];
     }

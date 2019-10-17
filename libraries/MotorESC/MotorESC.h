@@ -10,6 +10,9 @@
 #define MAXPWM 1832
 #define MINPWMTHRO 1250
 #define MAXPWMTHRO 1750
+#define MAXABSPWMPID 200
+#define MAXABSPID 79 // computed based on value of the coeff ans max error for PID
+
 
 #define NBMOTORS 4
 #define Motor1Pin 5  //FRONT_LEFT

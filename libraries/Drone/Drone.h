@@ -21,7 +21,7 @@ class DroneClass
 
   private:
     const uint32_t samplePeriod = 20;  // 20 ms (50Hz)
-    const double _Kp[3] = {0.6,   0.6,   2.4};
+    const double _Kp[3] = {0.6,   0.6,   1.3};
     const double _Ki[3] = {0.02, 0.02, 0.01};  // values for 50hz (20 ms)
     const double _Kd[3] = {12.0,  12.0,  0.0}; // values for 50hz (20 ms)
     const double _IMax  = 5; // Maximum Integral value
