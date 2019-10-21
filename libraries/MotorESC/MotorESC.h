@@ -5,12 +5,12 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define STOPPWM 1140
-#define MINPWM 1148
-#define MAXPWM 1832
-#define MINPWMTHRO 1250
-#define MAXPWMTHRO 1750
-#define MAXABSPWMPID 200
+#define STOPPWM 1000
+#define MINPWM 1000
+#define MAXPWM 2000
+#define MINPWMTHRO 1150
+#define MAXPWMTHRO 1850
+#define MAXABSPWMPID 200 // to be TESTED
 #define MAXABSPID 79 // computed based on value of the coeff ans max error for PID
 
 
