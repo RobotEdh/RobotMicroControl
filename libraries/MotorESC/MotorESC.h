@@ -5,7 +5,6 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define STOPPWM 1000
 #define MINPWM 1000
 #define MAXPWM 2000
 #define MINPWMTHRO 1150

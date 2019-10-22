@@ -45,41 +45,41 @@ void MotorESCClass::MotorESC_init(int16_t value, int8_t motor)
   
   switch (motor) {
   case -1:
-      Motor1.attach(Motor1Pin, STOPPWM, MAXPWM); 
-      Motor2.attach(Motor2Pin, STOPPWM, MAXPWM); 
-      Motor3.attach(Motor3Pin, STOPPWM, MAXPWM); 
-      Motor4.attach(Motor4Pin, STOPPWM, MAXPWM); 
+      Motor1.attach(Motor1Pin, MINPWM, MAXPWM); 
+      Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
+      Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
+      Motor4.attach(Motor4Pin, MINPWM, MAXPWM); 
       
       MotorESC_writeAllMotors(value);
     break;
   case 0:
-    Motor1.attach(Motor1Pin, STOPPWM, MAXPWM);
+    Motor1.attach(Motor1Pin, MINPWM, MAXPWM);
     MotorESC_writeOneMotor (0, value);
     break;
   case 1:
-    Motor2.attach(Motor2Pin, STOPPWM, MAXPWM);
+    Motor2.attach(Motor2Pin, MINPWM, MAXPWM);
     MotorESC_writeOneMotor (1, value);
     break;
   case 2:
-    Motor3.attach(Motor3Pin, STOPPWM, MAXPWM);
+    Motor3.attach(Motor3Pin, MINPWM, MAXPWM);
     MotorESC_writeOneMotor (2, value);
     break;
    case 3:
-    Motor4.attach(Motor4Pin, STOPPWM, MAXPWM);
+    Motor4.attach(Motor4Pin, MINPWM, MAXPWM);
     MotorESC_writeOneMotor (3, value);
     break;       
   }
     
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
-  if (value == STOPPWM) delay(15*1000); /* 15s to connect the ESC to power */
-  digitalWrite(LED_PIN, LOW);  // turn on Led
+  delay(15*1000);               // 15s to connect the ESC to power
+  digitalWrite(LED_PIN, LOW);   // turn on Led
   
   PRINTs("<End MotorESC_init")
 }
 
 void MotorESCClass::MotorESC_init()
 { 
-    MotorESC_init(STOPPWM, -1);
+    MotorESC_init(MINPWM, -1);
 }    
      
 void MotorESCClass::MotorESC_writeMotors ()
@@ -122,7 +122,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
   
   if (ESC_command[THROTTLE] == 0) 
   { 
-     for(i=0; i< NBMOTORS; i++) _motor[i] = STOPPWM; //stop
+     for(i=0; i< NBMOTORS; i++) _motor[i] = MINPWM; //stop
 #ifdef LOGSDCARD     
 	 if (motor_t > 0) { // force dump
              motor_record_block.motor_record[motor_t].tick = tick;

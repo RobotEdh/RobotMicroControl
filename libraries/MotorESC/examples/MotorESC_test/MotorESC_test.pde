@@ -14,13 +14,13 @@ void setup()
 void displayInstructions()
 {  
     Serial.println("READY - PLEASE SEND INSTRUCTIONS AS FOLLOWING :");
-    Serial.println("A : Init all motors (start Throttle stick = STOPPWM)");
+    Serial.println("A : Init all motors (start Throttle stick = MINPWM)");
     Serial.println("B : Program/Calib all motors (start Throttle stick = MAXPWM)");
     Serial.println("C : Program/Calib motor 1 (start Throttle stick = MAXPWM)"); 
     Serial.println("D : Program/Calib motor 2 (start Throttle stick = MAXPWM)"); 
     Serial.println("E : Program/Calib motor 3 (start Throttle stick = MAXPWM)"); 
     Serial.println("F : Program/Calib motor 4 (start Throttle stick = MAXPWM)");   
-    Serial.println("0 : Send STOPPWM all motors");
+    Serial.println("0 : Send MINPWM all motors");
     Serial.println("1 : Send MAXPWM all motors");
     Serial.println("2 : Send value entered all motors");
     Serial.println("9 : Run tests all motors");
@@ -35,31 +35,31 @@ void test()
   Serial.println("Beging ESC Tests");
     
 /* START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way  */
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);   // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM);   // stop
   Serial.println("START TESTCASE 1: spin up each blade individually for 10s each and check they all turn the right way");
 
   for(int i=0; i< NBMOTORS; i++)
   {
       Serial.println(szMotors[i]);
       MotorESC.MotorESC_writeOneMotor(i, throttle);
-      if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, STOPPWM);
+      if (i>0) MotorESC.MotorESC_writeOneMotor(i-1, MINPWM);
       delay(10*1000);
   }
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM);  // stop
   Serial.println("END TESTCASE 1");
   delay(1*1000);
 /* END TESTCASE 1 */
 
-/* START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM */
-  Serial.print("START TESTCASE 2: Spin all the motors together near to minimum speed STOPPWM: ");Serial.println(STOPPWM);
+/* START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM */
+  Serial.print("START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM: ");Serial.println(MINPWM);
   
-  for(int pwm=STOPPWM-20; pwm<STOPPWM+200; pwm+=20)
+  for(int pwm=MINPWM; pwm<MINPWM+200; pwm+=20)
   {
       Serial.print("PWM: ");Serial.println(pwm);
       MotorESC.MotorESC_writeAllMotors(pwm);
       delay(5*1000);
   }
-  MotorESC.MotorESC_writeAllMotors(STOPPWM);  // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM);  // stop
   Serial.println("END TESTCASE 2");
   delay(1*1000);
  /* END TESTCASE 2 */
@@ -73,7 +73,7 @@ void test()
   MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM); // stop
   Serial.println("END TESTCASE 3");
   delay(1*1000);
  /* END TESTCASE 3 */
@@ -87,7 +87,7 @@ void test()
   MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM); // stop
   Serial.println("END TESTCASE 4");
   delay(1*1000);
  /* END TESTCASE 4 */
@@ -101,7 +101,7 @@ void test()
   MotorESC.MotorESC_writeOneMotor(3,throttle + delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM); // stop
   Serial.println("END TESTCASE 5");
   delay(1*1000);
 /* END TESTCASE 5 */
@@ -115,7 +115,7 @@ void test()
   MotorESC.MotorESC_writeOneMotor(3,throttle - delta); //Rear Left
   delay(10*1000); 
  
-  MotorESC.MotorESC_writeAllMotors(STOPPWM); // stop
+  MotorESC.MotorESC_writeAllMotors(MINPWM); // stop
   Serial.println("END TESTCASE 6");
   delay(1*1000);
  /* END TESTCASE 6 */
@@ -137,7 +137,7 @@ void loop() {
         switch (data) {     
             
             // A
-            case 65 : Serial.println("Init (start Throttle stick = STOPPWM)");
+            case 65 : Serial.println("Init (start Throttle stick = MINPWM)");
                       Serial.println("15s to connect ESC to power");
                       
                       MotorESC.MotorESC_init();
@@ -182,8 +182,8 @@ void loop() {
             break; 
                                        
             // 0
-            case 48 : Serial.println("Send STOPPWM");
-                      MotorESC.MotorESC_writeAllMotors(STOPPWM);
+            case 48 : Serial.println("Send MINPWM");
+                      MotorESC.MotorESC_writeAllMotors(MINPWM);
             break;
 
             // 1
