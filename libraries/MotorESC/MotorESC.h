@@ -29,8 +29,9 @@ class MotorESCClass
    
    MotorESCClass();
    
-   void MotorESC_init(int16_t value, int8_t motor, int8_t t_delay);
-   void MotorESC_init();
+   uint8_t MotorESC_init(int16_t value, int8_t motor, int8_t t_delay);
+   uint8_t MotorESC_init(void);
+   void MotorESC_itimer(void);
    void MotorESC_test(void); 
    void MotorESC_writeOneMotor(uint8_t no, int16_t value);
    void MotorESC_writeAllMotors(int16_t value);

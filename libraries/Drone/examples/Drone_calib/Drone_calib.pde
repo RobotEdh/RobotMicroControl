@@ -8,13 +8,17 @@ MotorESCClass MotorESC;           // The Motor ESC Class
 
 void setup()
 {
+  uint8_t servoIndex = 0; 
+  
   Wire.begin(); // initialize I2C
    
   Serial.begin(9600); // initialize serial port
   Serial.println("Start init"); 
 
-  MotorESC.MotorESC_init(MAXPWM, -1, 0);  // Init all motors with MAXPWM with no delay
-    
+  servoIndex = MotorESC.MotorESC_init(MAXPWM, -1, 0);  // Init all motors with MAXPWM and no delay
+  Serial.print("servoIndex: "); Serial.println(servoIndex);  // display the number of "servos"
+  MotorESC.MotorESC_itimer();  // Display the timers used
+  
   RC.RC_init(); 
   
   Serial.println("End init");

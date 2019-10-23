@@ -33,39 +33,50 @@ struct motor_record_block_type {  //(struct 9 bytes
 motor_record_block_type motor_record_block;
 int motor_t = 0;  
 
+
+void MotorESCClass::MotorESC_itimer()
+{
+  PRINT("Timer Motor 1: ",Motor1.itimer())
+  PRINT("Timer Motor 2: ",Motor2.itimer())
+  PRINT("Timer Motor 3: ",Motor3.itimer())
+  PRINT("Timer Motor 4: ",Motor4.itimer())
+}    
+    
 MotorESCClass::MotorESCClass()
 {
 }
         
-void MotorESCClass::MotorESC_init(int16_t value, int8_t motor, int8_t t_delay)
+uint8_t MotorESCClass::MotorESC_init(int16_t value, int8_t motor, int8_t t_delay)
 { 
+  uint8_t servoIndex = 0;
+  
   PRINTs(">Start MotorESC_init")
 
   pinMode(LED_PIN, OUTPUT);
   
   switch (motor) {
   case -1:
-      Motor1.attach(Motor1Pin); 
-      Motor2.attach(Motor2Pin); 
-      Motor3.attach(Motor3Pin); 
-      Motor4.attach(Motor4Pin); 
+      servoIndex = Motor1.attach(Motor1Pin); 
+      servoIndex = Motor2.attach(Motor2Pin); 
+      servoIndex = Motor3.attach(Motor3Pin); 
+      servoIndex = Motor4.attach(Motor4Pin); 
       
       MotorESC_writeAllMotors(value);
     break;
   case 0:
-    Motor1.attach(Motor1Pin);
+    servoIndex = Motor1.attach(Motor1Pin);
     MotorESC_writeOneMotor (0, value);
     break;
   case 1:
-    Motor2.attach(Motor2Pin);
+    servoIndex = Motor2.attach(Motor2Pin);
     MotorESC_writeOneMotor (1, value);
     break;
   case 2:
-    Motor3.attach(Motor3Pin);
+    servoIndex = Motor3.attach(Motor3Pin);
     MotorESC_writeOneMotor (2, value);
     break;
    case 3:
-    Motor4.attach(Motor4Pin);
+    servoIndex = Motor4.attach(Motor4Pin);
     MotorESC_writeOneMotor (3, value);
     break;       
   }
@@ -75,11 +86,13 @@ void MotorESCClass::MotorESC_init(int16_t value, int8_t motor, int8_t t_delay)
   digitalWrite(LED_PIN, LOW);   // turn on Led
   
   PRINTs("<End MotorESC_init")
+  
+  return servoIndex;
 }
 
-void MotorESCClass::MotorESC_init()
+uint8_t MotorESCClass::MotorESC_init()
 { 
-    MotorESC_init(MINPWM, -1, 15);  // Init all motors and wait 15s to connect Lipo
+    return MotorESC_init(MINPWM, -1, 15);  // Init all motors and wait 15s to connect Lipo
 }    
      
 void MotorESCClass::MotorESC_writeMotors ()
