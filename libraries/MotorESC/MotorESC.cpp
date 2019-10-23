@@ -37,7 +37,7 @@ MotorESCClass::MotorESCClass()
 {
 }
         
-void MotorESCClass::MotorESC_init(int16_t value, int8_t motor)
+void MotorESCClass::MotorESC_init(int16_t value, int8_t motor, int8_t t_delay)
 { 
   PRINTs(">Start MotorESC_init")
 
@@ -45,33 +45,33 @@ void MotorESCClass::MotorESC_init(int16_t value, int8_t motor)
   
   switch (motor) {
   case -1:
-      Motor1.attach(Motor1Pin, MINPWM, MAXPWM); 
-      Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
-      Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
-      Motor4.attach(Motor4Pin, MINPWM, MAXPWM); 
+      Motor1.attach(Motor1Pin); 
+      Motor2.attach(Motor2Pin); 
+      Motor3.attach(Motor3Pin); 
+      Motor4.attach(Motor4Pin); 
       
       MotorESC_writeAllMotors(value);
     break;
   case 0:
-    Motor1.attach(Motor1Pin, MINPWM, MAXPWM);
+    Motor1.attach(Motor1Pin);
     MotorESC_writeOneMotor (0, value);
     break;
   case 1:
-    Motor2.attach(Motor2Pin, MINPWM, MAXPWM);
+    Motor2.attach(Motor2Pin);
     MotorESC_writeOneMotor (1, value);
     break;
   case 2:
-    Motor3.attach(Motor3Pin, MINPWM, MAXPWM);
+    Motor3.attach(Motor3Pin);
     MotorESC_writeOneMotor (2, value);
     break;
    case 3:
-    Motor4.attach(Motor4Pin, MINPWM, MAXPWM);
+    Motor4.attach(Motor4Pin);
     MotorESC_writeOneMotor (3, value);
     break;       
   }
     
   digitalWrite(LED_PIN, HIGH);  // turn on Led for 15s
-  delay(15*1000);               // 15s to connect the ESC to power
+  if (t_delay > 0) delay(t_delay*1000); // delay to connect the ESC to power
   digitalWrite(LED_PIN, LOW);   // turn on Led
   
   PRINTs("<End MotorESC_init")
@@ -79,7 +79,7 @@ void MotorESCClass::MotorESC_init(int16_t value, int8_t motor)
 
 void MotorESCClass::MotorESC_init()
 { 
-    MotorESC_init(MINPWM, -1);
+    MotorESC_init(MINPWM, -1, 15);  // Init all motors and wait 15s to connect Lipo
 }    
      
 void MotorESCClass::MotorESC_writeMotors ()

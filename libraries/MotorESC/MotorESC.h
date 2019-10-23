@@ -5,10 +5,10 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define MINPWM 1000
-#define MAXPWM 2000
-#define MINPWMTHRO 1150
-#define MAXPWMTHRO 1850
+#define MINPWM MIN_PULSE_WIDTH
+#define MAXPWM MAX_PULSE_WIDTH
+#define MINPWMTHRO MIN_PULSE_WIDTH
+#define MAXPWMTHRO MAX_PULSE_WIDTH
 #define MAXABSPWMPID 200 // to be TESTED
 #define MAXABSPID 79 // computed based on value of the coeff ans max error for PID
 
@@ -29,7 +29,7 @@ class MotorESCClass
    
    MotorESCClass();
    
-   void MotorESC_init(int16_t value, int8_t motor);
+   void MotorESC_init(int16_t value, int8_t motor, int8_t t_delay);
    void MotorESC_init();
    void MotorESC_test(void); 
    void MotorESC_writeOneMotor(uint8_t no, int16_t value);

@@ -13,8 +13,7 @@ void setup()
   Serial.begin(9600); // initialize serial port
   Serial.println("Start init"); 
 
-  Serial.println("MAXPWM send to ESC, you have 15 s to connect the ESC to power..."); 
-  MotorESC.MotorESC_init(MAXPWM, -1);  // Init all motors with MAXPWM
+  MotorESC.MotorESC_init(MAXPWM, -1, 0);  // Init all motors with MAXPWM with no delay
     
   RC.RC_init(); 
   
