@@ -14,17 +14,13 @@ void setup()
 void displayInstructions()
 {  
     Serial.println("READY - PLEASE SEND INSTRUCTIONS AS FOLLOWING :");
-    Serial.println("A : Init all motors (start Throttle stick = MINPWM)");
-    Serial.println("B : Program/Calib all motors (start Throttle stick = MAXPWM)");
-    Serial.println("C : Program/Calib motor 1 (start Throttle stick = MAXPWM)"); 
-    Serial.println("D : Program/Calib motor 2 (start Throttle stick = MAXPWM)"); 
-    Serial.println("E : Program/Calib motor 3 (start Throttle stick = MAXPWM)"); 
-    Serial.println("F : Program/Calib motor 4 (start Throttle stick = MAXPWM)");   
-    Serial.println("0 : Send MINPWM all motors");
-    Serial.println("1 : Send MIDPWM all motors");
-    Serial.println("2 : Send MAXPWM all motors");
-    Serial.println("3 : Send value entered all motors");
-    Serial.println("9 : Run tests all motors");
+    Serial.println("A : Init motors (start Throttle stick = MINPWM)");
+    Serial.println("B : Program/Calib motors (start Throttle stick = MAXPWM)"); 
+    Serial.println("0 : Send MINPWM");
+    Serial.println("1 : Send MIDPWM");
+    Serial.println("2 : Send MAXPWM");
+    Serial.println("3 : Send value entered");
+    Serial.println("9 : Run tests");
 }
 
 void test()
@@ -147,41 +143,12 @@ void loop() {
             break; 
                      
             // B
-            case 66 : Serial.println("Program/Calib all motors (start Throttle stick = MAXPWM)");
+            case 66 : Serial.println("Program/Calib motors (start Throttle stick = MAXPWM)");
                                         
                       MotorESC.MotorESC_init(MAXPWM, -1, 0);
                       
                       Serial.println("End Program/Calib");  
-            break; 
-            // C
-            case 67 : Serial.println("Program/Calib motor 1 (start Throttle stick = MAXPWM)");
-                                        
-                      MotorESC.MotorESC_init(MAXPWM, 0, 0);
-                      
-                      Serial.println("End Program/Calib ");  
-            break;            
-            // D
-            case 68 : Serial.println("Program/Calib motor 2 (start Throttle stick = MAXPWM)");
-                                        
-                      MotorESC.MotorESC_init(MAXPWM, 1, 0);
-                      
-                      Serial.println("End Program/Calib");  
-            break;
-            // E
-            case 69 : Serial.println("Program/Calib motor 3 (start Throttle stick = MAXPWM)");
-                                        
-                      MotorESC.MotorESC_init(MAXPWM, 2, 0);
-                      
-                      Serial.println("End Program/Calib");  
-            break;            
-            // F
-            case 70 : Serial.println("Program/Calib motor 4 (start Throttle stick = MAXPWM)");
-                                        
-                      MotorESC.MotorESC_init(MAXPWM, 3, 0);
-                      
-                      Serial.println("End Program/Calib");  
-            break; 
-                                       
+                   
             // 0
             case 48 : Serial.print("Send MINPWM = ");Serial.println(MINPWM);
                       MotorESC.MotorESC_writeAllMotors(MINPWM);

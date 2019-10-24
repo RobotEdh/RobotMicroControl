@@ -12,7 +12,7 @@ void setup()
   
   Wire.begin(); // initialize I2C
    
-  Serial.begin(9600); // initialize serial port
+  Serial.begin(115200); // initialize serial port
   Serial.println("Start init"); 
 
   servoIndex = MotorESC.MotorESC_init(MAXPWM, -1, 0);  // Init all motors with MAXPWM and no delay
@@ -42,4 +42,6 @@ void loop()
     Serial.print("Throttle received: ");Serial.println(RC_command[THROTTLE]); 
 	Serial.print("Value set to the motors: ");Serial.println(value); 
     MotorESC.MotorESC_writeAllMotors(value);
+    
+    delay(1*1000);  // delay min 20 ms
 }

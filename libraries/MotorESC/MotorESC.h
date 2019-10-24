@@ -5,10 +5,10 @@
 #include <Servo.h>
 #include <RC.h>
 
-#define MINPWM MIN_PULSE_WIDTH
-#define MAXPWM MAX_PULSE_WIDTH
-#define MINPWMTHRO MIN_PULSE_WIDTH
-#define MAXPWMTHRO MAX_PULSE_WIDTH
+#define MINPWM 1000
+#define MAXPWM 2000
+#define MINPWMTHRO 1000
+#define MAXPWMTHRO 2000
 #define MAXABSPWMPID 200 // to be TESTED
 #define MAXABSPID 79 // computed based on value of the coeff ans max error for PID
 
