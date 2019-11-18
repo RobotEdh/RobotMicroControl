@@ -10,7 +10,7 @@
 #define MINPWMTHRO 1000
 #define MAXPWMTHRO 2000
 #define MAXABSPWMPID 200 // to be TESTED
-#define MAXABSPID 79 // computed based on value of the coeff ans max error for PID
+#define MAXABSPID 100 // computed based on value of the coeff ans max error for PID
 
 
 #define NBMOTORS 4
