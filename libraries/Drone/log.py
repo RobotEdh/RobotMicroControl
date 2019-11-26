@@ -150,11 +150,11 @@ while (not eof):
  
 
 print("************************* End log ****************************************")
-print("Max Tick: ",MaxTick)
-print("count PID: ",iPID)
-print("count Max sample Time: ",iMaxsampleTime)
+print("Tick Max: ",MaxTick)
+print("count sample Time > 20ms: ",iMaxsampleTime)
 print("count Sample Time: ",isampleTime)
-print("ratio Max Sample Time: ",iMaxsampleTime*100/isampleTime)
+print("ratio sample Time > 20ms: ",iMaxsampleTime*100/isampleTime)
+print("count PID: ",iPID)
 print("count PID Roll: ",iPIDRoll)
 print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)

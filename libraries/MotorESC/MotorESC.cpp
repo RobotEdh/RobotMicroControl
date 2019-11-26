@@ -148,7 +148,8 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
              motor_t++; 
              for(int z=motor_t; z< MOTORLOGDATASIZE+1; z++) motor_record_block.motor_record[motor_t].tick = 0;// reset end tab
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
-             if (count != 512) PRINT("bad count written: ",count);  
+             if (count != 512) PRINTi2("bad count written MOTOR following force dump: ",tick,count) 
+             Serial.print("written MOTOR following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);                
              motor_t = 0;                                           
      }
 #endif	 
@@ -208,6 +209,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
              if (count != 512) PRINTi2("bad count written: ",tick,count)
+             Serial.print("written MOTOR following need to dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);            
              motor_t = 0;                                             
           }
     } 
@@ -249,7 +251,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
        motor_t++;
        if (motor_t == MOTORLOGDATASIZE) { // need to dump
           count = logFile.write((const uint8_t *)&motor_record_block, 512);
-          if (count != 512) PRINTi2("bad count written: ",tick,count)
+          if (count != 512) PRINTi2("bad count written MOTOR following need to dump: ",tick,count)
           motor_t = 0;                                             
        }
 #endif         

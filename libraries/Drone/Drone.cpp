@@ -92,6 +92,7 @@ void DroneClass::Drone_init() {
    
   uint8_t status = 0; 
   PRINTbegin
+  Serial.begin(115200);
   
    // initialize RTC
   PRINTs(" ")
@@ -232,7 +233,8 @@ void DroneClass::Drone_pid() {
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
-          if (count != 512) PRINTi2("bad count written following force dump: ",tick,count)
+          if (count != 512) PRINTi2("bad count written PID following force dump: ",tick,count)
+          Serial.print("written PID following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
           PID_t = 0;                                            
      }
 #endif     
@@ -321,7 +323,8 @@ void DroneClass::Drone_pid() {
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump 
           count = logFile.write((const uint8_t *)&PID_record_block, 512);
-          if (count != 512) PRINTi2("bad count written following need to dump: ",tick,count)
+          if (count != 512) PRINTi2("bad count written PID following need to dump: ",tick,count)
+          Serial.print("written PID following need to dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
           PID_t = 0;                                           
        }
     }
