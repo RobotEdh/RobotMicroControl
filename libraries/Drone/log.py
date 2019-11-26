@@ -20,6 +20,8 @@ MaxTick = 0
 isampleTime = 0
 iMaxsampleTime = 0
 previous_tick = 0
+piddumpsize = 0
+motordumpsize = 0
 
 eof = False
 while (not eof):
@@ -53,7 +55,7 @@ while (not eof):
            found = True
            print("PID end dump")
            print("PID dumpsize:",piddumpsize)
-           char0 = fichier.read(6)  # 6 fillers
+           char0 = fichier.read(4)  # 4 fillers
        elif ((ord(char0) == 0xFD) and (ord(char1) == 0xFE)): # Motors
            found = True
            print("Motor end dump")

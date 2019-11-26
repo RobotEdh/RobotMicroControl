@@ -7,7 +7,7 @@
 #include <DS1307.h>     // RTC
 
 
-#define PIDLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
+#define PIDLOGFREQ 1 //record every 1 ticks ie 20 ms at 50Hz
   
 class DroneClass
 {

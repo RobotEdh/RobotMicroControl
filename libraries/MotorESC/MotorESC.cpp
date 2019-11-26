@@ -5,6 +5,7 @@
 // Logging mode
 //#define  LOGSERIAL
 #define LOGSDCARD  // log to SD Card
+#define AUTOFLUSH // auto flush following each write
 //#define LOGTRACE   // Enable trace
 #include <log.h>
 File logFile; 

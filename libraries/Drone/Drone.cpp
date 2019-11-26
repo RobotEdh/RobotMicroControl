@@ -232,7 +232,7 @@ void DroneClass::Drone_pid() {
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE+1; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
-          if (count != 512) PRINTi2("bad count written: ",tick,count)
+          if (count != 512) PRINTi2("bad count written following force dump: ",tick,count)
           PID_t = 0;                                            
      }
 #endif     
@@ -308,7 +308,7 @@ void DroneClass::Drone_pid() {
     PRINTi2("delta_error",i,delta_error[i])
     PRINTi2("anglePID",i,anglePID[i])
   #else  
-    if ((tick%PIDLOGFREQ) == 0 ) { // record every 5 ticks ie 100 ms at 50Hz
+    if ((tick%PIDLOGFREQ) == 0 ) { // record every PIDLOGFREQ ticks
        PID_record_block.PID_record[PID_t].angleType = (uint8_t)i;
        PID_record_block.PID_record[PID_t].angle = (int8_t)angle[i];
        PID_record_block.PID_record[PID_t].RC_commandRP = (int8_t)RC_commandRP[i];
@@ -321,7 +321,7 @@ void DroneClass::Drone_pid() {
        PID_t++;
        if (PID_t == PIDLOGDATASIZE) { // need to dump 
           count = logFile.write((const uint8_t *)&PID_record_block, 512);
-          if (count != 512) PRINTi2("bad count written: ",tick,count)
+          if (count != 512) PRINTi2("bad count written following need to dump: ",tick,count)
           PID_t = 0;                                           
        }
     }

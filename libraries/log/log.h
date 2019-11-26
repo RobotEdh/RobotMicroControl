@@ -70,9 +70,9 @@
    #define  CS_PIN  10  
     
    #ifdef AUTOFLUSH
-      #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT|O_SYNC);logFile.println(F(" ")); logFile.println(F("BEGIN LOG")); logFile.println(F("*********"));logFile.println(F(" "));
+      #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT|O_SYNC);logFile.println(F(" ")); logFile.println(F("BEGIN LOG AUTOFLUSH ON")); logFile.println(F("*********"));logFile.println(F(" "));
    #else
-      #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT);logFile.println(F(" ")); logFile.println(F("BEGIN LOG")); logFile.println(F("*********"));logFile.println(F(" "));
+      #define PRINTbegin   if (SD.begin(CS_PIN)) logFile=SD.open("log.txt", O_WRITE|O_CREAT);logFile.println(F(" ")); logFile.println(F("BEGIN LOG AUTOFLUSH OFF")); logFile.println(F("*********"));logFile.println(F(" "));
    #endif
    
    #define PRINTflush   logFile.flush();
