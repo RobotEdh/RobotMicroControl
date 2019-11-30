@@ -19,6 +19,7 @@ iMotor = 0
 MaxTick = 0
 isampleTime = 0
 iMaxsampleTime = 0
+TotsampleTime = 0
 previous_tick = 0
 piddumpsize = 0
 motordumpsize = 0
@@ -110,6 +111,7 @@ while (not eof):
                 if (TlogPID[iPID,0]>MaxTick):
                     MaxTick = TlogPID[iPID,0]
                 isampleTime = isampleTime + 1
+                TotsampleTime = TotsampleTime + TlogPID[iPID,8]
                 if (TlogPID[iPID,8]>20):
                     iMaxsampleTime = iMaxsampleTime + 1
                 iPID = iPID +1
@@ -154,6 +156,7 @@ print("Tick Max: ",MaxTick)
 print("count sample Time > 20ms: ",iMaxsampleTime)
 print("count Sample Time: ",isampleTime)
 print("ratio sample Time > 20ms: ",iMaxsampleTime*100/isampleTime)
+print("Cumul Sample Time (ms): ",TotsampleTime)
 print("count PID: ",iPID)
 print("count PID Roll: ",iPIDRoll)
 print("count PID Pitch: ",iPIDPitch)
