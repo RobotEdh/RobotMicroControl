@@ -16,17 +16,17 @@ Servo Motor2;
 Servo Motor3;
 Servo Motor4;
 
-struct motor_record_type  // 9 bytes
+struct motor_record_type  // 14 bytes
 {
-     uint8_t throttle;
-     uint8_t motor0;
-     uint8_t motor1;
-     uint8_t motor2;
-     uint8_t motor3;
+     int16_t throttle;
+     int16_t motor0;
+     int16_t motor1;
+     int16_t motor2;
+     int16_t motor3;
      uint32_t tick;     
 };
-#define MOTORLOGDATASIZE 56 //multiple of block size 512 (struct 9 bytes * 56 = 504 + 8 bytes start/stop)
-struct motor_record_block_type {  //(struct 9 bytes
+#define MOTORLOGDATASIZE 36 //multiple of block size 512 (struct 14 bytes * 36 = 504 + 8 bytes start/stop)
+struct motor_record_block_type {  //(struct 14 bytes
      const uint8_t startMotorLog[2]={0xFB,0xFC};
      motor_record_type motor_record[MOTORLOGDATASIZE];
      const uint8_t stopMotorLog[6] ={0xFD,0xFE,0xFE,0xFE,0xFE,0xFE};  
@@ -141,12 +141,12 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
 	 if (motor_t > 0) { // force dump
              motor_record_block.motor_record[motor_t].tick = tick;
              motor_record_block.motor_record[motor_t].throttle = 0;
-             motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
-             motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
-             motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-             motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3]; 
+             motor_record_block.motor_record[motor_t].motor0 = _motor[0];
+             motor_record_block.motor_record[motor_t].motor1 = _motor[1];
+             motor_record_block.motor_record[motor_t].motor2 = _motor[2];
+             motor_record_block.motor_record[motor_t].motor3 = _motor[3]; 
              motor_t++; 
-             for(int z=motor_t; z< MOTORLOGDATASIZE+1; z++) motor_record_block.motor_record[motor_t].tick = 0;// reset end tab
+             for(int z=motor_t; z< MOTORLOGDATASIZE; z++) motor_record_block.motor_record[motor_t].tick = 0;// reset end tab
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
              if (count != 512) PRINTi2("bad count written MOTOR following force dump: ",tick,count) 
              Serial.print("written MOTOR following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);                
@@ -199,11 +199,11 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
     }
 #ifdef LOGSDCARD
     if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
-          motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
-          motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
-          motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
-          motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-          motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];
+          motor_record_block.motor_record[motor_t].throttle = throttle;
+          motor_record_block.motor_record[motor_t].motor0 = _motor[0];
+          motor_record_block.motor_record[motor_t].motor1 = _motor[1];
+          motor_record_block.motor_record[motor_t].motor2 = _motor[2];
+          motor_record_block.motor_record[motor_t].motor3 = _motor[3];
           motor_record_block.motor_record[motor_t].tick = tick;                    
           motor_t++;
           if (motor_t == MOTORLOGDATASIZE) { // need to dump
@@ -242,11 +242,11 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
 #endif          
        }
 #ifdef LOGSDCARD
-       motor_record_block.motor_record[motor_t].throttle = (uint8_t)throttle;
-       motor_record_block.motor_record[motor_t].motor0 = (uint8_t)_motor[0];
-       motor_record_block.motor_record[motor_t].motor1 = (uint8_t)_motor[1];
-       motor_record_block.motor_record[motor_t].motor2 = (uint8_t)_motor[2];
-       motor_record_block.motor_record[motor_t].motor3 = (uint8_t)_motor[3];
+       motor_record_block.motor_record[motor_t].throttle = throttle;
+       motor_record_block.motor_record[motor_t].motor0 = _motor[0];
+       motor_record_block.motor_record[motor_t].motor1 = _motor[1];
+       motor_record_block.motor_record[motor_t].motor2 = _motor[2];
+       motor_record_block.motor_record[motor_t].motor3 = _motor[3];
        motor_record_block.motor_record[motor_t].tick = tick;                    
        motor_t++;
        if (motor_t == MOTORLOGDATASIZE) { // need to dump

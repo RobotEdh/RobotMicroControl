@@ -63,20 +63,21 @@ while (not eof):
            print("motor dump size:",motordumpsize)
            char0 = fichier.read(4)  # 4 fillers
        elif (foundMotor):
-              char2 = fichier.read(1) # motor1
-              char3 = fichier.read(1) # motor2
-              char4 = fichier.read(1) # motor3
+              fichier.seek(-2,1)
+              twobytesT = fichier.read(2) # throttle 16 bytes
+              twobytes0 = fichier.read(2) # motor0 16 bytes
+              twobytes1 = fichier.read(2) # motor1 16 bytes
+              twobytes2 = fichier.read(2) # motor2 16 bytes
+              twobytes3 = fichier.read(2) # motor3 16 bytes
               fourbytes = fichier.read(4) # tick 32 bytes
               if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 900000000)):    # tick>0
-                motordumpsize = motordumpsize+2+3+4    
+                motordumpsize = motordumpsize+2+8+4    
                 TlogMotor[iMotor,0] = int.from_bytes(fourbytes, byteorder='little',signed=False) # tick
-                TlogMotor[iMotor,1] = int.from_bytes(char0, byteorder='little',signed=False) # throttle
-                if (TlogMotor[iMotor,1] < 120):
-                    TlogMotor[iMotor,1] = 120
-                TlogMotor[iMotor,2] = int.from_bytes(char1, byteorder='little',signed=False) # motor0
-                TlogMotor[iMotor,3] = int.from_bytes(char2, byteorder='little',signed=False) # motor1
-                TlogMotor[iMotor,4] = int.from_bytes(char3, byteorder='little',signed=False) # motor2
-                TlogMotor[iMotor,5] = int.from_bytes(char4, byteorder='little',signed=False) # motor3
+                TlogMotor[iMotor,1] = int.from_bytes(twobytesT, byteorder='little',signed=True) # throttle
+                TlogMotor[iMotor,2] = int.from_bytes(twobytes0, byteorder='little',signed=True) # motor0
+                TlogMotor[iMotor,3] = int.from_bytes(twobytes1, byteorder='little',signed=True) # motor1
+                TlogMotor[iMotor,4] = int.from_bytes(twobytes2, byteorder='little',signed=True) # motor2
+                TlogMotor[iMotor,5] = int.from_bytes(twobytes3, byteorder='little',signed=True) # motor3
                 if (TlogMotor[iMotor,0]>MaxTick):
                     MaxTick = TlogMotor[iMotor,0]                    
                 iMotor = iMotor + 1
@@ -92,10 +93,10 @@ while (not eof):
               char6 = fichier.read(1) # anglePID
               char7 = fichier.read(1) # sampleTime
               fourbytes = fichier.read(4) # tick 32 bytes
-              if(int.from_bytes(fourbytes, byteorder='little',signed=False) > 900000000):
+              if (int.from_bytes(fourbytes, byteorder='little',signed=False) > 900000000):
                 print("Data error, tick > 900000000, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False))
-              if(int.from_bytes(fourbytes, byteorder='little',signed=False) < previous_tick):
-                print("Data error, tick < previous tick, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False))                
+              if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < previous_tick)):
+                print("iPID: ",iPID, "->Data error, tick ",int.from_bytes(fourbytes, byteorder='little',signed=False)," < previous tick ",previous_tick)                
               if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 900000000)):    # tick>0
                 previous_tick = int.from_bytes(fourbytes, byteorder='little',signed=False)
                 piddumpsize = piddumpsize+2+6+4 
@@ -163,10 +164,15 @@ print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
-print(TlogPIDYaw[0:iPIDYaw,1])
+i=2001
+while (i <2500 ):
+  print("-------------", TlogPID[i,0])
+  print("TlogPID[i,1] ", TlogPID[i,1])
+  print("TlogPID[i,8] ", TlogPID[i,8])
+  i = i +1
 
 plt.title('Sample Time')
-plt.plot(TlogPID[0:iPID,0], TlogPID[0:iPID,8],'k*' ,label='Sample Time',linewidth=1,markersize=1)
+plt.plot(TlogPID[0:iPID,0], TlogPID[0:iPID,8],'k*-' ,label='Sample Time',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 plt.title('Roll')
@@ -191,6 +197,18 @@ plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,2],'r+',label='Front Left',lin
 plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,3],'g+',label='Front Right',linewidth=1,markersize=1)
 plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,4],'b+',label='Rear Right',linewidth=1,markersize=1)
 plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,5],'y+',label='Rear Left',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+iMotordraw =iMotor-100
+
+plt.title('Motors delta')
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,2]-TlogMotor[0:iMotordraw,1],'r+',label='Front Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,3]-TlogMotor[0:iMotordraw,1],'g+',label='Front Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,4]-TlogMotor[0:iMotordraw,1],'b+',label='Rear Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,5]-TlogMotor[0:iMotordraw,1],'y+',label='Rear Left',linewidth=1,markersize=1)
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'c.-' ,label='RollPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,6],'m.-',label='PitchPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'k.-',label='YawPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 

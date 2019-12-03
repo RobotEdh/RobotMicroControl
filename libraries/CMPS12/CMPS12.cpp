@@ -2,11 +2,11 @@
 #include <CMPS12.h>
 
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
 //#define LOGTRACE   // Enable trace
 #include <log.h>
-//extern File logFile;                // The loging class
+extern File logFile;                // The loging class
 
 CMPS12Class::CMPS12Class()
 {
