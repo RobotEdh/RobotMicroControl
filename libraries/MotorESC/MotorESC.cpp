@@ -146,7 +146,7 @@ void MotorESCClass::MotorESC_RunMotors(int16_t ESC_command[4], uint32_t tick)
              motor_record_block.motor_record[motor_t].motor2 = _motor[2];
              motor_record_block.motor_record[motor_t].motor3 = _motor[3]; 
              motor_t++; 
-             for(int z=motor_t; z< MOTORLOGDATASIZE; z++) motor_record_block.motor_record[motor_t].tick = 0;// reset end tab
+             for(int z=motor_t; z< MOTORLOGDATASIZE; z++) motor_record_block.motor_record[z].tick = 0;// reset end tab
              count = logFile.write((const uint8_t *)&motor_record_block, 512);
              if (count != 512) PRINTi2("bad count written MOTOR following force dump: ",tick,count) 
              Serial.print("written MOTOR following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);                

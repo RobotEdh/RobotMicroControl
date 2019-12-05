@@ -231,7 +231,7 @@ void DroneClass::Drone_pid() {
   { 
 #ifdef LOGSDCARD     
      if (PID_t > 0) { // force dump
-          for(int z=PID_t; z< PIDLOGDATASIZE; z++) PID_record_block.PID_record[PID_t].tick = 0;// reset end tab 
+          for(int z=PID_t; z< PIDLOGDATASIZE; z++) PID_record_block.PID_record[z].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
           if (count != 512) PRINTi2("bad count written PID following force dump: ",tick,count)
           Serial.print("written PID following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);

@@ -35,11 +35,11 @@ while (not eof):
            eof = True
        elif ((ord(char0) == 0xFA) and (ord(char1) == 0xFB)):
            foundPID = True
-           print("PID begin dump")
+           print("iPID: ",iPID,"->PID begin dump")
            piddumpsize = 0
        elif ((ord(char0) == 0xFB) and (ord(char1) == 0xFC)):
            foundMotor = True
-           print("Motor begin dump")
+           print("iMotor: ",iMotor,"->Motor begin dump")
            motordumpsize = 0
        elif ((ord(char0) > 0x1F) and (ord(char0) < 0x7E) and (ord(char1) > 0x1F) and (ord(char1) < 0x7E)):
            fichier.seek(-2,1)
@@ -54,13 +54,15 @@ while (not eof):
            eof = True
        elif ((ord(char0) == 0xFC) and (ord(char1) == 0xFD)): # PID
            found = True
-           print("PID end dump")
-           print("PID dumpsize:",piddumpsize)
+           print("iPID: ",iPID, "PID end dump, size; ",piddumpsize)
+           if (piddumpsize != 504):
+               print("***iPID: ",iPID, "->PID dump size error, delta: ",504-piddumpsize)
            char0 = fichier.read(4)  # 4 fillers
        elif ((ord(char0) == 0xFD) and (ord(char1) == 0xFE)): # Motors
            found = True
-           print("Motor end dump")
-           print("motor dump size:",motordumpsize)
+           print("iMotor: ",iMotor, "Motor end dump, size; ",motordumpsize)
+           if (motordumpsize != 504):
+               print("***iMotor: ",iMotor, "->motor dump size error, delta: ",504-motordumpsize)
            char0 = fichier.read(4)  # 4 fillers
        elif (foundMotor):
               fichier.seek(-2,1)
@@ -70,8 +72,12 @@ while (not eof):
               twobytes2 = fichier.read(2) # motor2 16 bytes
               twobytes3 = fichier.read(2) # motor3 16 bytes
               fourbytes = fichier.read(4) # tick 32 bytes
-              if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 900000000)):    # tick>0
-                motordumpsize = motordumpsize+2+8+4    
+              if (int.from_bytes(fourbytes, byteorder='little',signed=False) == 0): # tick=0
+                print("***iMotor: ",iMotor, "->tick = 0 - previous tick: ",previous_tick)
+              if (int.from_bytes(fourbytes, byteorder='little',signed=False) > 2000):
+                print("***iMotor: ",iMotor, "->Data error, tick > 2000, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False)," - previous tick: ",previous_tick)
+              if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 2000)):    # tick OK
+                motordumpsize = motordumpsize+14    
                 TlogMotor[iMotor,0] = int.from_bytes(fourbytes, byteorder='little',signed=False) # tick
                 TlogMotor[iMotor,1] = int.from_bytes(twobytesT, byteorder='little',signed=True) # throttle
                 TlogMotor[iMotor,2] = int.from_bytes(twobytes0, byteorder='little',signed=True) # motor0
@@ -83,7 +89,7 @@ while (not eof):
                 iMotor = iMotor + 1
        elif ((ord(char0) != 0x00) and (ord(char0) != 0x01) and (ord(char0) != 0x02)):
               found = True
-              print("Data error, angle type should be between 0 and 2: ",ord(char0))
+              print("***Data error, angle type should be between 0 and 2: ",ord(char0))
        else:
            if (foundPID):
               char2 = fichier.read(1) # RC_commandRP
@@ -93,13 +99,15 @@ while (not eof):
               char6 = fichier.read(1) # anglePID
               char7 = fichier.read(1) # sampleTime
               fourbytes = fichier.read(4) # tick 32 bytes
-              if (int.from_bytes(fourbytes, byteorder='little',signed=False) > 900000000):
-                print("Data error, tick > 900000000, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False))
+              if (int.from_bytes(fourbytes, byteorder='little',signed=False) == 0): # tick=0
+                print("***iPID: ",iPID, "->tick = 0 - previous tick: ",previous_tick)
+              if (int.from_bytes(fourbytes, byteorder='little',signed=False) > 2000):
+                print("***iPID: ",iPID, "->Data error, tick > 2000, tick: ",int.from_bytes(fourbytes, byteorder='little',signed=False)," - previous tick: ",previous_tick)
               if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < previous_tick)):
-                print("iPID: ",iPID, "->Data error, tick ",int.from_bytes(fourbytes, byteorder='little',signed=False)," < previous tick ",previous_tick)                
-              if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 900000000)):    # tick>0
+                print("***iPID: ",iPID, "->Data error, tick ",int.from_bytes(fourbytes, byteorder='little',signed=False)," < previous tick ",previous_tick)                
+              if ((int.from_bytes(fourbytes, byteorder='little',signed=False) > 0) and (int.from_bytes(fourbytes, byteorder='little',signed=False) < 2000)):    # tick>0
                 previous_tick = int.from_bytes(fourbytes, byteorder='little',signed=False)
-                piddumpsize = piddumpsize+2+6+4 
+                piddumpsize = piddumpsize+12 
                 TlogPID[iPID,0] = int.from_bytes(fourbytes, byteorder='little',signed=False) # tick
                 TlogPID[iPID,1] = int.from_bytes(char0, byteorder='little',signed=False) # angle type
                 TlogPID[iPID,2] = int.from_bytes(char1, byteorder='little',signed=True) # angle
@@ -164,11 +172,12 @@ print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
-i=2001
-while (i <2500 ):
-  print("-------------", TlogPID[i,0])
-  print("TlogPID[i,1] ", TlogPID[i,1])
-  print("TlogPID[i,8] ", TlogPID[i,8])
+i=468
+while (i <510 ):
+  print("--------------------", i)
+  print("-------------", TlogMotor[i,0])
+  print("TlogMotor[i,1] ", TlogMotor[i,1])
+  print("TlogMotor[i,2] ", TlogMotor[i,2])
   i = i +1
 
 plt.title('Sample Time')
@@ -191,15 +200,16 @@ plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'b.-',label='YawPID',l
 plt.legend()
 plt.show()
 
+iMotordraw =468
 plt.title('Motors')
-plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,1],'k+-',label='Throttle',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,2],'r+',label='Front Left',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,3],'g+',label='Front Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,4],'b+',label='Rear Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotor,0],TlogMotor[0:iMotor,5],'y+',label='Rear Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,1],'k+-',label='Throttle',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,2],'r+',label='Front Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,3],'g+',label='Front Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,4],'b+',label='Rear Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,5],'y+',label='Rear Left',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
-iMotordraw =iMotor-100
+
 
 plt.title('Motors delta')
 plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,2]-TlogMotor[0:iMotordraw,1],'r+',label='Front Left',linewidth=1,markersize=1)
