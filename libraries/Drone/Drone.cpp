@@ -211,7 +211,7 @@ void DroneClass::Drone_pid() {
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-45;+45] for ROLL, PITCH and range [-90;+90] for YAW
   
-  if ((RC_command[THROTTLE] > 0) && (go != 1)) // reset PID and Yaw init if before starting
+  if ((RC_command[THROTTLE] > 0) && (go != 1)) // reset PID and Yaw init before starting
   {           
      go = 1; 
      for (int j=0;j<3;j++) {
@@ -234,7 +234,7 @@ void DroneClass::Drone_pid() {
           for(int z=PID_t; z< PIDLOGDATASIZE; z++) PID_record_block.PID_record[z].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
           if (count != 512) PRINTi2("bad count written PID following force dump: ",tick,count)
-          Serial.print("written PID following force dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
+          Serial.print("written PID following force dump,tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
           PID_t = 0;                                            
      }
 #endif     
@@ -324,7 +324,7 @@ void DroneClass::Drone_pid() {
        if (PID_t == PIDLOGDATASIZE) { // need to dump 
           count = logFile.write((const uint8_t *)&PID_record_block, 512);
           if (count != 512) PRINTi2("bad count written PID following need to dump: ",tick,count)
-          Serial.print("written PID following need to dump > tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
+          Serial.print("written PID following need to dump, tick: ");Serial.print(tick);Serial.print(" ,count: ");Serial.println(count);
           PID_t = 0;                                           
        }
     }
