@@ -1,12 +1,12 @@
 #include <Drone.h>
 
 // Logging mode
-//#define  LOGSERIAL
-#define LOGSDCARD  // log to SD Card
-#define AUTOFLUSH // auto flush following each write
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define AUTOFLUSH // auto flush following each write
 //#define LOGTRACE   // Enable trace
 #include <log.h>
-extern File logFile;   
+//extern File logFile;   
    
 CMPS12Class CMPS12;               // The Compass class    
 RCClass       RC;                 // The Radio Command class
@@ -197,7 +197,6 @@ void DroneClass::Drone_main() {
 void DroneClass::Drone_pid() {
   
   uint8_t status = 0; 
-  int count = -1;
 
   double RC_commandRP[3]; // commands Roll & Pitch & Yaw
   double angle[3]; // Roll & Pitch & Yaw measured
@@ -229,7 +228,8 @@ void DroneClass::Drone_pid() {
   }
   else if ((RC_command[THROTTLE] == 0) && (go != -1))  // already started
   { 
-#ifdef LOGSDCARD     
+#ifdef LOGSDCARD
+     int count = -1; 
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE; z++) PID_record_block.PID_record[z].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
