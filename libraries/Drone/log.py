@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,7 +8,8 @@ TlogPIDPitch = np.zeros((10000,8),dtype=int)
 TlogPIDYaw = np.zeros((10000,8),dtype=int)
 TlogMotor = np.zeros((10000,6),dtype=int)
 
-fichier = open("F:\log.txt","rb")
+filename = sys.argv[1]
+fichier = open(filename,"rb")
 
 char0 = 'a'
 char1 = 'b'
@@ -172,8 +174,8 @@ print("count PID Pitch: ",iPIDPitch)
 print("count PID Yaw: ",iPIDYaw)
 print("count Motor: ",iMotor)
 
-i=468
-while (i <510 ):
+i=1
+while (i <1 ):
   print("--------------------", i)
   print("-------------", TlogMotor[i,0])
   print("TlogMotor[i,1] ", TlogMotor[i,1])
@@ -199,26 +201,26 @@ plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,1],'k*-',label='Yaw',line
 plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'b.-',label='YawPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
-
-iMotordraw =468
+iMotordrawstart = 10
+iMotordraw =690
 plt.title('Motors')
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,1],'k+-',label='Throttle',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,2],'r+',label='Front Left',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,3],'g+',label='Front Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,4],'b+',label='Rear Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,5],'y+',label='Rear Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,1],'k+-',label='Throttle',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,2],'r+',label='Front Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,3],'g+',label='Front Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,4],'b+',label='Rear Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,5],'y+',label='Rear Left',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 
 
 plt.title('Motors delta')
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,2]-TlogMotor[0:iMotordraw,1],'r+',label='Front Left',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,3]-TlogMotor[0:iMotordraw,1],'g+',label='Front Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,4]-TlogMotor[0:iMotordraw,1],'b+',label='Rear Right',linewidth=1,markersize=1)
-plt.plot(TlogMotor[0:iMotordraw,0],TlogMotor[0:iMotordraw,5]-TlogMotor[0:iMotordraw,1],'y+',label='Rear Left',linewidth=1,markersize=1)
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,6],'c.-' ,label='RollPID',linewidth=1,markersize=1)
-plt.plot(TlogPIDPitch[0:iPIDPitch,0],TlogPIDPitch[0:iPIDPitch,6],'m.-',label='PitchPID',linewidth=1,markersize=1)
-plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,6],'k.-',label='YawPID',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,2]-TlogMotor[iMotordrawstart:iMotordraw,1],'r+',label='Front Left',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,3]-TlogMotor[iMotordrawstart:iMotordraw,1],'g+',label='Front Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,4]-TlogMotor[iMotordrawstart:iMotordraw,1],'b+',label='Rear Right',linewidth=1,markersize=1)
+plt.plot(TlogMotor[iMotordrawstart:iMotordraw,0],TlogMotor[iMotordrawstart:iMotordraw,5]-TlogMotor[iMotordrawstart:iMotordraw,1],'y+',label='Rear Left',linewidth=1,markersize=1)
+plt.plot(TlogPIDRoll[iMotordrawstart:iPIDRoll,0]  ,TlogPIDRoll[iMotordrawstart:iPIDRoll,6],'c.-' ,label='RollPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[iMotordrawstart:iPIDPitch,0],TlogPIDPitch[iMotordrawstart:iPIDPitch,6],'m.-',label='PitchPID',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[iMotordrawstart:iPIDYaw,0]    ,TlogPIDYaw[iMotordrawstart:iPIDYaw,6],'k.-',label='YawPID',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
 
