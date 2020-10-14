@@ -37,10 +37,10 @@ int motor_t = 0;
 
 void MotorESCClass::MotorESC_itimer()
 {
-  PRINT("Timer Motor 1: ",Motor1.itimer())
-  PRINT("Timer Motor 2: ",Motor2.itimer())
-  PRINT("Timer Motor 3: ",Motor3.itimer())
-  PRINT("Timer Motor 4: ",Motor4.itimer())
+  PRINT("Motor 1 attached: ",Motor1.attached())
+  PRINT("Motor 2 attached: ",Motor2.attached())
+  PRINT("Motor 3 attached: ",Motor3.attached())
+  PRINT("Motor 4 attached: ",Motor4.attached())
 }    
     
 MotorESCClass::MotorESCClass()

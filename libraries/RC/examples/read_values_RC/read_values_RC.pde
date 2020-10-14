@@ -5,7 +5,7 @@ RCClass RC;
 void setup()
 {
   
-  Serial.begin(9600); // initialize serial port
+  Serial.begin(115200); // initialize serial port
   
   Serial.println("Start Init" );  
   

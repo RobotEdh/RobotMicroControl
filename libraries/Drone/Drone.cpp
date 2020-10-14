@@ -4,7 +4,7 @@
 //#define  LOGSERIAL
 #define LOGSDCARD  // log to SD Card
 #define AUTOFLUSH // auto flush following each write
-//#define LOGTRACE   // Enable trace
+#define LOGTRACE   // Enable trace
 #include <log.h>
 extern File logFile;   
    
@@ -197,7 +197,6 @@ void DroneClass::Drone_main() {
 void DroneClass::Drone_pid() {
   
   uint8_t status = 0; 
-  int count = -1;
 
   double RC_commandRP[3]; // commands Roll & Pitch & Yaw
   double angle[3]; // Roll & Pitch & Yaw measured
@@ -207,6 +206,8 @@ void DroneClass::Drone_pid() {
   static double last_error[3] = {0.0,0.0,0.0};
   static double last_delta_error[3] = {0.0,0.0,0.0};
   static double sum_error[3] = {0.0,0.0,0.0};
+  
+  int count = -1; 
 
   // Get RC commands
   RC.RC_getCommands(RC_command); // int16_t range [-45;+45] for ROLL, PITCH and range [-90;+90] for YAW
@@ -229,7 +230,7 @@ void DroneClass::Drone_pid() {
   }
   else if ((RC_command[THROTTLE] == 0) && (go != -1))  // already started
   { 
-#ifdef LOGSDCARD     
+#ifdef LOGSDCARD
      if (PID_t > 0) { // force dump
           for(int z=PID_t; z< PIDLOGDATASIZE; z++) PID_record_block.PID_record[z].tick = 0;// reset end tab 
           count = logFile.write((const uint8_t *)&PID_record_block,  512);  
