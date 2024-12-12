@@ -20,7 +20,6 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
     thisk = PINK;          // read PORT K  
     currTime = micros();
     
-    //THROTTLE
     if ((thisk ^ lastk) & 0x01) {   // RK0 changed 
       if (!(thisk &  0x01)) {       // RK0 is low => compute duration high level                        
         dTime = currTime-edgeTime[THROTTLE];                            
@@ -31,8 +30,7 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
       else
         edgeTime[THROTTLE] = currTime; // RK0 is high => store time rising high level                            
     }        
-       
-    //ROLL    
+        
     if ((thisk ^ lastk) &  0x02) {  // RK1 changed 
       if (!(thisk & 0x02)) {       // RK1 is low => compute duration high level                        
         dTime = currTime-edgeTime[ROLL];                             
@@ -44,7 +42,6 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
         edgeTime[ROLL] = currTime; // RK1 is high => store time rising high level                            
     }        
 
-    // PITCH
     if ((thisk ^ lastk) & 0x04) {  // RK2 changed  
       if (!(thisk & 0x04)) {       // RK2 is low => compute duration high level                        
         dTime = currTime-edgeTime[PITCH];                             
@@ -56,7 +53,6 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
         edgeTime[PITCH] = currTime; // RK2 is high => store time rising high level                            
     } 
     
-    //YAW
     if ((thisk ^ lastk) & 0x08) {  // RK3 changed
       if (!(thisk & 0x08)) {       // RK3 is low => compute duration high level                        
         dTime = currTime-edgeTime[YAW];                             
@@ -68,7 +64,6 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
         edgeTime[YAW] = currTime; // RK3 is high  => store time rising high level                           
     }            
     
-    //AUX1 
     if ((thisk ^ lastk) & 0x10) {  // RK4 changed   
       if (!(thisk & 0x10)) {       // RK4 is low => compute duration high level                        
         dTime = currTime-edgeTime[AUX1];                             
@@ -80,7 +75,6 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
         edgeTime[AUX1] = currTime; // RK4 is high  => store time rising high level                           
     }
     
-    //AUX2
     if ((thisk ^ lastk) & 0x20) {  // RK5 changed    
       if (!(thisk & 0x20)) {       // RK5 is low  => compute duration high level                       
         dTime = currTime-edgeTime[AUX2];                             
@@ -129,6 +123,12 @@ A15	  PCINT23 (PCMSK2 / PCIF2 / PCIE2) PK7
   rcValue[YAW]      = MIDPPM;
   rcValue[AUX1]     = MINPPM;
   rcValue[AUX2]     = MINPPM;
+  
+  // compute linear coefficients before and after the neutral band.
+  _a1 = MAXSPEED / (MIDPPM - NEUTRALBAND - MINPPM);
+  _b1 = -MAXSPEED - (_a1 * MINPPM);
+  _a2 = MAXSPEED / (MAXPPM - MIDPPM + NEUTRALBAND);
+  _b2 = -_a2 * (MIDPPM + NEUTRALBAND);
 }
 
 
@@ -149,12 +149,60 @@ void RCClass::RC_getCommands(int16_t RC_command[NBCHANNELS])
   
   for (int i = 0; i < NBCHANNELS; i++) {         // read data from all channels
         RC_data = (double)RC_readRaw(i);
-        
-        if ((i == ROLL) || (i == PITCH)) RC_command[i] = (int16_t)(RC_data - MIDPPM)* 45.0 * 2.0 /(MAXPPM -MINPPM); // roll, pitch convert to range [-45;+45]
-        else if (i == YAW)               RC_command[i] = (int16_t)(RC_data - MIDPPM)* 90.0 * 2.0 /(MAXPPM -MINPPM); // yaw convert to range [-90;+90]        
-        else if (i == THROTTLE) { if (RC_data < 1.1*MINPPM) RC_command[i] = 0; else RC_command[i] = (int16_t)RC_data;}           // throttle 
+        if (RC_data > MAXPPM) RC_data = MAXPPM; 
+        if (RC_data < MINPPM) RC_data = MINPPM; 
+            
+        if ((i == ROLL) || (i == PITCH)) { 
+           if ((RC_data > MIDPPM+NEUTRALBAND) || (RC_data < MIDPPM-NEUTRALBAND)) RC_command[i] = (int16_t)(RC_data - MIDPPM)* 45.0 * 2.0 /(MAXPPM -MINPPM); // roll, pitch converted to range [-45;+45]
+           else                                                                  RC_command[i] = 0; 
+        }     
+        else if (i == YAW) { 
+           if ((RC_data > MIDPPM+NEUTRALBAND) || (RC_data < MIDPPM-NEUTRALBAND)) RC_command[i] = (int16_t)(RC_data - MIDPPM)* 90.0 * 2.0 /(MAXPPM -MINPPM); // yaw converted to range [-90;+90] 
+           else                                                                  RC_command[i] = 0; 
+        }           
+        else if (i == THROTTLE) { if (RC_data < 1.1*MINPPM) RC_command[i] = 0; else RC_command[i] = (int16_t)RC_data;}           // throttle = PPM [1100;2000]
         else if (i == AUX1) { if (RC_data > 0.9*MAXPPM)     RC_command[i] = 1; else RC_command[i] = 0;}                          // aux1
         else if (i == AUX2) { if (RC_data > 0.9*MAXPPMAUX2) RC_command[i] = 1; else RC_command[i] = 0;}                          // aux2    
   } // end for
 
+}
+
+void RCClass::RC_getAngularSpeedCommands(double RC_angularspeedcommand[NBCHANNELS])
+{
+    
+  double RC_data;
+  
+  for (int i = 0; i < NBCHANNELS; i++) {         // read data from all channels
+        RC_data = (double)RC_readRaw(i);
+        
+        if ((i == ROLL) || (i == PITCH) || (i == YAW)) {
+            if (RC_data > MIDPPM+NEUTRALBAND)      RC_angularspeedcommand[i] = (_a1 * RC_data) + _b1;
+            else if (RC_data < MIDPPM-NEUTRALBAND) RC_angularspeedcommand[i] = (_a2 * RC_data) + _b2;
+            else                                   RC_angularspeedcommand[i] = 0.0;    
+        }
+        else if (i == THROTTLE) { if (RC_data < 1.1*MINPPM) RC_angularspeedcommand[i] = 0.0; else RC_angularspeedcommand[i] = RC_data;}           // throttle 
+        else if (i == AUX1) { if (RC_data > 0.9*MAXPPM)     RC_angularspeedcommand[i] = 1; else RC_angularspeedcommand[i] = 0;}                          // aux1
+        else if (i == AUX2) { if (RC_data > 0.9*MAXPPMAUX2) RC_angularspeedcommand[i] = 1; else RC_angularspeedcommand[i] = 0;}                          // aux2    
+  } // end for
+
+  // change signes
+  RC_angularspeedcommand[PITCH] = -RC_angularspeedcommand[PITCH];
+  
+}
+
+double RCClass::RC_get_a1()
+{
+  return _a1;
+}
+double RCClass::RC_get_b1()
+{
+  return _b1;
+}
+double RCClass::RC_get_a2()
+{
+  return _a2;
+}
+double RCClass::RC_get_b2()
+{
+  return _b2;
 }

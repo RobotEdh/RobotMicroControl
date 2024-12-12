@@ -2,7 +2,7 @@
 
 // Data wire is plugged into port 38 on the Arduino
 // Connect a 4.7K resistor between VCC and the data pin (strong pullup)
-#define DHT22_PIN 38
+#define DHT22_PIN 7
 
 // Setup a DHT22 instance
 DHT22Class DHT22;

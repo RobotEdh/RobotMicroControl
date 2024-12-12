@@ -20,9 +20,12 @@ void loop()
 {
   long starttime;
   int16_t RC_command[NBCHANNELS];
-  const char *szChannels[] = {"THROTTLE", "ROLL", "PITCH", "YAW", "AUX1", "AUX2"};
+  const char *szChannels[] = {"ROLL", "PITCH", "YAW",  "THROTTLE", "AUX1", "AUX2"};
   
   Serial.println("move tick for 5s to get RC Commands"); 
+  Serial.println("roll, pitch converted to range [-45;+45]"); 
+  Serial.println("yaw converted to range [-90;+90]"); 
+  Serial.println("throttle = PPM [1100;2000]"); 
   delay(5*1000);
   starttime = millis();
   

@@ -5,8 +5,10 @@
 #include <Wire.h>
 
 
-#define ADDRESS_DEFAULT 0X69 //AD0 logiv level set to high
-#define MPU6050_ID 0x69
+#define LED 13    // LED 
+
+#define ADDRESS_DEFAULT 0X69 //AD0 logic level set to high
+#define MPU6050_ID 0x68
 
 #define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
 #define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
@@ -14,6 +16,10 @@
 #define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+
+const double FE_ACCEL = 4096.0; // scale factor accelerometer for AFS_SEL = 2 
+const double FE_GYRO = 65.5;    // scale factor gyro  for FS_SEL = 1
+
 
 
 class MPU6050Class
@@ -39,38 +45,47 @@ class MPU6050Class
 
     MPU6050Class();
     
-    uint8_t MPU6050_init(void);
-    uint8_t MPU6050_CheckDeviceID(void);
-            
-    void MPU6050_writeReg(uint8_t reg, uint8_t value);
-
+     void MPU6050_writeReg(uint8_t reg, uint8_t value);
     uint8_t  MPU6050_readReg(uint8_t reg);
     int16_t MPU6050_readReg16BitHL(uint8_t reg);
+
+    uint8_t MPU6050_init(void);
+    uint8_t MPU6050_checkDeviceID(void);
+    uint8_t MPU6050_calibrate(void);
     
-    double MPU6050_getTemperature(void);
+    uint8_t MPU6050_read_raw_roll_pitch_yaw();
+    uint8_t MPU6050_compute_accel_gyro(double accel[3],double gyro[3]);
+    uint8_t MPU6050_compute_angle_gyro(uint32_t dt, double angle[2], double gyro[3]);
+       
+    uint8_t MPU6050_getStatus(void);
+    uint8_t MPU6050_getAddress(void);
+    void    MPU6050_getZero(double accel[3],double gyro[3]);
+    double  MPU6050_getTemperature(void);
+  
+    // OLD functions
+    uint8_t MPU6050_get_roll_pitch_yaw(double angle[3]);
+
     double MPU6050_getAccel_x(void);
     double MPU6050_getAccel_y(void);
     double MPU6050_getAccel_z(void);
     double MPU6050_getGyro_x(void);
     double MPU6050_getGyro_y(void);
     double MPU6050_getGyro_z(void);
-    
-    uint8_t MPU6050_calibrate(void);
-    
-    uint8_t MPU6050_get_roll_pitch_yaw(double angle[3]);
-    
-    uint8_t MPU6050_getStatus(void);
-    uint8_t MPU6050_getAddress(void);
+ 
     
   private:
     uint8_t _address;
     uint8_t _last_status;
     uint8_t _last_nb_receive; 
-    long _previousTime, _currentTime;
-    double _ax_zero, _ay_zero, _az_zero;
-    double _gyrox_zero, _gyroy_zero, _gyroz_zero;
+    uint32_t _previousTime, _currentTime;
+    int16_t _accel_raw_x, _accel_raw_y, _accel_raw_z;
+    int16_t _gyro_raw_roll, _gyro_raw_pitch, _gyro_raw_yaw;
+    int16_t _temperature;
+    double _accel_zero_x, _accel_zero_y, _accel_zero_z;
+    double _gyro_zero_roll, _gyro_zero_pitch, _gyro_zero_yaw; 
+    double _accel_filter_x, _accel_filter_y, _accel_filter_z;
+    double _gyro_filter_roll, _gyro_filter_pitch, _gyro_filter_yaw; 
     double _previous_roll, _previous_pitch;
-    double _a;
 };
 
 #endif
