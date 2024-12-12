@@ -9,13 +9,14 @@ double incrementdebug = 5.0;
 
 
 // Logging mode
-//#define  LOGSERIAL
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+#include <log.h> //SPI CS=10 for SD Card
 
-#define LOGSDCARD  // log to SD Card
 #ifdef  LOGSDCARD
 #define AUTOFLUSH // auto flush following each write
 //#define LOGTRACE   // Enable trace
-#include <log.h> //SPI CS=10 
+
 File logFile; 
 int countwrite = -1; 
 
@@ -460,7 +461,13 @@ uint8_t Drone3Class::Drone_init_ICM20948()
   status = ICM20948.ICM20948_startupDefault(false); // don't start Magnetometer
   if (status > 0)
   {
-    PRINT("Init ICM20948 KO, startupDefault error:",status)
+    switch (status) {
+        case CHECK_DEVICE_ERROR: PRINTs("Init ICM20948 KO, startupDefault error: CHECK_DEVICE_ERROR")
+             break;
+        case CHECK_STARTUP_ERROR: PRINTs("Init ICM20948 KO, startupDefault error: CHECK_STARTUP_ERROR")
+             break;
+        default: PRINT("Init ICM20948 KO, startupDefault failed, status: ", status)
+    } 
     return status;   
   }
 
