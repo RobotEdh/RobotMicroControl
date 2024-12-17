@@ -146,10 +146,9 @@ Reset FIFO through FIFO_RST.
 Assert and hold to set FIFO size to 0. Assert and de-assert to reset FIFO.
     FIFO_RESET[4:0]]= 1111
     FIFO_RESET[4:0]]= 1110
-    FIFO_RESET[4:0]]= 0000
     ICM20948_REG_FIFO_RST
     Reset Value: 0x00 0000 0000
-    new Value:        0000 0000 
+    new Value:        0001 1110 
  
  3.4 Configuring Sensor Sample Rate
 Set gyro sample rate divider with GYRO_SMPLRT_DIV.
@@ -166,7 +165,7 @@ Set accel sample rate divider with ACCEL_SMPLRT_DIV_1. + ACCEL_SMPLRT_DIV_2
     ACCEL_SMPLRT_DIV[7:0] = 0001 0011
     ICM20948_REG_ACCEL_SMPLRT_DIV_2 (LSB)
     Reset Value: 0x00 0000 0000
-    new Value:        0001 0011 
+    new Value:   0x1E 0001 0011 
 
 3.5 Configuring the DMP start address
 Setup DMP start address 0x1000 through PRGM_STRT_ADDRH/PRGM_STRT_ADDRL.
@@ -177,15 +176,27 @@ DMP_REG_PRGM_START_ADDRL= 0000 0000
 Loading DMP Firmware
    Make sure chip is awake
    ICM_20948_sleep (false)
+   SLEEP[6:6]=0
+   ICM20948_REG_PWR_MGMT_1
+   old Value: 0x01 0000 0001
+   new Value: 0x01 0000 0001
 
    Make sure chip is not in low power state
-   ICM_20948_low_power(pdev, false
-
-   Put chip into low power state
-   ICM20948_lowPower(true); 
-
+   ICM20948_lowPower(false); 
+   LP_EN[5:5]=0
+   ICM20948_REG_PWR_MGMT_1
+   old Value: 0x01 0000 0001
+   new Value: 0x01 0000 0001
+  
    Write the 2 byte Firmware Start Value to ICM PRGM_STRT_ADDRH/PRGM_STRT_ADDRL
-
+   
+   
+   Enable LP_EN since we disabled it at begining of this function.
+   ICM20948_lowPower(true); // Put chip into low power state
+   LP_EN[5:5]=1
+   ICM20948_REG_PWR_MGMT_1
+   old Value: 0x01 0000 0001
+   new Value: 0x21 0010 0001
 
 Set the Single FIFO Priority Select register to 0xE4 
 DMP_REG_SINGLE_FIFO_PRIORITY_SEL = 0xE4
@@ -239,10 +250,6 @@ The mount matrix write to DMP register is used to align the compass axes with ac
   const unsigned char compassRate[2] = {0x00, 0x45}; // 69Hz
   result = writeDMPmems(CPASS_TIME_BUFFER, 2, &compassRate[0]); if (result > worstResult) worstResult = result;
 
-
-3.9 Reset FIFO and DMP
-Reset FIFO with FIFO_RST.
-Reset DMP with USER_CTRL.
 
 
 

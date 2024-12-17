@@ -43,12 +43,14 @@ void ICM20948Class::ICM20948_initializeI2C()
 #endif
 
 void ICM20948Class::ICM20948_initializeSPI(uint8_t slaveSelectPin)
-{ 
+{   
+  Serial.begin(115200);  // 115200 bauds
+  
   Serial.println("Start ICM20948_initializeSPI");
   
    _SPIfreq= F_CPU/4;
   if (_SPIfreq > SPI_SPEEDMAXIMUM) _SPIfreq = SPI_SPEEDMAXIMUM;
-  Serial.print("_SPIfreq: "); Serial.println(_SPIfreq);
+  Serial.print("SPIfreq: "); Serial.println(_SPIfreq);
   Serial.print("SPISETTINGS_DATAORDER: "); Serial.println(SPISETTINGS_DATAORDER);
   Serial.print("SPISETTINGS_DATAMODE: "); Serial.println(SPISETTINGS_DATAMODE,HEX);
   Serial.print("Slave Select Pin: "); Serial.println(slaveSelectPin);
@@ -67,106 +69,278 @@ void ICM20948Class::ICM20948_initializeSPI(uint8_t slaveSelectPin)
   Serial.println("End ICM20948_initializeSPI");
 }
 
-uint8_t ICM20948Class::ICM20948_checkDeviceID()
+void ICM20948Class::ICM20948_ICM20948WhoIAm()
 {
     uint8_t deviceID = 0;
     
     ICM20948_readBankReg(ICM20948_REG_WHO_AM_I, &deviceID);
-    if (_last_status > 0) return _last_status;
+    if (_last_status > 0) return;
    
-    //Serial.print(F("ICM20948_checkDeviceID - deviceID: "));Serial.println(deviceID,HEX);     
+    //Serial.print(F("ICM20948_ICM20948WhoIAm - deviceID: "));Serial.println(deviceID,HEX);     
      
-    if (deviceID != ICM20948_ID) _last_status = CHECK_DEVICE_ERROR; 
+    if (deviceID != ICM20948_WHO_AM_I) _last_status = CHECK_DEVICE_ICM20948_ERROR;    
     
-    return _last_status;      
+    return;      
 }
 
-uint8_t ICM20948Class::ICM20948_checkStartup()
+void ICM20948Class::ICM20948_checkStartup()
 {
     uint8_t regval = 0;
     
     ICM20948_readBankReg(ICM20948_REG_PWR_MGMT_1, &regval);
-    if (_last_status > 0) return _last_status;
-           
-    if (regval == REG_PWR_MGMT_1_VAL_STARTUP) return 0;
-    else return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_PWR_MGMT_1_VAL_STARTUP)
+    {
+        Serial.print(F("ICM20948_checkStartup - ICM20948_REG_PWR_MGMT_1, expected value: "));Serial.print(REG_PWR_MGMT_1_VAL_STARTUP,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
         
     ICM20948_readBankReg(ICM20948_REG_INT_ENABLE_1, &regval);
-    if (_last_status > 0) return _last_status;
-           
-    if (regval == REG_INT_ENABLE_1_VAL_STARTUP) return 0;
-    else return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_INT_ENABLE_1_VAL_STARTUP)
+    {
+        Serial.print(F("ICM20948_checkStartup - ICM20948_REG_INT_ENABLE_1, expected value: "));Serial.print(REG_INT_ENABLE_1_VAL_STARTUP,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
     
     ICM20948_readBankReg(ICM20948_REG_INT_ENABLE_2, &regval);
-    if (_last_status > 0) return _last_status;
-           
-    if (regval == REG_INT_ENABLE_2_VAL_STARTUP) return 0;
-    else return regval;       
+    if (_last_status > 0) return;          
+    if (regval != REG_INT_ENABLE_2_VAL_STARTUP)
+    {
+        Serial.print(F("ICM20948_checkStartup - ICM20948_REG_INT_ENABLE_2, expected value: "));Serial.print(REG_INT_ENABLE_2_VAL_STARTUP,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }     
     
     ICM20948_readBankReg(ICM20948_REG_FIFO_EN_1, &regval);
-    if (_last_status > 0) return _last_status;
-           
-    if (regval == REG_FIFO_EN_1_VAL_STARTUP) return 0;
-    else return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_FIFO_EN_1_VAL_STARTUP)
+    {
+        Serial.print(F("ICM20948_checkStartup - ICM20948_REG_FIFO_EN_1, expected value: "));Serial.print(REG_FIFO_EN_1_VAL_STARTUP,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
     
     ICM20948_readBankReg(ICM20948_REG_FIFO_EN_2, &regval);
-    if (_last_status > 0) return _last_status;
-           
-    if (regval == REG_FIFO_EN_2_VAL_STARTUP) return 0;
-    else return regval;   
-        
-              
+    if (_last_status > 0) return;          
+    if (regval != REG_FIFO_EN_2_VAL_STARTUP)
+    {
+        Serial.print(F("ICM20948_checkStartup - ICM20948_REG_FIFO_EN_2, expected value: "));Serial.print(REG_FIFO_EN_2_VAL_STARTUP,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    return;          
 }
 
-uint8_t ICM20948Class::ICM20948_checkStep1()
+void ICM20948Class::ICM20948_checkDMP1()
 {
     uint8_t regval = 0;
     
     ICM20948_readBankReg(ICM20948_REG_PWR_MGMT_1, &regval);
-    if (_last_status > 0) return _last_status;    
-    if (regval != REG_PWR_MGMT_1_VAL_S1)
-    {   
-         Serial.print(F("ICM20948_checkStep1 - ICM20948_REG_PWR_MGMT_1]: "));printBinary(regval);Serial.print(F(" <> "));printBinary(REG_PWR_MGMT_1_VAL_S1);Serial.println(F(" "));  
-         return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_PWR_MGMT_1_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_PWR_MGMT_1, expected value: "));Serial.print(REG_PWR_MGMT_1_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
     }
     
     ICM20948_readBankReg(ICM20948_REG_PWR_MGMT_2, &regval);
-    if (_last_status > 0) return _last_status;    
-    if (regval != REG_PWR_MGMT_2_VAL_S1)
-    {   
-         Serial.print(F("ICM20948_checkStep1 - ICM20948_REG_PWR_MGMT_2]: "));printBinary(regval);Serial.print(F(" <> "));printBinary(REG_PWR_MGMT_2_VAL_S1);Serial.println(F(" "));  
-         return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_PWR_MGMT_2_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_PWR_MGMT_2, expected value: "));Serial.print(REG_PWR_MGMT_2_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
     }
     
     ICM20948_readBankReg(ICM20948_REG_LP_CONFIG, &regval);
-    if (_last_status > 0) return _last_status;    
-    if (regval != REG_LP_CONFIG_VAL_S1)
-    {   
-         Serial.print(F("ICM20948_checkStep1 - ICM20948_REG_LP_CONFIG]: "));printBinary(regval);Serial.print(F(" <> "));printBinary(REG_LP_CONFIG_VAL_S1);Serial.println(F(" "));  
-         return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_LP_CONFIG_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_LP_CONFIG, expected value: "));Serial.print(REG_LP_CONFIG_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
     }
            
     ICM20948_readBankReg(ICM20948_REG_USER_CTRL, &regval);
-    if (_last_status > 0) return _last_status;    
-    if (regval != REG_USER_CTRL_VAL_S1)
-    {   
-         Serial.print(F("ICM20948_checkStep1 - ICM20948_REG_USER_CTRL]: "));printBinary(regval);Serial.print(F(" <> "));printBinary(REG_USER_CTRL_VAL_S1);Serial.println(F(" "));  
-        //FIXME return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_USER_CTRL_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_USER_CTRL_2, expected value: "));Serial.print(REG_USER_CTRL_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
     }
+    
+    ICM20948_readBankReg(ICM20948_REG_FIFO_RST, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_FIFO_RST_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_FIFO_RST, expected value: "));Serial.print(REG_FIFO_RST_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+     
                
     ICM20948_readBankReg(ICM20948_REG_GYRO_CONFIG_1, &regval);
-    if (_last_status > 0) return _last_status;    
-    if (regval != REG_GYRO_CONFIG_1_VAL_S1)
-    {   
-         Serial.print(F("ICM20948_checkStep1 - ICM20948_REG_GYRO_CONFIG_1]: "));printBinary(regval);Serial.print(F(" <> "));printBinary(REG_GYRO_CONFIG_1_VAL_S1);Serial.println(F(" "));  
-         return regval;
+    if (_last_status > 0) return;          
+    if (regval != REG_GYRO_CONFIG_1_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_GYRO_CONFIG_1, expected value: "));Serial.print(REG_GYRO_CONFIG_1_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
     }
-    return 0;
+    
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_CONFIG, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_CONFIG_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_ACCEL_CONFIG, expected value: "));Serial.print(REG_ACCEL_CONFIG_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+    
+    ICM20948_readBankReg(ICM20948_REG_GYRO_SMPLRT_DIV, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_GYRO_SMPLRT_DIV_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_GYRO_SMPLRT_DIV, expected value: "));Serial.print(REG_GYRO_SMPLRT_DIV_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_1, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_SMPLRT_DIV_1_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_ACCEL_SMPLRT_DIV_1, expected value: "));Serial.print(REG_ACCEL_SMPLRT_DIV_1_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_2, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_SMPLRT_DIV_2_VAL_DMP1)
+    {
+        Serial.print(F("ICM20948_checkDMP1 - ICM20948_REG_ACCEL_SMPLRT_DIV_2, expected value: "));Serial.print(REG_ACCEL_SMPLRT_DIV_2_VAL_DMP1,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }    
+        
+    return;
+}
+
+void ICM20948Class::ICM20948_checkDMP2()
+{
+    uint8_t regval = 0;
+    
+    ICM20948_readBankReg(ICM20948_REG_PWR_MGMT_1, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_PWR_MGMT_1_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_PWR_MGMT_1, expected value: "));Serial.print(REG_PWR_MGMT_1_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    
+    ICM20948_readBankReg(ICM20948_REG_PWR_MGMT_2, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_PWR_MGMT_2_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_PWR_MGMT_2, expected value: "));Serial.print(REG_PWR_MGMT_2_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    
+    ICM20948_readBankReg(ICM20948_REG_LP_CONFIG, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_LP_CONFIG_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_LP_CONFIG, expected value: "));Serial.print(REG_LP_CONFIG_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+           
+    ICM20948_readBankReg(ICM20948_REG_USER_CTRL, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_USER_CTRL_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_USER_CTRL_2, expected value: "));Serial.print(REG_USER_CTRL_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    
+    ICM20948_readBankReg(ICM20948_REG_FIFO_RST, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_FIFO_RST_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_FIFO_RST, expected value: "));Serial.print(REG_FIFO_RST_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+     
+               
+    ICM20948_readBankReg(ICM20948_REG_GYRO_CONFIG_1, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_GYRO_CONFIG_1_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_GYRO_CONFIG_1, expected value: "));Serial.print(REG_GYRO_CONFIG_1_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_CONFIG, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_CONFIG_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_ACCEL_CONFIG, expected value: "));Serial.print(REG_ACCEL_CONFIG_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+    
+    ICM20948_readBankReg(ICM20948_REG_GYRO_SMPLRT_DIV, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_GYRO_SMPLRT_DIV_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_GYRO_SMPLRT_DIV, expected value: "));Serial.print(REG_GYRO_SMPLRT_DIV_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_1, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_SMPLRT_DIV_1_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_ACCEL_SMPLRT_DIV_1, expected value: "));Serial.print(REG_ACCEL_SMPLRT_DIV_1_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }
+    
+    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_2, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_ACCEL_SMPLRT_DIV_2_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - ICM20948_REG_ACCEL_SMPLRT_DIV_2, expected value: "));Serial.print(REG_ACCEL_SMPLRT_DIV_2_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+    
+    ICM20948_readBankReg(DMP_REG_SINGLE_FIFO_PRIORITY_SEL, &regval);
+    if (_last_status > 0) return;          
+    if (regval != REG_SINGLE_FIFO_PRIORITY_SEL_VAL_DMP2)
+    {
+        Serial.print(F("ICM20948_checkDMP2 - DMP_REG_SINGLE_FIFO_PRIORITY_SEL, expected value: "));Serial.print(REG_SINGLE_FIFO_PRIORITY_SEL_VAL_DMP2,HEX);Serial.print(F(", current value: "));Serial.println(regval,HEX);  
+       _last_status = CHECK_REGISTER_ERROR;
+       return;
+    }  
+        
+    return;
 }
 
 uint8_t ICM20948Class::ICM20948_startupDefault(bool Magnetometer)
 {
-  int8_t result = 0;
+  Serial.println("Start  ICM20948_startupDefault"); 
   
   ICM20948_reset();
   if (_last_status > 0) return _last_status;
@@ -180,35 +354,28 @@ uint8_t ICM20948Class::ICM20948_startupDefault(bool Magnetometer)
   if (_last_status > 0) return _last_status;
 
   if (Magnetometer) {
-     result = ICM20948_startupMagnetometer(); // startupMagnetometer
+     uint8_t result = ICM20948_startupMagnetometer(); // startupMagnetometer
      if (_last_status > 0) {   
-        Serial.println(F("ICM20948_checkStep1 - ICM20948_startupMagnetometer KO"));
+        Serial.println(F("ICM20948_startupDefault - ICM20948_startupMagnetometer KO"));
         Serial.print(F("result: "));Serial.print(result);Serial.print(F("  _last_status: "));Serial.println(_last_status);
         return _last_status;
      }
   }
    
-  result = ICM20948_checkDeviceID();
-  if (result > 0) 
-  {
-     _last_status = CHECK_DEVICE_ERROR;
-     return result;
-  }
+  ICM20948_ICM20948WhoIAm();
+  if (_last_status > 0) return _last_status;
    
-  result = ICM20948_checkStartup();
-  if (result > 0)
-  {
-     _last_status = CHECK_STARTUP_ERROR;
-     return result;
-  } 
-
-  return 0;
+  ICM20948_checkStartup();
+  if (_last_status > 0) return _last_status;
+    
+  Serial.println("End OK ICM20948_startupDefault"); 
+  
+  return CHECK_NO_ERROR;
 }
 
 uint8_t ICM20948Class::ICM20948_initializeDMP(bool Magnetometer)
 {
-    //PRINTs(">>>Start  DMP_init") 
-    Serial.println("Start ICM20948_initializeDMP"); 
+    Serial.println("Start  ICM20948_initializeDMP"); 
     
     if (Magnetometer)
     {
@@ -315,29 +482,9 @@ uint8_t ICM20948Class::ICM20948_initializeDMP(bool Magnetometer)
     // Config Accel sample rate divider = 19 ODR = 1.125 kHz/(1+ACCEL_SMPLRT_DIV[11:0]) = 56.25HZ InvenSense Nucleo example uses 19 (0x13).
     ICM20948_setSampleRateAccel(0x13);
     if (_last_status > 0) return _last_status;  
-   
-    uint8_t buf;
-    ICM20948_readBankReg(ICM20948_REG_ACCEL_CONFIG, &buf);
-    Serial.print("ICM20948_REG_ACCEL_CONFIG = ");Serial.println(buf,BIN);
-
-
-    ICM20948_readBankReg(ICM20948_REG_FIFO_RST, &buf);
-    Serial.print("ICM20948_REG_FIFO_RST = ");Serial.println(buf,BIN);
- 
-   
-    ICM20948_readBankReg(ICM20948_REG_GYRO_SMPLRT_DIV, &buf);
-    Serial.print("ICM20948_REG_GYRO_SMPLRT_DIV = ");Serial.println(buf,BIN);   
-    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_1, &buf);
-    Serial.print("ICM20948_REG_ACCEL_SMPLRT_DIV_1 = ");Serial.println(buf,BIN);  
-    ICM20948_readBankReg(ICM20948_REG_ACCEL_SMPLRT_DIV_2, &buf);
-    Serial.print("ICM20948_REG_ACCEL_SMPLRT_DIV_2 = ");Serial.println(buf,BIN);  
-    
-     uint8_t result = ICM20948_checkStep1();
-     if (result > 0)
-     {
-        _last_status = 3;
-        return result;
-    }
+  
+    ICM20948_checkDMP1();
+    if (_last_status > 0) return _last_status;
  
 /*
 3.5 Configuring the DMP start address
@@ -474,19 +621,12 @@ The mount matrix write to DMP register is used to align the compass axes with ac
   const uint8_t compassRate[2] = {0x00, 0x45}; // 69Hz
   ICM20948_write_mems(CPASS_TIME_BUFFER, 2, &compassRate[0]);
   if (_last_status > 0) return _last_status;
-
-  //Reset FIFO
-  //ICM20948_resetFIFO();
-  if (_last_status > 0) return _last_status;
     
-  //Reset DMP
-  //ICM20948_resetDMP();
-  if (_last_status > 0) return _last_status; 
-    
-     
-  //PRINTs("<<<End OK DMP_init")
-
-    return 0;
+  ICM20948_checkDMP2();
+  if (_last_status > 0) return _last_status;   
+  
+  Serial.println("End OK ICM20948_initializeDMP"); 
+  return _last_status;
 }
 
 #ifdef I2C
@@ -721,7 +861,6 @@ void ICM20948Class::ICM20948_writeBankReg(uint16_t bankreg, const uint8_t regval
  ICM20948_writeReg((uint8_t)(bankreg), regval);
 #endif
 
- 
  return;
 }
 
@@ -1032,14 +1171,14 @@ void ICM20948Class::ICM20948_resetFIFO()
       
   // Assert and hold to set FIFO size to 0. Assert and de-assert to reset FIFO.
   // FIFO_RESET[4:0]
-  regval |= ICM20948_BITS_FIFO_RESET; // setFIFO_RESET [4:0]= 11111  (0x1F)
+  regval |= ICM20948_BITS_FIFO_RESET; // set FIFO_RESET [4:0]= 11111  (0x1F)
   ICM20948_writeBankReg(ICM20948_REG_FIFO_RST, regval);
   delay(10);  
 
   // The InvenSense Nucleo examples write 0x1F followed by 0x1E
   // FIFO_RESET[4:0]
   regval &= ~ICM20948_BITS_FIFO_RESET; // set FIFO_RESET [4:0]= 00000 
-  regval |= 0x1E; // setFIFO_RESET [4:0]= 11110  (0x1E) 
+  regval |= 0x1E; // set FIFO_RESET [4:0]= 11110  (0x1E) 
   ICM20948_writeBankReg(ICM20948_REG_FIFO_RST, regval);
   delay(10);
 
@@ -1324,7 +1463,7 @@ void ICM20948Class::ICM20948_loadDMPFirmware()
     memcpy_P(data_not_pg, data, write_size);  // Suggested by @HyperKokichi in Issue #63
     if (memcmp(data_cmp, data_not_pg, write_size))
     {
-         _last_status = 9;
+         _last_status = DMP_ERR_FIRMWARE_LOADED;
           Serial.println(F("ICM20948_loadDMPFirmware - error memcmp "));         
          return;
     }
@@ -1335,7 +1474,7 @@ void ICM20948Class::ICM20948_loadDMPFirmware()
   Serial.println(F("ICM20948_loadDMPFirmware - memcmp OK"));
   _firmware_loaded = true;        
 
-  //Enable LP_EN since we disabled it at begining of this function.
+  //Enable LP_EN since we disabled it at begining of this function
   ICM20948_lowPower(true); // Put chip into low power state
   if (_last_status > 0) return;    
     
@@ -2072,7 +2211,8 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
     Serial.print(F("ICM_20948::startupMagnetometer: reached MAX_MAGNETOMETER_STARTS: "));
     Serial.print(MAX_MAGNETOMETER_STARTS);
     Serial.println(F(". Returning ICM_20948_Stat_WrongID"));
-    return 1; 
+    _last_status = CHECK_DEVICE_MAGNETOMETER_ERROR;
+    return _last_status; 
   }
   else
   {
@@ -2086,7 +2226,7 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
 
   Serial.println(F("ICM_20948::startupMagnetometer: startup complete!"));
 
-  return 0;
+  return CHECK_NO_ERROR;
 }
 
 uint8_t ICM20948Class::ICM20948_magWhoIAm()

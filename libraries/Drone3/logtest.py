@@ -95,7 +95,6 @@ while (not eof):
                 twobytes2 = fichier.read(2) # instruction
                 #print("instruction 2 bytes: ",int.from_bytes(twobytes2, byteorder='little',signed=True))
                 twobytes3 = fichier.read(2) # angle
-                #print("angle 2 bytes: ",int.from_bytes(twobytes3, byteorder='little',signed=True))
                 twobytes4 = fichier.read(2) # error
                 #print("error 2 bytes: ",int.from_bytes(twobytes4, byteorder='little',signed=True))
                 twobytes5 = fichier.read(2) # lastError
@@ -114,6 +113,15 @@ while (not eof):
                 #print("tick 2 bytes: ",int.from_bytes(twobytes11, byteorder='little',signed=False))                                                                                                  
                 piddumpsize = piddumpsize+24 # 24 bytes
                 #print("piddumpsize: ",piddumpsize)
+                if ((ord(char0) == 0x01) and (int.from_bytes(twobytes10, byteorder='little',signed=False) <-100)): 
+                    print("****************pitch: ",int.from_bytes(twobytes3, byteorder='little',signed=True)/10)
+                    print("****************pitchPID: ",int.from_bytes(twobytes0, byteorder='little',signed=True)/10)
+                    print("****************tick: ",int.from_bytes(twobytes11, byteorder='little',signed=False))
+                if ((ord(char0) == 0x00) and (int.from_bytes(twobytes10, byteorder='little',signed=False) < -100)): 
+                    print("****************roll: ",int.from_bytes(twobytes3, byteorder='little',signed=True)/10)
+                    print("****************rollPID: ",int.from_bytes(twobytes10, byteorder='little',signed=True)/10)
+                    print("****************tick: ",int.from_bytes(twobytes11, byteorder='little',signed=False))
+  
                 if (ord(char0) == 0x00):
                     TlogPID[iPID,0] = int.from_bytes(twobytes11, byteorder='little',signed=False) # tick
                     TlogPID[iPID,1] = int.from_bytes(char1, byteorder='little',signed=True) # dt
@@ -180,23 +188,82 @@ print("count ESC: ",CountESC)
 print("count PID: ",iPID)
 print("Max dt: ",MaxDT)
 print("count Motor: ",iMotor)
-
+print("Roll: ",TlogPIDRoll[355:370,0])
+print("Roll: ",TlogPIDRoll[355:370,1])
+print("Roll: ",TlogPIDRoll[355:370,2])
+print("Roll: ",TlogPIDRoll[355:370,3]/10)
+print("Roll: ",TlogPIDRoll[355:370,4]/10)
+print("Roll: ",TlogPIDRoll[355:370,5]/10)
+print("Roll: ",TlogPIDRoll[355:370,6]/10)
+print("Roll: ",TlogPIDRoll[355:370,7]/10)
+print("Roll: ",TlogPIDRoll[355:370,8]/10)
+print("Roll: ",TlogPIDRoll[355:370,9]/10)
+print("Roll: ",TlogPIDRoll[355:370,10]/10)
+print("Roll: ",TlogPIDRoll[355:370,11]/10)
 
 plt.title('dt')
 plt.plot(TlogPID[0:iPID,0], TlogPID[0:iPID,1],'k*' ,label='dt',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
-plt.title('Roll')
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,3],'k-' ,label='RollInstruction',linewidth=1,markersize=1)
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,4]/10,'g-' ,label='Roll',linewidth=1,markersize=1)
-plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,11]/10,'r-' ,label='RollPID',linewidth=2,markersize=1)
+
+plt.title('Angles')
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,4]/10,'k-' ,label='Roll',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,4]/10,'g-' ,label='Pitch',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDRoll,4]/10,'r-' ,label='Yaw',linewidth=1,markersize=1)
 plt.legend()
 plt.show()
+
+
+plt.title('Roll')
+plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,4]/10,'g*' ,label='Roll',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('Pitch')
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,4]/10,'g*' ,label='Pitch',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('Yaw')
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,4]/10,'g*' ,label='Yaw',linewidth=1,markersize=1)
+plt.legend()
+plt.show()
+
 plt.title('PID Roll')
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,7]/10,'c-' ,label='P',linewidth=1,markersize=1)
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,8]/10,'g-' ,label='I',linewidth=1,markersize=1)
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,9]/10,'y-' ,label='D',linewidth=1,markersize=1)
 plt.plot(TlogPIDRoll[0:iPIDRoll,0], TlogPIDRoll[0:iPIDRoll,11]/10,'r-' ,label='PID',linewidth=2,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('Pitch')
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,3]/10,'k-' ,label='PitchInstruction',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,4]/10,'g-' ,label='Pitch',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,11]/10,'r-' ,label='PitchPID',linewidth=2,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('PID Pitch')
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,7]/10,'c-' ,label='P',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,8]/10,'g-' ,label='I',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,9]/10,'y-' ,label='D',linewidth=1,markersize=1)
+plt.plot(TlogPIDPitch[0:iPIDPitch,0], TlogPIDPitch[0:iPIDPitch,11]/10,'r-' ,label='PID',linewidth=2,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('Yaw')
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,3]/10,'k-' ,label='YawInstruction',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,4]/10,'g-' ,label='Yaw',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,11]/10,'r-' ,label='YawPID',linewidth=2,markersize=1)
+plt.legend()
+plt.show()
+
+plt.title('PID Yaw')
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,7]/10,'c-' ,label='P',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,8]/10,'g-' ,label='I',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,9]/10,'y-' ,label='D',linewidth=1,markersize=1)
+plt.plot(TlogPIDYaw[0:iPIDYaw,0], TlogPIDYaw[0:iPIDYaw,11]/10,'r-' ,label='PID',linewidth=2,markersize=1)
 plt.legend()
 plt.show()
 

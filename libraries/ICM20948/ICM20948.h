@@ -23,7 +23,9 @@
  
 //ICM20948 I2C
 #define ADDRESS_DEFAULT 0X69 //AD0 logic level set to high
-
+//AK09916 I2C
+#define AK09916_I2C_ADDR  0x0C                // The slave address of AK09916 is 0Ch. The 8th bit (least significant bit) of the first byte is a R/W bit
+                                             // When the R/W bit is set to “1”, READ instruction is executed. When the R/W bit is set to “0”, WRITE instruction is executed*
 #define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
 #define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
 #define WIRE_ERROR_TRANSMIT_ADR_NACK  0x02 // Wire.endTransmission()- 2:received NACK on transmit of address
@@ -31,17 +33,17 @@
 #define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
 #define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
 
-//ICM20948 Errors
-#define CHECK_DEVICE_ERROR            0x01
-#define CHECK_STARTUP_ERROR           0x02
+//Check Errors
+#define CHECK_NO_ERROR                  0x00
+#define CHECK_DEVICE_ICM20948_ERROR     0x01
+#define CHECK_DEVICE_MAGNETOMETER_ERROR 0x02
+#define CHECK_REGISTER_ERROR            0x03
+#define DMP_ERR_FIRMWARE_LOADED         0x10   // loadDMPFirmware - error memcmp
 
-#define ICM20948_ID 0xEA                     // The value for ICM-20948 is 0xEA.
-
-#define AK09916_I2C_ADDR 0x0C                // The slave address of AK09916 is 0Ch. The 8th bit (least significant bit) of the first byte is a R/W bit
-                                             // When the R/W bit is set to “1”, READ instruction is executed. When the R/W bit is set to “0”, WRITE instruction is executed
-
-#define AK09916_WHO_AM_I 0x09                // The value for ICM-20948 is 0x09.
+#define ICM20948_WHO_AM_I 0xEA               // The value for ICM-20948 is 0xEA.
+#define AK09916_WHO_AM_I  0x09               // The value for AK09916 is 0x09.
 #define MAX_MAGNETOMETER_STARTS 10 
+
 
 /* Max size that can be read across SPI data lines */
 #define INV_MAX_SERIAL_READ 16
@@ -67,15 +69,15 @@
 #define ICM20948_BIT_DMP_RST                0x08                        /**< DMP module reset bit                                   */
 #define ICM20948_BIT_SRAM_RST               0x04                        /**< SRAM module reset bit                                  */
 #define ICM20948_BIT_I2C_MST_RST            0x02                        /**< I2C Master reset bit                                   */
-
-#define REG_USER_CTRL_VAL_S1                0x00                        /**< Value of the register at the end the step 1            */
+#define REG_USER_CTRL_VAL_DMP1              0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_USER_CTRL_VAL_DMP2              0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_LP_CONFIG              (ICM20948_BANK_0 | 0x05)    /**< Low Power mode config register                         */
 #define ICM20948_BIT_I2C_MST_CYCLE          0x40                        /**< I2C master cycle mode enable                           */
 #define ICM20948_BIT_ACCEL_CYCLE            0x20                        /**< Accelerometer cycle mode enable bit                    */
 #define ICM20948_BIT_GYRO_CYCLE             0x10                        /**< Gyroscope cycle mode enable bit                        */
-
-#define REG_LP_CONFIG_VAL_S1                0x40                        /**< Value of the register at the end the step 1            */
+#define REG_LP_CONFIG_VAL_DMP1              0x40                        /**< Value of the register at the end the step DMP1         */
+#define REG_LP_CONFIG_VAL_DMP2              0x40                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_PWR_MGMT_1             (ICM20948_BANK_0 | 0x06)    /**< Power Management 1 register                            */
 #define ICM20948_BIT_RESET                  0x80                        /**< Device reset bit                                       */
@@ -86,12 +88,14 @@
 
 #define ICM20948_CLOCK_AUTO                 0x01                        /**< Auto selects the best available clock source           */
 #define REG_PWR_MGMT_1_VAL_STARTUP          0x01                        /**< Value of the register at the end the startup           */
-#define REG_PWR_MGMT_1_VAL_S1               0x01                        /**< Value of the register at the end the step 1            */
+#define REG_PWR_MGMT_1_VAL_DMP1             0x01                        /**< Value of the register at the end the step DMP1         */
+#define REG_PWR_MGMT_1_VAL_DMP2             0x21                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_PWR_MGMT_2             (ICM20948_BANK_0 | 0x07)    /**< Power Management 2 register                            */
 #define ICM20948_BITS_DISABLE_ACCEL         0x38                        /**< Disable accelerometer 3 bits                           */
 #define ICM20948_BITS_DISABLE_GYRO          0x07                        /**< Disable gyroscope 3 bits                               */
-#define REG_PWR_MGMT_2_VAL_S1               0x00                        /**< Value of the register at the end the step 1            */
+#define REG_PWR_MGMT_2_VAL_DMP1             0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_PWR_MGMT_2_VAL_DMP2             0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_INT_PIN_CFG            (ICM20948_BANK_0 | 0x0F)    /**< Interrupt Pin Configuration register                   */
 #define ICM20948_BIT_INT_ACTL               0x80                        /**< Active low setting bit                                 */
@@ -105,14 +109,16 @@
 #define ICM20948_REG_INT_ENABLE_1           (ICM20948_BANK_0 | 0x11)    /**< Interrupt Enable 1 register                            */
 #define ICM20948_BIT_RAW_DATA_0_RDY_EN      0x01                        /**< Raw data ready interrupt enable bit                    */
 
-#define REG_INT_ENABLE_1_VAL_S1             0x00                        /**< Value of the register at the end the step 1            */
 #define REG_INT_ENABLE_1_VAL_STARTUP        0x00                        /**< Value of the register at the startup                   */
+#define REG_INT_ENABLE_1_VAL_DMP1           0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_INT_ENABLE_1_VAL_DMP2           0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_INT_ENABLE_2           (ICM20948_BANK_0 | 0x12)    /**< Interrupt Enable 2 register                            */
 #define ICM20948_BITS_FIFO_OVERFLOW_EN      0x1F                        /**< FIFO overflow interrupt enable bits                    */
 
-#define REG_INT_ENABLE_2_VAL_S1             0x0F                        /**< Value of the register at the end the step 1            */
 #define REG_INT_ENABLE_2_VAL_STARTUP        0x00                        /**< Value of the register at the startup                   */
+#define REG_INT_ENABLE_2_VAL_DMP1           0x0F                        /**< Value of the register at the end the step DMP1         */
+#define REG_INT_ENABLE_2_VAL_DMP2           0x0F                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_INT_ENABLE_3           (ICM20948_BANK_0 | 0x13)    /**< Interrupt Enable 2 register                            */
 
@@ -131,6 +137,7 @@
 #define ICM20948_REG_INT_STATUS_3           (ICM20948_BANK_0 | 0x1C)    /**< Interrupt Status 3 register                            */
 
 #define DMP_REG_SINGLE_FIFO_PRIORITY_SEL   (ICM20948_BANK_0 | 0x26)    /* Single FIFO Priority Select register                      */
+#define REG_SINGLE_FIFO_PRIORITY_SEL_VAL_DMP2 0xE4                     /**< Value of the register at the end the step DMP2          */
 
 #define ICM20948_REG_DELAY_TIMEH           (ICM20948_BANK_0 | 0x28)    /**< Interrupt Time High byte register                       */
 #define ICM20948_REG_DELAY_TIMEL           (ICM20948_BANK_0 | 0x29)    /**< Interrupt Time Low bytes register                       */
@@ -157,22 +164,22 @@
 #define ICM20948_BIT_SLV_2_FIFO_EN          0x04                        /**< Write EXT_SENS_DATA registers associated to SLV_2 bit  */
 #define ICM20948_BIT_SLV_1_FIFO_EN          0x02                        /**< Write EXT_SENS_DATA registers associated to SLV_1 bit  */
 #define ICM20948_BIT_SLV_0_FIFO_EN          0x01                        /**< Write EXT_SENS_DATA registers associated to SLV_0 bit  */
-
-#define REG_FIFO_EN_1_VAL_S1                0x00                        /**< Value of the register at the end the step 1            */
 #define REG_FIFO_EN_1_VAL_STARTUP           0x00                        /**< Value of the register at the startup                   */
+#define REG_FIFO_EN_1_VAL_DMP1              0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_FIFO_EN_1_VAL_DMP2              0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_FIFO_EN_2              (ICM20948_BANK_0 | 0x67)    /**< FIFO Enable 2 register                                 */
 #define ICM20948_BIT_ACCEL_FIFO_EN          0x10                        /**< Enable writing acceleration data to FIFO bit           */
 #define ICM20948_BITS_GYRO_FIFO_EN          0x0E                        /**< Enable writing gyroscope data to FIFO bitd             */
 #define ICM20948_BITS_TEMP_FIFO_EN          0x01                        /**< Enable writing temprature data to FIFO bit             */
-
-#define REG_FIFO_EN_2_VAL_S1                0x00                        /**< Value of the register at the end the step 1            */
 #define REG_FIFO_EN_2_VAL_STARTUP           0x00                        /**< Value of the register at the startup                   */
+#define REG_FIFO_EN_2_VAL_DMP1              0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_FIFO_EN_2_VAL_DMP2              0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_FIFO_RST               (ICM20948_BANK_0 | 0x68)    /**< FIFO Reset register                                    */
 #define ICM20948_BITS_FIFO_RESET            0x1F                        /**< FIFO reset bits                                        */
-
-#define REG_FIFO_RST _VAL_S1                0x0F                        /**< Value of the register at the end the step 1            */
+#define REG_FIFO_RST_VAL_DMP1               0x1E                        /**< Value of the register at the end the step DMP1         */
+#define REG_FIFO_RST_VAL_DMP2               0x1E                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_FIFO_MODE              (ICM20948_BANK_0 | 0x69)    /**< FIFO Mode register                                     */
 #define ICM20948_BITS_FIFO_MODE             0x1F                        /**< FIFO Mode bits                                         */
@@ -211,8 +218,8 @@
 /* Bank 2 register map */
 /***********************/
 #define ICM20948_REG_GYRO_SMPLRT_DIV        (ICM20948_BANK_2 | 0x00)    /**< Gyroscope Sample Rate Divider register     */
-
-#define REG_GYRO_SMPLRT_DIV_VAL_S1          0x13                        /**< Value of the register at the end the step 1            */
+#define REG_GYRO_SMPLRT_DIV_VAL_DMP1        0x13                        /**< Value of the register at the end the step DMP1            */
+#define REG_GYRO_SMPLRT_DIV_VAL_DMP2        0x13                        /**< Value of the register at the end the step DMP2            */
 
 #define ICM20948_REG_GYRO_CONFIG_1          (ICM20948_BANK_2 | 0x01)    /**< Gyroscope Configuration 1 register         */
 #define ICM20948_BIT_GYRO_FCHOICE           0x01                        /**< Gyro Digital Low-Pass Filter enable bit    */
@@ -223,7 +230,6 @@
 #define ICM20948_GYRO_FULLSCALE_500DPS      0x01                        /**< Gyro Full Scale = 500 deg/s                */
 #define ICM20948_GYRO_FULLSCALE_1000DPS     0x02                        /**< Gyro Full Scale = 1000 deg/s               */
 #define ICM20948_GYRO_FULLSCALE_2000DPS     0x03                        /**< Gyro Full Scale = 2000 deg/s               */
-
 #define ICM20948_GYRO_BW_200HZ              0x00                        /**< Gyro Bandwidth = 200 Hz                    */
 #define ICM20948_GYRO_BW_150HZ              0x01                        /**< Gyro Bandwidth = 150 Hz                    */
 #define ICM20948_GYRO_BW_120HZ              0x02                        /**< Gyro Bandwidth = 120 Hz                    */
@@ -232,8 +238,8 @@
 #define ICM20948_GYRO_BW_12HZ               0x05                        /**< Gyro Bandwidth = 12 Hz                     */
 #define ICM20948_GYRO_BW_6HZ                0x06                        /**< Gyro Bandwidth = 6 Hz                      */
 #define ICM20948_GYRO_BW_360HZ              0x07                        /**< Gyro Bandwidth = 360 Hz                    */
-
-#define REG_GYRO_CONFIG_1_VAL_S1            0x07                        /**< Value of the register at the end the step 1            */
+#define REG_GYRO_CONFIG_1_VAL_DMP1          0x07                        /**< Value of the register at the end the step DMP1         */
+#define REG_GYRO_CONFIG_1_VAL_DMP2          0x07                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_GYRO_CONFIG_2          (ICM20948_BANK_2 | 0x02)    /**< Gyroscope Configuration 2 register                     */
 #define ICM20948_BIT_GYRO_CTEN              0x38                        /**< Gyroscope Self-Test Enable bits                        */
@@ -248,13 +254,13 @@
 #define ICM20948_REG_ODR_ALIGN_EN           (ICM20948_BANK_2 | 0x09)    /**< Output Data Rate start time alignment                  */
 
 #define ICM20948_REG_ACCEL_SMPLRT_DIV_1     (ICM20948_BANK_2 | 0x10)    /**< Acceleration Sensor Sample Rate Divider 1 register     */
-#define ICM20948_BITS_ACCEL_SMPLRT_DIV_1     0x0F                       /**< Acceleration Sensor Sample Rate Divider 1 bits         */
-
-#define REG_ACCEL_SMPLRT_DIV_1_S1            0x0 0                       /**< Value of the register at the end the step 1            */
+#define ICM20948_BITS_ACCEL_SMPLRT_DIV_1    0x0F                        /**< Acceleration Sensor Sample Rate Divider 1 bits         */
+#define REG_ACCEL_SMPLRT_DIV_1_VAL_DMP1     0x00                        /**< Value of the register at the end the step DMP1         */
+#define REG_ACCEL_SMPLRT_DIV_1_VAL_DMP2     0x00                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_ACCEL_SMPLRT_DIV_2     (ICM20948_BANK_2 | 0x11)    /**< Acceleration Sensor Sample Rate Divider 2 register     */
-
-#define REG_ACCEL_SMPLRT_DIV_2_VAL_S1       0x13                        /**< Value of the register at the end the step 1            */
+#define REG_ACCEL_SMPLRT_DIV_2_VAL_DMP1     0x13                        /**< Value of the register at the end the step DMP1         */
+#define REG_ACCEL_SMPLRT_DIV_2_VAL_DMP2     0x13                        /**< Value of the register at the end the step DMP2         */
 
 #define ICM20948_REG_ACCEL_INTEL_CTRL       (ICM20948_BANK_2 | 0x12)    /**< Accelerometer Hardware Intelligence Control register   */
 #define ICM20948_BIT_ACCEL_INTEL_EN         0x02                        /**< Wake-up On Motion enable bit                           */
@@ -266,12 +272,10 @@
 #define ICM20948_BIT_ACCEL_FCHOICE          0x01                        /**< Accel Digital Low-Pass Filter enable bit               */
 #define ICM20948_BITS_ACCEL_FS              0x06                        /**< Accel Full Scale Select bits                           */
 #define ICM20948_BITS_ACCEL_DLPCFG          0x38                        /**< Accel DLPF Config bits                                 */
-
 #define ICM20948_ACCEL_FULLSCALE_2G         0x00                        /**< Accel Full Scale = 2 g                                 */
 #define ICM20948_ACCEL_FULLSCALE_4G         0x01                        /**< Accel Full Scale = 4 g                                 */
 #define ICM20948_ACCEL_FULLSCALE_8G         0x02                        /**< Accel Full Scale = 8 g                                 */
 #define ICM20948_ACCEL_FULLSCALE_16G        0x03                        /**< Accel Full Scale = 16 g                                */
-
 #define ICM20948_ACCEL_BW_246HZ             0x00                        /**< Accel Bandwidth = 246 Hz                               */
 #define ICM20948_ACCEL_BW_111HZ             0x02                        /**< Accel Bandwidth = 111 Hz                               */
 #define ICM20948_ACCEL_BW_50HZ              0x03                        /**< Accel Bandwidth = 50 Hz                                */
@@ -279,11 +283,11 @@
 #define ICM20948_ACCEL_BW_12HZ              0x05                        /**< Accel Bandwidth = 12 Hz                                */
 #define ICM20948_ACCEL_BW_6HZ               0x06                        /**< Accel Bandwidth = 6 Hz                                 */
 #define ICM20948_ACCEL_BW_470HZ             0x07                        /**< Accel Bandwidth = 470 Hz                               */
+#define REG_ACCEL_CONFIG_VAL_DMP1           0x03                        /**< Value of the register at the end the step DMP1         */
+#define REG_ACCEL_CONFIG_VAL_DMP2           0x03                        /**< Value of the register at the end the step DMP2         */
 
-#define REG_ACCEL_CONFIG_VAL_S1             0x03                        /**< Value of the register at the end the step 1            */
-
-#define ICM20948_REG_ACCEL_CONFIG_2         (ICM20948_BANK_2 | 0x15)    /**< Accelerometer Configuration 2 register             */
-#define ICM20948_BIT_ACCEL_CTEN             0x1C                        /**< Accelerometer Self-Test Enable bits                */
+#define ICM20948_REG_ACCEL_CONFIG_2         (ICM20948_BANK_2 | 0x15)    /**< Accelerometer Configuration 2 register                 */
+#define ICM20948_BIT_ACCEL_CTEN             0x1C                        /**< Accelerometer Self-Test Enable bits                    */
 
 
 #define DMP_REG_PRS_ODR_CONFIG              (ICM20948_BANK_2 | 0x20)
@@ -440,9 +444,10 @@ class ICM20948Class
     void    ICM20948_setDMPDsensorPeriod(enum DMP_ODR_Registers odr_reg, uint16_t interval);
     uint8_t ICM20948_startupDefault(bool Magnetometer);
     void    ICM20948_configureMagnetometer(void);
-    uint8_t ICM20948_checkDeviceID(void);
-    uint8_t ICM20948_checkStartup(void);
-    uint8_t ICM20948_checkStep1(void);
+    void    ICM20948_ICM20948WhoIAm(void);
+    void    ICM20948_checkStartup(void);
+    void    ICM20948_checkDMP1(void);
+    void    ICM20948_checkDMP2(void);    
     uint8_t ICM20948_getLaststatus(void);
     uint8_t ICM20948_startupMagnetometer(void);
     uint8_t ICM20948_magWhoIAm(void);

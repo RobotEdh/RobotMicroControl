@@ -21,22 +21,20 @@
 
 #define NBMOTORS 4
 
-#define LED_PIN         13 // LED for init, pint 13 for MEGA2560
-
-
 class MotorESC2Class
 {
   public:
    
    MotorESC2Class();
    
-   void MotorESC_init();
+   void MotorESC_init(int led);
    void MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick);
    void MotorESC_runMotors(int8_t no, uint16_t value);
-   void MotorESC_pulsePWM(); 
+   void MotorESC_pulsePWM(uint32_t duration);
       
    private:
    void MotorESC_sendPWMtoESC();
+   void MotorESC_pulsePWM();
 
    uint16_t _motor[NBMOTORS];
 };

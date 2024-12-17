@@ -18,11 +18,11 @@ Servo Motor4;
 // Logging mode
 #define  LOGSERIAL
 //#define LOGSDCARD  // log to SD Card
+//#define AUTOFLUSH // auto flush following each write
+//#define LOGTRACE   // Enable trace
 #include <log.h>
 
 #ifdef  LOGSDCARD
-#define AUTOFLUSH // auto flush following each write
-//#define LOGTRACE   // Enable trace
 extern File logFile;
 extern int countwrite;  
 
@@ -54,7 +54,7 @@ MotorESC2Class::MotorESC2Class()
 {
 }
      
-void MotorESC2Class::MotorESC_init()
+void MotorESC2Class::MotorESC_init(int led)
 { 
   
   PRINTs(">Start MotorESC_init")
@@ -67,15 +67,18 @@ void MotorESC2Class::MotorESC_init()
 #else
   PORTL &= B00001111;   //L4 pin 45 ... L7 pin 42 set to 0
 #endif
-
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);  // turn on Led
-  
+ 
   MotorESC_runMotors(-1, MINPWM);
 
-  delay (15*1000);  //delay 15s to connect battery
-  
-  digitalWrite(LED_PIN, LOW);   // turn off Led
+  pinMode(led, OUTPUT);
+  // blink 20 times the led during 1s; Time to connect the battery.
+  for (int i=0;i<20;i++){
+        digitalWrite(led, HIGH);  // turn on led
+        delay(500);
+        digitalWrite(led, LOW);  // turn off led
+        delay(500);  
+  } 
+  digitalWrite(led, LOW);   // turn off Led
   
   PRINTs("<End MotorESC_init")
 } 
@@ -100,6 +103,21 @@ void MotorESC2Class::MotorESC_sendPWMtoESC()
 /**************************************************************************************/
 /************          Send the PWM command to ESC                   ******************/
 /**************************************************************************************/
+
+void MotorESC2Class::MotorESC_pulsePWM(uint32_t duration)
+{
+  uint32_t startTime = millis();
+  
+  if (duration == 0) { 
+     MotorESC_pulsePWM();
+     return;
+  }
+  
+  while((millis() - startTime) < duration) {
+          MotorESC_pulsePWM();
+  }
+  return;
+}
 
 void MotorESC2Class::MotorESC_pulsePWM()
 {

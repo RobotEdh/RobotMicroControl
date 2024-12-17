@@ -1,22 +1,20 @@
 #include <Drone3.h>
 
+//#define DEBUGLEVEL0
 #define DEBUGLEVEL1
-double rolldebug = 0.0;
-double incrementdebug = 5.0;
+
 #ifdef  DEBUGLEVEL0
  #define  DEBUGLEVEL1
 #endif
 
-
 // Logging mode
-#define  LOGSERIAL
-//#define LOGSDCARD  // log to SD Card
+//#define  LOGSERIAL
+#define LOGSDCARD  // log to SD Card
+#define AUTOFLUSH // auto flush following each write
+//#define LOGTRACE   // Enable trace
 #include <log.h> //SPI CS=10 for SD Card
 
 #ifdef  LOGSDCARD
-#define AUTOFLUSH // auto flush following each write
-//#define LOGTRACE   // Enable trace
-
 File logFile; 
 int countwrite = -1; 
 
@@ -57,6 +55,27 @@ MotorESC2Class MotorESC;         // The Motor ESC Class
 #ifdef RTC
 DS1307Class    DS1307;           // The RTC class  
 #endif
+
+
+void blink(int led, int nb)
+{
+  // blink nb times the led during 2s
+  for (int i=0;i<nb;i++){
+        digitalWrite(led, HIGH);  // turn on led
+        delay(1000);
+        digitalWrite(led, LOW);  // turn off led
+        delay(1000);  
+  }          
+}
+void ledOn(int led)
+{
+  digitalWrite(led, HIGH);  // turn on led        
+}
+
+void ledOff(int led)
+{
+  digitalWrite(led, LOW);  // turn off led        
+}
     
 void print_time()
 {
@@ -81,20 +100,26 @@ Drone3Class::Drone3Class(void) {
 }
 
 
-void Drone3Class::Drone_init() {
+uint8_t Drone3Class::Drone_init() {
    
   uint8_t status = 0; 
   
-  // initialize serial port
-  Serial.begin(115200);
+  // initialize logging
+  pinMode(LED_INIT, OUTPUT);
+  ledOff(LED_INIT);    // turn off led init
+  pinMode(LED_RUNNING, OUTPUT);
+  ledOff(LED_RUNNING); // turn off led running
+    
   PRINTbegin
+    
+  PRINTs("Start  Init Drone") 
 
 #ifdef RTC  
   // initialize I2C
   Wire.begin(); 
   Wire.setClock(400000); //set I2C SCL to High Speed Mode of 400kHz
   
-   // initialize RTC
+  // initialize RTC
   PRINTs(" ")
   status = DS1307.DS1307_init();
   if (status == ERROR_RTC_STOPPED)
@@ -103,8 +128,7 @@ void Drone3Class::Drone_init() {
   }  
   else if (status > 0)
   {   
-     PRINT("Init DS1307 KO, I2C error:",status) 
-     delay(60000);
+     PRINT("Init DS1307 KO, I2C error:",status)
   }
   else
   {
@@ -114,26 +138,53 @@ void Drone3Class::Drone_init() {
      print_time();    
   }
 #endif 
-   
-  PRINTs(">Start Init Drone")
   
+  PRINTs("Start  Init ICM20948")
   status = Drone_init_ICM20948();
-        
-  PRINTs("Start Init RC")
-  RC.RC_init();
+  if (status == 0) 
+  {
+     PRINTs("End OK Init ICM20948")
+  }
+  else
+  {   
+     PRINTs("End KO Init ICM20948")
+     return status;
+  }
+ 
+  blink(LED_INIT, 15);  // blink led init 15*2s
+  ledOff(LED_INIT);    // turn off led init
   
-  PRINTs("Init RC OK")
+  PRINTs("Start  Compute offsets")
+  status = Drone_compute_offsets();
+  if (status == 0) 
+  {
+     PRINTs("End OK Compute offsets")
+     PRINTi2("angle Offset Roll",0,_angleOffset[0])
+     PRINTi2("angle Offset Pitch",1,_angleOffset[1])
+     PRINTi2("angle Offset Yaw",2,_angleOffset[2])
+  }
+  else
+  {   
+     PRINTs("End KO Compute offsets")
+     return status;
+  }
+
+  PRINTs("Start  Init RC")
+  RC.RC_init();  
+  PRINTs("End OK Init RC")
   
-#ifndef DEBUGLEVEL1
-  PRINTs("Start Init Motor ESC")
-  MotorESC.MotorESC_init();
-  PRINTs("Init Motor ESC OK")
-#endif
+  PRINTs("Start Init  Motor ESC")
+  MotorESC.MotorESC_init(LED_INIT);
+  PRINTs("End OK Init Motor ESC")
+ 
+  ledOn(LED_INIT);    // turn on led init
+  PRINTs("End OK Init Drone")
+  PRINTs("*****************")
   
-  PRINTs("<End OK Init Drone")
-  PRINTs("******************************")
+
+  print_time();
   
-  print_time(); 
+  return 0; 
 }
 
 
@@ -164,7 +215,6 @@ void Drone3Class::Drone_main() {
      
       status = Drone_pid(dt, anglePID, throttle, tick, countESC);      
       if ((status == 0) && (_go != NOT_STARTED)) {
-  // call MotorESC
            ESC_command[THROTTLE] = throttle;
            ESC_command[ROLL]     = (int16_t)anglePID[0];
            ESC_command[PITCH]    = (int16_t)anglePID[1];
@@ -179,7 +229,7 @@ void Drone3Class::Drone_main() {
    else if (_go == RUNNING)
    {
       countESC++;
-      MotorESC.MotorESC_pulsePWM();
+      MotorESC.MotorESC_pulsePWM(0);  // no duration
    }
  
  } // end while (1)
@@ -202,7 +252,9 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
 
   if ((throttle > 0.0) && (_go != RUNNING)) // reset PID before starting
   {           
-     _go = RUNNING; 
+     _go = RUNNING;
+     PRINTs("Start RUNNING")
+     ledOn(LED_RUNNING);    // turn on led running
      for (int j=0;j<3;j++) {
          integ[j] = 0.0; 
          lastError[j] = 0.0;
@@ -222,7 +274,9 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
           PID_t = 0;                                            
      }
 #endif     
-     _go = STOPPED; 
+     _go = STOPPED;
+     PRINTs("STOPPED")
+     ledOff(LED_RUNNING);    // turn off led running 
      for (int j=0;j<3;j++) { // reset PID before stoping
          integ[j] = 0.0; 
          lastError[j] = 0.0;
@@ -239,7 +293,7 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
   // Get angles  
   status = Drone_get_angles(angle);
   if (status > 0) return status;
-
+    
   for (int i=0;i<3;i++) {
 
     // compute error
@@ -307,23 +361,15 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
 
   return 0;
 }
-   
-   
 
 uint8_t Drone3Class::Drone_get_angles(double angle[3])
 {
   icm20948_DMP_data_t data;
-  double q0, q1, q2, q3;
+  static double lastAngle[3] = {0.0,0.0,0.0};
   uint8_t status = 0;
   static unsigned long count = 0;
   static unsigned long counterr = 0;
 
-#ifdef DEBUGLEVEL1 
-    angle[0] = 0;
-    angle[1] = 0;
-    angle[2] = 0; 
-    return 0;
-#endif  
 
   // Read any DMP data waiting in the FIFO
   status = ICM20948.ICM20948_readDMPdataFromFIFO(&data);
@@ -340,11 +386,14 @@ uint8_t Drone3Class::Drone_get_angles(double angle[3])
       // The quaternion data is scaled by 2^30.
 
       // Scale to +/- 1
-      double q1 = ((double)data.Quat6.Data.Q1) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q2 = ((double)data.Quat6.Data.Q2) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q3 = ((double)data.Quat6.Data.Q3) / 1073741824.0; // Convert to double. Divide by 2^30
-      double q0 = sqrt(1.0 - ((q1 * q1) + (q2 * q2) + (q3 * q3)));
-      
+      double qy = ((double)data.Quat6.Data.Q1) / 1073741824.0; // Convert to double. Divide by 2^30
+      double qx = ((double)data.Quat6.Data.Q2) / 1073741824.0; // Convert to double. Divide by 2^30
+      double qz = -((double)data.Quat6.Data.Q3) / 1073741824.0; // Convert to double. Divide by 2^30
+      double u = ((qx * qx) + (qy * qy) + (qz * qz));
+      double qw;
+      if (u < 1.0) qw = sqrt(1.0 - u);
+      else         qw = 0.0;
+
       // The ICM 20948 chip has axes y-forward, x-right and Z-up - see Figure 12:
       // Orientation of Axes of Sensitivity and Polarity of Rotation
       // in DS-000189-ICM-20948-v1.6.pdf  These are the axes for gyro and accel and quat
@@ -366,27 +415,31 @@ uint8_t Drone3Class::Drone_get_angles(double angle[3])
       // Note when pitch approaches +/- 90 deg. the heading and bank become less meaningfull because the
       // device is pointing up/down. (Gimbal lock)
 
-      double qw = q0; // See issue #145 - thank you @Gord1
-      double qx = q2;
-      double qy = q1;
-      double qz = -q3;
-
       // roll (x-axis rotation)
       double t0 = +2.0 * (qw * qx + qy * qz);
       double t1 = +1.0 - 2.0 * (qx * qx + qy * qy);
       angle[0] = atan2(t0, t1) * 180.0 / PI;
+      angle[0] -= _angleOffset[0];
+      if (abs(lastAngle[0] - angle[0]) > _safeguard) angle[0] = lastAngle[0];  // safeguard
+      else                                           lastAngle[0] = angle[0]; 
 
       // pitch (y-axis rotation)
       double t2 = +2.0 * (qw * qy - qx * qz);
       t2 = t2 > 1.0 ? 1.0 : t2;
       t2 = t2 < -1.0 ? -1.0 : t2;
       angle[1] = asin(t2) * 180.0 / PI;
-
+      angle[1] -= _angleOffset[1];
+      if (abs(lastAngle[1] - angle[1]) > _safeguard) angle[1] = lastAngle[1];  // safeguard
+      else                                           lastAngle[1] = angle[1]; 
+              
       // yaw (z-axis rotation)
       double t3 = +2.0 * (qw * qz + qx * qy);
       double t4 = +1.0 - 2.0 * (qy * qy + qz * qz);
       angle[2] = atan2(t3, t4) * 180.0 / PI;
-     
+      angle[2] -= _angleOffset[2];
+      if (abs(lastAngle[2] - angle[2]) > _safeguard) angle[2] = lastAngle[2];  // safeguard
+      else                                           lastAngle[2] = angle[2]; 
+        
       count++;
       return DMP_NO_ERR;
       
@@ -432,52 +485,63 @@ void Drone3Class::Drone_get_instructions(double instruction[3], int16_t &throttl
       
   // yaw range [-90;+90]  
   instruction[2] = (double)RC_command[YAW];
-
-#ifdef DEBUGLEVEL1 
-  instruction[0]=rolldebug;
-  rolldebug += incrementdebug;
-  if ((rolldebug > _angleLimit) || (rolldebug < -_angleLimit)) incrementdebug *= -1.0;
-  instruction[1]=0.0;
-  instruction[2]=0.0;
-  throttle=1500;
-#endif  
-
+  
+  throttle = 1500;
+  instruction[0]= 0.0;
+  instruction[1]= 0.0;
+  instruction[2]= 0.0;
 }
 
 uint8_t Drone3Class::Drone_init_ICM20948()
 {
   uint8_t status = 0;
-
-  PRINTs(">Start Init ICM20948")
   
-#ifdef SPI_ICM20948  
+#ifdef SPI_ICM20948 
+  PRINTs("Start  ICM20948_initializeSPI") 
   ICM20948.ICM20948_initializeSPI(SPI_SLAVESELECTED_PIN);
+  PRINTs("End OK ICM20948_initializeSPI") 
 #endif
 
 #ifdef I2C_ICM20948
+  PRINTs("Start  ICM20948_initializeI2C") 
   ICM20948.ICM20948_initializeI2C();
+  PRINTs("End OK ICM20948_initializeI2C")
 #endif
-  
+    
+  PRINTs("Start  ICM20948_startupDefault")
   status = ICM20948.ICM20948_startupDefault(false); // don't start Magnetometer
   if (status > 0)
   {
     switch (status) {
-        case CHECK_DEVICE_ERROR: PRINTs("Init ICM20948 KO, startupDefault error: CHECK_DEVICE_ERROR")
+        case CHECK_DEVICE_ICM20948_ERROR: PRINTs("ICM20948_startupDefault KO, error: CHECK_DEVICE_ICM20948_ERROR")
              break;
-        case CHECK_STARTUP_ERROR: PRINTs("Init ICM20948 KO, startupDefault error: CHECK_STARTUP_ERROR")
+        case CHECK_DEVICE_MAGNETOMETER_ERROR: PRINTs("ICM20948_startupDefault KO, error: CHECK_DEVICE_MAGNETOMETER_ERROR")
              break;
-        default: PRINT("Init ICM20948 KO, startupDefault failed, status: ", status)
+        case CHECK_REGISTER_ERROR: PRINTs("ICM20948_startupDefault KO, error: CHECK_REGISTER_ERROR")
+             break;             
+        default: PRINT("ICM20948_startupDefault KO, error: unknown, status: ", status)
     } 
     return status;   
   }
+  else
+    PRINTs("End OK ICM20948_startupDefault")
 
+  PRINTs("Start  ICM20948_initializeDMP")
   status = ICM20948.ICM20948_initializeDMP(false); // don't config Magnetometer
   if (status > 0)
   {
-    PRINT("Init ICM20948 KO, initializeDMP error:",status)
-    return status;  
+    switch (status) {
+        case DMP_ERR_FIRMWARE_LOADED: PRINTs("ICM20948_initializeDMP KO, error: DMP_ERR_FIRMWARE_LOADED")
+             break;
+        case CHECK_REGISTER_ERROR: PRINTs("ICM20948_initializeDMP KO, error: CHECK_REGISTER_ERROR")
+             break;             
+        default: PRINT("ICM20948_initializeDMP KO, error: unknown, status: ", status)
+    } 
+    return status;   
   }
-
+  else
+    PRINTs("End OK ICM20948_initializeDMP")
+    
   // Enable the DMP Game Rotation Vector sensor (Quat6)
   ICM20948.ICM20948_enableDMPSensor(ICM20948_SENSOR_GAME_ROTATION_VECTOR);
   
@@ -495,8 +559,33 @@ uint8_t Drone3Class::Drone_init_ICM20948()
   
   // Reset FIFO
   ICM20948.ICM20948_resetFIFO();
-  
-  PRINTs("<End OK Init ICM20948")
-  
+     
   return 0;
+}
+
+uint8_t Drone3Class::Drone_compute_offsets()
+{
+  uint8_t status = 0;
+  double angle[3];
+  double sumAngle[3]= {0.0, 0.0, 0.0};
+  uint16_t nb = 0;
+  
+  for (uint16_t n=0; n<_nbMeasures; n++) {
+      status = Drone_get_angles(angle);
+      if ((status == 0) && (n > _nbMeasures/2)) {  // ignore first measures
+        
+         for (int i=0;i<3;i++) {
+            sumAngle[i] += angle[i];
+         }
+         nb++;
+      }
+      delay(20);  
+  }
+  if (nb == 0) return 1;
+    
+  for (int i=0;i<3;i++) {
+     _angleOffset[i] = sumAngle[i]/(double)nb;
+  }  
+  
+  return 0;    
 }

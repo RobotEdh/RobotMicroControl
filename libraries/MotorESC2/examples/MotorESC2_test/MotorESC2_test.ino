@@ -41,11 +41,12 @@ void test()
   {
       Serial.println(szMotors[i]);
       MotorESC.MotorESC_runMotors(i, throttle);
-      delay(10*1000);
-  }
-  MotorESC.MotorESC_runMotors(-1, MINPWM);  // stop
-  Serial.println("END TESTCASE 1");
-  delay(1*1000);
+      MotorESC.MotorESC_pulsePWM(10*1000);  // duration 10s
+
+      MotorESC.MotorESC_runMotors(-1, MINPWM);  // stop
+      Serial.println("END TESTCASE 1");
+      MotorESC.MotorESC_pulsePWM(1*1000);  // duration 1s
+  }     
 /* END TESTCASE 1 */
 
 /* START TESTCASE 2: Spin all the motors together near to minimum speed MINPWM */
@@ -55,11 +56,11 @@ void test()
   {
       Serial.print("PWM: ");Serial.println(pwm);
       MotorESC.MotorESC_runMotors(-1, pwm);
-      delay(5*1000);
+      MotorESC.MotorESC_pulsePWM(5*1000);  // duration 5s
   }
   MotorESC.MotorESC_runMotors(-1, MINPWM);  // stop
   Serial.println("END TESTCASE 2");
-  delay(1*1000);
+  MotorESC.MotorESC_pulsePWM(1*1000);  // duration 1s
  /* END TESTCASE 2 */
 
 /* START TESTCASE 3: Front up / increase pitch*/
@@ -71,12 +72,11 @@ void test()
   ESC_command[YAW]      = 0;
            
   MotorESC.MotorESC_MixPID(ESC_command, tick);
-
-  delay(10*1000); 
+  MotorESC.MotorESC_pulsePWM(10*1000);  // duration 10s
  
   MotorESC.MotorESC_runMotors(-1, MINPWM); // stop
   Serial.println("END TESTCASE 3");
-  delay(1*1000);
+  MotorESC.MotorESC_pulsePWM(1*1000);  // duration 1s
  /* END TESTCASE 3 */
 
 /* START TESTCASE 4: Right up / increase roll*/
@@ -88,12 +88,11 @@ void test()
   ESC_command[YAW]      = 0;
            
   MotorESC.MotorESC_MixPID(ESC_command, tick);
-  
-  delay(10*1000); 
+  MotorESC.MotorESC_pulsePWM(10*1000);  // duration 10s
  
   MotorESC.MotorESC_runMotors(-1, MINPWM); // stop
   Serial.println("END TESTCASE 4");
-  delay(1*1000);
+  MotorESC.MotorESC_pulsePWM(1*1000);  // duration 1s
  /* END TESTCASE 4 */
 
 /* START TESTCASE 5: Turn right / increase Yaw */
@@ -105,12 +104,11 @@ void test()
   ESC_command[YAW]      = delta;
            
   MotorESC.MotorESC_MixPID(ESC_command, tick);
-  
-  delay(10*1000); 
+  MotorESC.MotorESC_pulsePWM(10*1000);  // duration 10s 
  
   MotorESC.MotorESC_runMotors(-1, MINPWM); // stop
   Serial.println("END TESTCASE 5");
-  delay(1*1000);
+  MotorESC.MotorESC_pulsePWM(1*1000);  // duration 1s
 /* END TESTCASE 5 */
 
 
@@ -132,7 +130,7 @@ void loop() {
         switch (data) {     
              // A
             case 65 : Serial.println("Running startup procedure");          
-                      MotorESC.MotorESC_init();                     
+                      MotorESC.MotorESC_init(LED_BUILTIN);                     
                       Serial.println("End startup procedure" );   
             break;
                       

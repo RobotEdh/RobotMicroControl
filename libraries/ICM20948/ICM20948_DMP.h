@@ -37,7 +37,7 @@ extern "C"
 #define DMP_ERR_NO_HEADER2       0x02   // no header2 is available
 #define DMP_ERR_NO_ENOUGH_DATA   0x03   // not enough data is available
 #define DMP_ERR_NO_HEADER_QUAT6  0x10   // no header QUAT6 is available
-#define DMP_FIFO_NOT_EMPTY       0xFE   // still data waiting to be read
+#define DMP_FIFO_NOT_EMPTY       0x20   // still data waiting to be read
 #define DMP_ERR_OTHER            0xFF   // other error
 
 // Appendix I: DMP register addresses
