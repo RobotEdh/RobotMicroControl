@@ -135,9 +135,9 @@ void loop() {
         switch (data) {     
             
             // A
-            case 65 : Serial.println("Init (start Throttle stick = MINPWM)");
+            case 65 : Serial.println("Init");
                      
-                      MotorESC.MotorESC_init(MINPWM, -1, 0);
+                      MotorESC.MotorESC_init();
                       
                       Serial.println("End Init" ); 
             break; 

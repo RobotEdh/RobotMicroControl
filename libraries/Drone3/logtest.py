@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-TlogPID = np.zeros((10000,3),dtype=int)
+TlogPID = np.zeros((10000,2),dtype=int)
 TlogPIDRoll = np.zeros((10000,12),dtype=int)
 TlogPIDPitch = np.zeros((10000,12),dtype=int)
 TlogPIDYaw = np.zeros((10000,12),dtype=int)
@@ -56,9 +56,9 @@ while (not eof):
        elif ((ord(char0) == 0xFC) and (ord(char1) == 0xFD)): # PID
            found = True
            print("PID end dump")
-           piddumpsize = piddumpsize+2+4 # 6 bytes stop
+           piddumpsize = piddumpsize+2+2 # 4 bytes stop
            print("PID dumpsize:",piddumpsize)
-           char0 = fichier.read(4)  # 4 fillers
+           char0 = fichier.read(2)  # 2 fillers
        elif ((ord(char0) == 0xFD) and (ord(char1) == 0xFE)): # Motors
            found = True
            print("Motor end dump")
@@ -89,9 +89,7 @@ while (not eof):
        else:
            if (foundPID):
                 #print("index: ",int.from_bytes(char0, byteorder='little',signed=False))
-                #print("dt: ",int.from_bytes(char1, byteorder='little',signed=False))
-                twobytes1 = fichier.read(2) # countESC
-                #print("countESC 2 bytes: ",int.from_bytes(twobytes1, byteorder='little',signed=False))               
+                #print("dt: ",int.from_bytes(char1, byteorder='little',signed=False))              
                 twobytes2 = fichier.read(2) # instruction
                 #print("instruction 2 bytes: ",int.from_bytes(twobytes2, byteorder='little',signed=True))
                 twobytes3 = fichier.read(2) # angle
@@ -125,10 +123,8 @@ while (not eof):
                 if (ord(char0) == 0x00):
                     TlogPID[iPID,0] = int.from_bytes(twobytes11, byteorder='little',signed=False) # tick
                     TlogPID[iPID,1] = int.from_bytes(char1, byteorder='little',signed=True) # dt
-                    TlogPID[iPID,2] = int.from_bytes(twobytes1, byteorder='little',signed=False) # countESC
 
                     NbTick = TlogPID[iPID,0]
-                    CountESC = TlogPID[iPID,2]
                     if (TlogPID[iPID,1]>MaxDT):
                         MaxDT = TlogPID[iPID,1]
                     
@@ -184,7 +180,6 @@ while (not eof):
 
 print("************************* End log ****************************************")
 print("Nb Tick: ",NbTick)
-print("count ESC: ",CountESC)
 print("count PID: ",iPID)
 print("Max dt: ",MaxDT)
 print("count Motor: ",iMotor)

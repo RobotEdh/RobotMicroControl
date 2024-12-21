@@ -345,7 +345,7 @@ uint8_t ICM20948Class::ICM20948_startupDefault(bool Magnetometer)
   ICM20948_reset();
   if (_last_status > 0) return _last_status;
     
-  delay(50);
+  delay(50); //50ms
 
   ICM20948_sleep(false);
   if (_last_status > 0) return _last_status;
@@ -468,7 +468,8 @@ uint8_t ICM20948Class::ICM20948_initializeDMP(bool Magnetometer)
   
     // Reset FIFO through FIFO_RST 
     ICM20948_resetFIFO();
-    if (_last_status > 0) return _last_status;    
+    if (_last_status > 0) return _last_status;
+    delay(10);  //10ms        
  
  /*
  3.4 Configuring Sensor Sample Rate
@@ -1180,8 +1181,6 @@ void ICM20948Class::ICM20948_resetFIFO()
   regval &= ~ICM20948_BITS_FIFO_RESET; // set FIFO_RESET [4:0]= 00000 
   regval |= 0x1E; // set FIFO_RESET [4:0]= 11110  (0x1E) 
   ICM20948_writeBankReg(ICM20948_REG_FIFO_RST, regval);
-  delay(10);
-
   
   return; 
 }
@@ -2165,20 +2164,11 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
 {
   Serial.println(F("ICM_20948::startupMagnetometer - Begin startup"));
   
-
   ICM20948_enable_I2CMasterPassthrough(false); //Do not connect the SDA/SCL pins to AUX_DA/AUX_CL
   if (_last_status > 0) return _last_status;
 
   ICM20948_enableI2CMaster(ICM20948_I2C_MST_CTRL_CLK_400KHZ, true);  // corresponds to 345.6 kHz, good for up to 400 kHz
   if (_last_status > 0) return _last_status;
-
-  uint8_t regval;
-  ICM20948_readBankReg(ICM20948_REG_INT_PIN_CFG, &regval);
-  Serial.print(F("ICM20948_startupMagnetometer - ICM20948_REG_INT_PIN_CFG: "));printBinary(regval);Serial.println(F(" "));
-  ICM20948_readBankReg(ICM20948_REG_I2C_MST_CTRL, &regval);
-  Serial.print(F("ICM20948_startupMagnetometer - ICM20948_REG_I2C_MST_CTRL: "));printBinary(regval);Serial.println(F(" "));
-  ICM20948_readBankReg(ICM20948_REG_USER_CTRL, &regval);
-  Serial.print(F("ICM20948_startupMagnetometer - ICM20948_REG_USER_CTRL: "));printBinary(regval);Serial.println(F(" "));
 
   // Reset mag
   uint8_t retval = 0;
@@ -2187,7 +2177,6 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
   // When “1” is set, all registers are initialized. After reset, SRST bit turns to “0” automatically.
   retval = ICM20948_i2c_controller_periph4_txn(AK09916_I2C_ADDR, AK09916_REG_CNTL3, SRST, false); // Write 1 byte
   if (_last_status > 0) return _last_status;
-  Serial.println(F("ICM_20948::startupMagnetometer - Reset mag OK"));
   
   //After a ICM reset the Mag sensor may stop responding over the I2C master
   //Reset the Master I2C until it responds
@@ -2203,7 +2192,7 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
 
     ICM20948_resetI2CMaster(); //Otherwise, reset the master I2C and try again
 
-    delay(100);
+    delay(100);  //100ms
   }
 
   if (tries == MAX_MAGNETOMETER_STARTS)

@@ -24,7 +24,7 @@ class Drone3Class
     uint8_t    Drone_init(void);
     uint8_t    Drone_init_ICM20948(void);
     uint8_t    Drone_compute_offsets(void);
-    uint8_t    Drone_pid(double dt, double anglePID[3], int16_t &throttle, uint16_t tick, uint16_t countESC);
+    uint8_t    Drone_pid(double dt, double anglePID[3], int16_t &throttle, uint16_t tick);
     void       Drone_main(void);
     uint8_t    Drone_get_angles(double angle[3]);
     void       Drone_get_instructions(double instruction[3], int16_t &throttle);

@@ -67,6 +67,7 @@ void setup()
   
   // Reset FIFO
   ICM20948.ICM20948_resetFIFO();
+  delay(10);  //10 milliseconds
   
   Serial.println("End Init" );
   Serial.println("********" ); 
@@ -148,12 +149,14 @@ void get_angles()
     {   
       // Reset FIFO
       ICM20948.ICM20948_resetFIFO();
+      delay(10);  //10 milliseconds
       
       return;
     }
   }      
   // Reset FIFO
-  ICM20948.ICM20948_resetFIFO();    
+  ICM20948.ICM20948_resetFIFO();
+  delay(10);  //10 milliseconds    
     
   return; 
 }

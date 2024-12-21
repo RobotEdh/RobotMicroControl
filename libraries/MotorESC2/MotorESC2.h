@@ -11,8 +11,10 @@
 #define Motor2Pin 6  //REAR_RIGHT
 #define Motor3Pin 7  //REAR_LEFT
 #define Motor4Pin 8  //FRONT_LEFT
+#else
+#define DDRx  DDRA
+#define PORTx PORTA  // PORT A => PA0:D22, PA1:D23, PA2:D24, PA3:D25
 #endif
-
 
 #define MINPWM 1000
 #define MAXPWM 2000
@@ -27,9 +29,10 @@ class MotorESC2Class
    
    MotorESC2Class();
    
-   void MotorESC_init(int led);
+   void MotorESC_init();
+   void MotorESC_power(int led, uint16_t duration);
    void MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick);
-   void MotorESC_runMotors(int8_t no, uint16_t value);
+   void MotorESC_updateMotors(int8_t n, uint16_t value);
    void MotorESC_pulsePWM(uint32_t duration);
       
    private:

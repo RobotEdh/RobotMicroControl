@@ -1,7 +1,7 @@
 #include <Drone3.h>
 
 //#define DEBUGLEVEL0
-#define DEBUGLEVEL1
+//#define DEBUGLEVEL1
 
 #ifdef  DEBUGLEVEL0
  #define  DEBUGLEVEL1
@@ -18,13 +18,12 @@
 File logFile; 
 int countwrite = -1; 
 
-#define PIDLOGFREQ 1 //record every 1 ticks ie 20 ms at 50Hz
+#define PIDLOGFREQ 500 ////record every 500 ticks ie 10s at 50Hz
 
 struct PID_record_type  
 {
      uint8_t  index;
-     uint8_t  dt;      //seconds (ms*1000)
-     uint16_t countESC;      
+     uint8_t  dt;      //seconds (ms*1000)    
      int16_t  instruction;  
      int16_t  angle;  //Degree*10
      int16_t  error;    //Error*10
@@ -37,11 +36,11 @@ struct PID_record_type
      uint16_t tick;
      
 };
-#define PIDLOGDATANB 21
-struct PID_record_block_type {  //(struct 24 bytes * 21 = 504 + 8 bytes start/stop = 512)
+#define PIDLOGDATANB 23
+struct PID_record_block_type {  //(struct 22 bytes * 23 = 506 + 6 bytes start/stop = 512)
      const uint8_t startPIDLog[2]={0xFA,0xFB}; 
      PID_record_type PID_record[PIDLOGDATANB];
-     const uint8_t stopPIDLog[6] ={0xFC,0xFD,0xFD,0xFD,0xFD,0xFD}; 
+     const uint8_t stopPIDLog[4] ={0xFC,0xFD,0xFD,0xFD}; 
 };
 PID_record_block_type PID_record_block;
 uint8_t PID_t = 0;  
@@ -152,7 +151,7 @@ uint8_t Drone3Class::Drone_init() {
   }
  
   blink(LED_INIT, 15);  // blink led init 15*2s
-  ledOff(LED_INIT);    // turn off led init
+  ledOff(LED_INIT);     // turn off led init
   
   PRINTs("Start  Compute offsets")
   status = Drone_compute_offsets();
@@ -174,7 +173,8 @@ uint8_t Drone3Class::Drone_init() {
   PRINTs("End OK Init RC")
   
   PRINTs("Start Init  Motor ESC")
-  MotorESC.MotorESC_init(LED_INIT);
+  MotorESC.MotorESC_init();
+  MotorESC.MotorESC_power(LED_INIT, 15);  // 15s to connect 
   PRINTs("End OK Init Motor ESC")
  
   ledOn(LED_INIT);    // turn on led init
@@ -197,23 +197,21 @@ void Drone3Class::Drone_main() {
   uint32_t previousTime = 0;
   double dt;
   uint16_t tick = 0;
-  uint16_t countESC = 0;
   
-  while(1){    
-  // loop until sample period reached, then compute PID and send command to MotorESC.
-   if (previousTime == 0)
-      previousTime = millis();
+  while(1){  
+   MotorESC.MotorESC_pulsePWM(0);  // no duration, waiting 5 milliseconds, i.e. a PWM frequency of about 200HZ
+   
+   if (previousTime == 0) previousTime = millis();
   
    else if ((millis() - previousTime) > _samplePeriod) { 
       dt = (double)(millis() - previousTime)/1000.0;
 
 #ifdef DEBUGLEVEL1
-      if (dt > ((double)(_samplePeriod+2)/1000.0)) {PRINT("dt: ",dt) PRINT("count call ESC: ",countESC)}
-      if (countESC == 0) PRINT("count call ESC: ",countESC)
+      if (dt > ((double)(_samplePeriod+2)/1000.0)) {PRINT("dt: ",dt)
 #endif  
       previousTime = millis();
      
-      status = Drone_pid(dt, anglePID, throttle, tick, countESC);      
+      status = Drone_pid(dt, anglePID, throttle, tick);      
       if ((status == 0) && (_go != NOT_STARTED)) {
            ESC_command[THROTTLE] = throttle;
            ESC_command[ROLL]     = (int16_t)anglePID[0];
@@ -223,19 +221,13 @@ void Drone3Class::Drone_main() {
            MotorESC.MotorESC_MixPID(ESC_command, tick);
       }
           
-      if (_go != NOT_STARTED)tick++;
- 
-   }
-   else if (_go == RUNNING)
-   {
-      countESC++;
-      MotorESC.MotorESC_pulsePWM(0);  // no duration
+      if (_go != NOT_STARTED)tick++; 
    }
  
  } // end while (1)
 }
 
-uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle, uint16_t tick, uint16_t countESC) {
+uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle, uint16_t tick) {
   
   uint8_t status = 0; 
          double instruction[3] = {0.0,0.0,0.0};          
@@ -321,7 +313,6 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
 #ifdef LOGSERIAL 
 #ifdef DEBUGLEVEL0 
     PRINT ("dt: ",dt)
-    PRINT ("countESC: ",countESC)
     PRINTi2("instruction",i,instruction[i])
     PRINTi2("angle",i,angle[i])
     PRINTi2("error",i,error[i])
@@ -335,7 +326,6 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
     if ((tick%PIDLOGFREQ) == 0 ) { // record every PIDLOGFREQ ticks
        PID_record_block.PID_record[PID_t].index = (uint8_t)i;       
        PID_record_block.PID_record[PID_t].dt = (uint8_t)(dt*1000.0);
-       PID_record_block.PID_record[PID_t].countESC = (uint16_t)countESC;
        PID_record_block.PID_record[PID_t].instruction = (int16_t)(instruction[i]*10.0);
        PID_record_block.PID_record[PID_t].angle = (int16_t)(angle[i]*10.0);
        PID_record_block.PID_record[PID_t].error = (int16_t)(error[i]*10.0);
@@ -367,9 +357,10 @@ uint8_t Drone3Class::Drone_get_angles(double angle[3])
   icm20948_DMP_data_t data;
   static double lastAngle[3] = {0.0,0.0,0.0};
   uint8_t status = 0;
+#ifdef DEBUGLEVEL1     
   static unsigned long count = 0;
   static unsigned long counterr = 0;
-
+#endif  
 
   // Read any DMP data waiting in the FIFO
   status = ICM20948.ICM20948_readDMPdataFromFIFO(&data);
@@ -439,33 +430,38 @@ uint8_t Drone3Class::Drone_get_angles(double angle[3])
       angle[2] -= _angleOffset[2];
       if (abs(lastAngle[2] - angle[2]) > _safeguard) angle[2] = lastAngle[2];  // safeguard
       else                                           lastAngle[2] = angle[2]; 
-        
+#ifdef DEBUGLEVEL1        
       count++;
+#endif        
       return DMP_NO_ERR;
       
     }   // end data.header 
     else
     {
+ 
+#ifdef DEBUGLEVEL1
       counterr++;  
-#ifdef DEBUGLEVEL1 
       PRINTs("ICM20948_readDMPdataFromFIFO error: No Header available")
       PRINT("count: ",count)
       PRINT("counterr: ",counterr)
 #endif     
       // Reset FIFO
       ICM20948.ICM20948_resetFIFO();
+      MotorESC.MotorESC_pulsePWM(10);  // duration =  10 milliseconds
       
       return DMP_ERR_NO_HEADER_QUAT6;
     }
   }
-  counterr++; 
-#ifdef DEBUGLEVEL1   
+
+#ifdef DEBUGLEVEL1 
+  counterr++;   
   PRINT("ICM20948_readDMPdataFromFIFO error: ",status)
   PRINT("count Read FIFO OK: ",count)
   PRINT("count Read FIFO ERR: ",counterr)
 #endif       
   // Reset FIFO
-  ICM20948.ICM20948_resetFIFO();    
+  ICM20948.ICM20948_resetFIFO();  
+  MotorESC.MotorESC_pulsePWM(10);  // duration =  10 milliseconds 
     
   return status; 
 }
@@ -559,6 +555,7 @@ uint8_t Drone3Class::Drone_init_ICM20948()
   
   // Reset FIFO
   ICM20948.ICM20948_resetFIFO();
+  delay(10);  //10ms
      
   return 0;
 }

@@ -1,7 +1,8 @@
 #include <Arduino.h>
-#include <MotorESC2.h>
 
 //#define SERVO 
+#include <MotorESC2.h>
+
 #ifdef SERVO 
 #include <Servo.h>
 Servo Motor1;
@@ -10,7 +11,8 @@ Servo Motor3;
 Servo Motor4;
 #endif
 
-#define DEBUGLEVEL1
+//#define DEBUGLEVEL0
+//#define DEBUGLEVEL1
 #ifdef  DEBUGLEVEL0
  #define  DEBUGLEVEL1
 #endif
@@ -26,7 +28,7 @@ Servo Motor4;
 extern File logFile;
 extern int countwrite;  
 
-#define MOTORLOGFREQ 1 //record every 5 ticks ie 100 ms at 50Hz
+#define MOTORLOGFREQ 500 //record every 500 ticks ie 10s at 50Hz
 
 struct motor_record_type  // 12 bytes
 {
@@ -54,7 +56,7 @@ MotorESC2Class::MotorESC2Class()
 {
 }
      
-void MotorESC2Class::MotorESC_init(int led)
+void MotorESC2Class::MotorESC_init()
 { 
   
   PRINTs(">Start MotorESC_init")
@@ -64,23 +66,41 @@ void MotorESC2Class::MotorESC_init(int led)
   Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
   Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
   Motor4.attach(Motor4Pin, MINPWM, MAXPWM);
+  
 #else
-  PORTL &= B00001111;   //L4 pin 45 ... L7 pin 42 set to 0
+  DDRx |=  B00001111;   //Px0...Px3 set to 1 for output
+  PORTx &= B11110000;  // Px0...Px3 Turned off
 #endif
- 
-  MotorESC_runMotors(-1, MINPWM);
-
-  pinMode(led, OUTPUT);
-  // blink 20 times the led during 1s; Time to connect the battery.
-  for (int i=0;i<20;i++){
-        digitalWrite(led, HIGH);  // turn on led
-        delay(500);
-        digitalWrite(led, LOW);  // turn off led
-        delay(500);  
-  } 
-  digitalWrite(led, LOW);   // turn off Led
   
   PRINTs("<End MotorESC_init")
+} 
+
+void MotorESC2Class::MotorESC_power(int led, uint16_t duration)
+{ 
+  
+  PRINTs(">Start MotorESC_power")
+  
+  pinMode(led, OUTPUT);
+  digitalWrite(led, HIGH);  // turn on led
+
+  MotorESC_updateMotors(-1, MINPWM); // Update all motors
+  
+#ifdef SERVO   
+  MotorESC_sendPWMtoESC();
+
+  // blink duration times the led during 1s; Time to connect the battery.
+  for (uint16_t i=0;i<duration;i++){
+        digitalWrite(led, HIGH);  // turn on led
+        delay(500);
+        digitalWrite(led, LOW);   // turn off led
+        delay(500);  
+  }   
+#else
+  MotorESC_pulsePWM((uint32_t)duration*1000);  // PWM during duration seconds. Time to connect the battery.
+#endif    
+  digitalWrite(led, LOW);   // turn off Led
+  
+  PRINTs("<End MotorESC_power")
 } 
 
 /**************************************************************************************/
@@ -93,10 +113,7 @@ void MotorESC2Class::MotorESC_sendPWMtoESC()
   Motor1.writeMicroseconds(_motor[0]);
   Motor2.writeMicroseconds(_motor[1]);    
   Motor3.writeMicroseconds(_motor[2]);
-  Motor4.writeMicroseconds(_motor[3]); 
-  
-#else  
-  MotorESC_pulsePWM();  
+  Motor4.writeMicroseconds(_motor[3]);  
 #endif    
 }  
 
@@ -128,23 +145,23 @@ void MotorESC2Class::MotorESC_pulsePWM()
   
   ESC_pulse_start_time = micros();  // This number will overflow (go back to zero), after approximately 70 minutes.
                                     // On 16 MHz Arduino boards, this function has a resolution of four microseconds                                      
-
-  PORTL |= B11110000; // all outputs connected to the ESCs are set to "1"
-
-  ESC_pulse_end_time[0] = ESC_pulse_start_time + _motor[0];
-  ESC_pulse_end_time[1] = ESC_pulse_start_time + _motor[1];
-  ESC_pulse_end_time[2] = ESC_pulse_start_time + _motor[2];
-  ESC_pulse_end_time[3] = ESC_pulse_start_time + _motor[3];
   
-  while(PORTL >=16)
+  PORTx |= B00001111;  // Px0...Px3 Turned on
+
+  ESC_pulse_end_time[0] = ESC_pulse_start_time + (uint32_t)_motor[0];
+  ESC_pulse_end_time[1] = ESC_pulse_start_time + (uint32_t)_motor[1];
+  ESC_pulse_end_time[2] = ESC_pulse_start_time + (uint32_t)_motor[2];
+  ESC_pulse_end_time[3] = ESC_pulse_start_time + (uint32_t)_motor[3];
+
+  while(PORTx&=B00001111)
   {
         current_time = micros();
-        if(ESC_pulse_end_time[0] <= current_time) PORTL &= B11101111; // Port L4 pin 45
-        if(ESC_pulse_end_time[1] <= current_time) PORTL &= B11011111; // Port L5 pin 44
-        if(ESC_pulse_end_time[2] <= current_time) PORTL &= B10111111; // Port L6 pin 43
-        if(ESC_pulse_end_time[3] <= current_time) PORTL &= B01111111; // Port L7 pin 42   
+        if(ESC_pulse_end_time[0] <= current_time) PORTx &= B11111110; // Px0 Turned off
+        if(ESC_pulse_end_time[1] <= current_time) PORTx &= B11111101; // Px1 Turned off
+        if(ESC_pulse_end_time[2] <= current_time) PORTx &= B11111011; // Px2 Turned off
+        if(ESC_pulse_end_time[3] <= current_time) PORTx &= B11110111; // Px3 Turned off   
  }
- delay(2);               // waiting 2 milliseconds before the next loop, i.e. a PWM frequency of about 250HZ
+ delay(5); // waiting 5 milliseconds before the next loop, i.e. a PWM frequency of about 200HZ
   
 #endif    
 }  
@@ -152,15 +169,12 @@ void MotorESC2Class::MotorESC_pulsePWM()
 /**************************************************************************************/
 /************          Run one or all Motors                         ******************/
 /**************************************************************************************/
-void MotorESC2Class::MotorESC_runMotors(int8_t no, uint16_t value)    // Sends same commands to one or all Motors 
+void MotorESC2Class::MotorESC_updateMotors(int8_t n, uint16_t value)    // Define same commands to one or all Motors 
 { 
  
-  for (int i=0;i<NBMOTORS;i++) {
-    if ((no == i) || (no == -1)) _motor[i]=value;
-    else                         _motor[i]=MINPWM;
-  }
-  
-MotorESC_sendPWMtoESC();
+  if (n == -1) {for (int i=0;i<NBMOTORS;i++) {_motor[i]=value;}}
+  else                                       {_motor[n]=value;}
+ 
 }
 
 /**************************************************************************************/
@@ -242,7 +256,7 @@ void MotorESC2Class::MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick)
 #endif       
 
      for(int k=0, maxMotor=0; k< NBMOTORS; k++) {
-       if(overflow[k] > maxMotor) maxMotor = overflow[k];
+       if((uint16_t)overflow[k] > (uint16_t)maxMotor) maxMotor = overflow[k];
      }
        
      if (maxMotor > 0) {      
@@ -262,7 +276,7 @@ void MotorESC2Class::MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick)
 
  
 #ifdef LOGSDCARD
-    if ((tick%MOTORLOGFREQ) == 0 ) { // record every 5 times ie 100 ms at 50Hz
+    if ((tick%MOTORLOGFREQ) == 0 ) { // record every MOTORLOGFREQ ticks
           motor_record_block.motor_record[motor_t].throttle = (uint16_t)ESC_command[THROTTLE];
           motor_record_block.motor_record[motor_t].motor0 = _motor[0];
           motor_record_block.motor_record[motor_t].motor1 = _motor[1];
@@ -283,6 +297,10 @@ void MotorESC2Class::MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick)
       
   }
   
-  MotorESC_sendPWMtoESC(); 
+#ifdef SERVO   
+  MotorESC_sendPWMtoESC();
+#else
+  MotorESC_pulsePWM();
+#endif 
 }
 

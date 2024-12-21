@@ -113,8 +113,8 @@ A15	  PCINT23 (PCMSK2 / PCIF2 / PCIE2) PK7
   PCMSK2 |= bit (PCINT21);  // PCMSK2 – Pin Change Mask Register 2 => want pin PCINT21
   PCIFR  |= bit (PCIF2);   // PCIFR – Pin Change Interrupt Flag Register => Bit 2 – PCIF2: clear any outstanding interrupts 2
   PCICR  |= bit (PCIE2);   // PCICR – Pin Change Interrupt Control Register => Bit 2 – PCIE2: enable pin change interrupts 2
-  DDRK  = DDRK  & B11000000; // DDRK – Port K Data Direction Register => set pins 0-5 of PORTK as input 
-  PORTK = PORTK | B00111111; // activate pull-up resitors on pins 8 to 13 of PORTK in order to avoid random values
+  DDRK  &= B11000000; // DDRK – Port K Data Direction Register => set pins 0-5 of PORTK as input 
+  PORTK |= B00111111; // activate pull-up resitors on pins 8 to 13 of PORTK in order to avoid random values
   uint8_t p = PINK;          // read PortB to clear any mismatch
   
   rcValue[THROTTLE] = MINPPM;
