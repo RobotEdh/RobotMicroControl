@@ -1,6 +1,9 @@
 #include <Arduino.h>
 
 //#define SERVO 
+#define HARDPWM 
+//#define SOFTPWM 
+
 #include <MotorESC2.h>
 
 #ifdef SERVO 
@@ -9,6 +12,9 @@ Servo Motor1;
 Servo Motor2;
 Servo Motor3;
 Servo Motor4;
+#elif defined HARDPWM 
+#include <PWM.h>
+PWMClass PWM;
 #endif
 
 //#define DEBUGLEVEL0
@@ -66,7 +72,8 @@ void MotorESC2Class::MotorESC_init()
   Motor2.attach(Motor2Pin, MINPWM, MAXPWM); 
   Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
   Motor4.attach(Motor4Pin, MINPWM, MAXPWM);
-  
+#elif defined  HARDPWM
+  PWM.PWMInit();  
 #else
   DDRx |=  B00001111;   //Px0...Px3 set to 1 for output
   PORTx &= B11110000;  // Px0...Px3 Turned off
@@ -86,7 +93,10 @@ void MotorESC2Class::MotorESC_power(int led, uint16_t duration)
   MotorESC_updateMotors(-1, MINPWM); // Update all motors
   
 #ifdef SERVO   
-  MotorESC_sendPWMtoESC();
+  Motor1.writeMicroseconds(_motor[0]);
+  Motor2.writeMicroseconds(_motor[1]);    
+  Motor3.writeMicroseconds(_motor[2]);
+  Motor4.writeMicroseconds(_motor[3]);
 
   // blink duration times the led during 1s; Time to connect the battery.
   for (uint16_t i=0;i<duration;i++){
@@ -94,7 +104,12 @@ void MotorESC2Class::MotorESC_power(int led, uint16_t duration)
         delay(500);
         digitalWrite(led, LOW);   // turn off led
         delay(500);  
-  }   
+  } 
+#elif defined HARDPWM 
+  PWM.writeESC(0, _motor[0]);
+  PWM.writeESC(1, _motor[1]);
+  PWM.writeESC(2, _motor[2]);
+  PWM.writeESC(3, _motor[3]);
 #else
   MotorESC_pulsePWM((uint32_t)duration*1000);  // PWM during duration seconds. Time to connect the battery.
 #endif    
@@ -103,19 +118,6 @@ void MotorESC2Class::MotorESC_power(int led, uint16_t duration)
   PRINTs("<End MotorESC_power")
 } 
 
-/**************************************************************************************/
-/************          Send the PWM command to ESC                   ******************/
-/**************************************************************************************/
-
-void MotorESC2Class::MotorESC_sendPWMtoESC()
-{ 
-#ifdef SERVO  
-  Motor1.writeMicroseconds(_motor[0]);
-  Motor2.writeMicroseconds(_motor[1]);    
-  Motor3.writeMicroseconds(_motor[2]);
-  Motor4.writeMicroseconds(_motor[3]);  
-#endif    
-}  
 
 /**************************************************************************************/
 /************          Send the PWM command to ESC                   ******************/
@@ -123,6 +125,7 @@ void MotorESC2Class::MotorESC_sendPWMtoESC()
 
 void MotorESC2Class::MotorESC_pulsePWM(uint32_t duration)
 {
+#ifdef SOFTPWM   
   uint32_t startTime = millis();
   
   if (duration == 0) { 
@@ -134,13 +137,13 @@ void MotorESC2Class::MotorESC_pulsePWM(uint32_t duration)
           MotorESC_pulsePWM();
   }
   return;
+#endif   
 }
 
 void MotorESC2Class::MotorESC_pulsePWM()
 {
  
-#ifndef SERVO  
-
+#ifdef SOFTPWM 
   uint32_t current_time, ESC_pulse_start_time, ESC_pulse_end_time[4];
   
   ESC_pulse_start_time = micros();  // This number will overflow (go back to zero), after approximately 70 minutes.
@@ -298,7 +301,15 @@ void MotorESC2Class::MotorESC_MixPID(int16_t ESC_command[4], uint16_t tick)
   }
   
 #ifdef SERVO   
-  MotorESC_sendPWMtoESC();
+  Motor1.writeMicroseconds(_motor[0]);
+  Motor2.writeMicroseconds(_motor[1]);    
+  Motor3.writeMicroseconds(_motor[2]);
+  Motor4.writeMicroseconds(_motor[3]);
+#elif defined HARDPWM
+  PWM.writeESC(0, _motor[0]);
+  PWM.writeESC(1, _motor[1]);
+  PWM.writeESC(2, _motor[2]);
+  PWM.writeESC(3, _motor[3]);
 #else
   MotorESC_pulsePWM();
 #endif 

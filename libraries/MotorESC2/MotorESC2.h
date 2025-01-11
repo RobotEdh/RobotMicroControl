@@ -11,12 +11,14 @@
 #define Motor2Pin 6  //REAR_RIGHT
 #define Motor3Pin 7  //REAR_LEFT
 #define Motor4Pin 8  //FRONT_LEFT
-#else
+#define MINPWM 1000
+#elif defined SOFTPWM
 #define DDRx  DDRA
 #define PORTx PORTA  // PORT A => PA0:D22, PA1:D23, PA2:D24, PA3:D25
+#define MINPWM 1000
 #endif
 
-#define MINPWM 1000
+
 #define MAXPWM 2000
 #define MAXPWMTHRO 1700
 
@@ -36,7 +38,6 @@ class MotorESC2Class
    void MotorESC_pulsePWM(uint32_t duration);
       
    private:
-   void MotorESC_sendPWMtoESC();
    void MotorESC_pulsePWM();
 
    uint16_t _motor[NBMOTORS];
