@@ -5,8 +5,20 @@
 #include <Arduino.h>
 
 #ifdef I2C
-  #include <Wire.h> // I2C
-#endif
+#include <Wire.h> // I2C
+
+//ICM20948 I2C
+#define ADDRESS_DEFAULT 0X69 //AD0 logic level set to high
+
+#define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
+#define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
+#define WIRE_ERROR_TRANSMIT_ADR_NACK  0x02 // Wire.endTransmission()- 2:received NACK on transmit of address
+#define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
+#define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
+#define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+
+#else
+#include <SPI.h>
 
 //ICM20948 SPI
 //   Data is delivered MSB first and LSB last => SPISettings.dataOrder = MSBFIRST
@@ -20,18 +32,10 @@
    
 //   The maximum frequency of SCLK is 7MHz => SPISettings.speedMaximum = 7000000 (7MHZ)
 #define SPI_SPEEDMAXIMUM  7000000   
- 
-//ICM20948 I2C
-#define ADDRESS_DEFAULT 0X69 //AD0 logic level set to high
-//AK09916 I2C
-#define AK09916_I2C_ADDR  0x0C                // The slave address of AK09916 is 0Ch. The 8th bit (least significant bit) of the first byte is a R/W bit
-                                             // When the R/W bit is set to “1”, READ instruction is executed. When the R/W bit is set to “0”, WRITE instruction is executed*
-#define WIRE_TRANSMIT_SUCESS          0x00 // Wire.endTransmission()- 0:success
-#define WIRE_ERROR_TRANSMIT_TOOLONG   0x01 // Wire.endTransmission()- 1:data too long to fit in transmit buffer
-#define WIRE_ERROR_TRANSMIT_ADR_NACK  0x02 // Wire.endTransmission()- 2:received NACK on transmit of address
-#define WIRE_ERROR_TRANSMIT_DATA_NACK 0x03 // Wire.endTransmission()- 3:received NACK on transmit of data
-#define WIRE_TRANSMIT_ERROR_OTHER     0x04 // Wire.endTransmission()- 4:other error
-#define WIRE_REQUEST_ERROR            0x80 // Wire.requestFrom()- the number of bytes returned from the slave device != the number of bytes to request
+#endif
+
+#define AK09916_ADDR  0x0C                // The slave address of AK09916 is 0Ch. The 8th bit (least significant bit) of the first byte is a R/W bit
+                                          // When the R/W bit is set to “1”, READ instruction is executed. When the R/W bit is set to “0”, WRITE instruction is executed*
 
 //Check Errors
 #define CHECK_NO_ERROR                  0x00

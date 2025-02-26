@@ -28,7 +28,7 @@ PWMClass PWM;
 //#define LOGSDCARD  // log to SD Card
 //#define AUTOFLUSH // auto flush following each write
 //#define LOGTRACE   // Enable trace
-#include <log.h>
+#include <MyLog.h>
 
 #ifdef  LOGSDCARD
 extern File logFile;
@@ -73,7 +73,7 @@ void MotorESC2Class::MotorESC_init()
   Motor3.attach(Motor3Pin, MINPWM, MAXPWM); 
   Motor4.attach(Motor4Pin, MINPWM, MAXPWM);
 #elif defined  HARDPWM
-  PWM.PWMInit();  
+  if (!PWM.PWMInit()) PRINTs("Error PWMInit");  
 #else
   DDRx |=  B00001111;   //Px0...Px3 set to 1 for output
   PORTx &= B11110000;  // Px0...Px3 Turned off

@@ -1,6 +1,17 @@
 #include <Arduino.h>
 #include <RC.h>
 
+#ifndef ARDUINO_AVR_MEGA2560
+#define RC_PIN_THROTTLE     GPIO_NUM_4
+#define RC_PIN_ROLL         GPIO_NUM_5
+#define RC_PIN_PITCH        GPIO_NUM_6
+#define RC_PIN_YAW          GPIO_NUM_7
+#define RC_PIN_AUX1         GPIO_NUM_8
+#define RC_PIN_AUX2         GPIO_NUM_9
+const uint8_t rc_pins[6]={RC_PIN_THROTTLE, RC_PIN_ROLL, RC_PIN_PITCH, RC_PIN_YAW, RC_PIN_AUX1, RC_PIN_AUX2};
+#define RC_PIN_SEL  ((1ULL<<RC_PIN_THROTTLE)|(1ULL<<RC_PIN_ROLL)|(1ULL<<RC_PIN_PITCH)|(1ULL<<RC_PIN_YAW)|(1ULL<<RC_PIN_AUX1)|(1ULL<<RC_PIN_AUX2))
+#endif
+
 //RAW RC values will be store here
 volatile uint16_t rcValue[NBCHANNELS] = {0}; 
 
@@ -8,6 +19,7 @@ RCClass::RCClass(void)
 {
 }
 
+#ifdef ARDUINO_AVR_MEGA2560
 ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
 {
     static volatile uint32_t edgeTime[NBCHANNELS]= {0};
@@ -91,9 +103,51 @@ ISR (PCINT2_vect) // ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
     
  }  // end of PCINT2_vect
  
+#else
+static xQueueHandle gpio_evt_queue = NULL;
+
+static void IRAM_ATTR gpio_isr_handler(void* arg)
+{
+    uint32_t gpio_num = (uint32_t)arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
+// Task running on Core 0
+static void gpio_RC_task(void* arg)
+{
+    uint32_t io_num;
+    
+    static volatile uint32_t edgeTime[NBCHANNELS]= {0};
+    uint32_t currTime; // current time, 
+    uint32_t dTime;    // duration high level = time changing low - time changing high
+
+    for(;;) {
+        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {          
+            currTime = micros();
+            int level = gpio_get_level((gpio_num_t)io_num);
+            
+            uint8_t i=0;
+            while((rc_pins[i]!=(gpio_num_t)io_num) || i>5) {i++;}
+            
+            if (i<=5) {          
+               if(level == 0) {// level is low => compute duration high level                         
+                  dTime = currTime-edgeTime[i];                             
+                  if (900<dTime && dTime<2200) {  // filter erroneous values                              
+                     rcValue[i] = (uint16_t)dTime;                             
+                  }                                                            
+               }
+               else
+                  edgeTime[i] = currTime; // level is high  => store time rising high level   
+            }                             
+        }
+    }
+}
+#endif
+
 
 void RCClass::RC_init()
 { 
+#ifdef ARDUINO_AVR_MEGA2560    
 /*ISR(PCINT2_vect){} for pins PCINT16-PCINT23 (PK0- PK7)
 
 A8	  PCINT16 (PCMSK2 / PCIF2 / PCIE2) PK0
@@ -116,7 +170,36 @@ A15	  PCINT23 (PCMSK2 / PCIF2 / PCIE2) PK7
   DDRK  &= B11000000; // DDRK – Port K Data Direction Register => set pins 0-5 of PORTK as input 
   PORTK |= B00111111; // activate pull-up resitors on pins 8 to 13 of PORTK in order to avoid random values
   uint8_t p = PINK;          // read PortB to clear any mismatch
-  
+#else
+
+//configure GPIO with the given settings
+  gpio_config_t io_conf;
+  io_conf.intr_type = GPIO_INTR_ANYEDGE;  //both rising and falling edge
+  io_conf.pin_bit_mask = RC_PIN_SEL;  //bit mask of the pins
+  io_conf.mode = GPIO_MODE_INPUT;  //input 
+  io_conf.pull_up_en = GPIO_PULLUP_ENABLE;  //Enable GPIO pull-up resistor
+  gpio_config(&io_conf);
+
+  //Create a queue capable of containing 10 uint32_t values to handle gpio event from isr
+  gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t)); 
+    
+  //Start gpio task on Core 0
+  //usStackDepth = 2048
+  //pvParameters = NULL
+  //uxPriority = 10
+  //pvCreatedTask = NULL
+  xTaskCreatePinnedToCore(gpio_RC_task, "gpio_RC_task", 2048, NULL, 10, NULL, 0);
+
+  //install gpio isr service
+  gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1);
+  gpio_isr_handler_add(RC_PIN_THROTTLE, gpio_isr_handler, (void*) RC_PIN_THROTTLE);
+  gpio_isr_handler_add(RC_PIN_ROLL,     gpio_isr_handler, (void*) RC_PIN_ROLL); 
+  gpio_isr_handler_add(RC_PIN_PITCH,    gpio_isr_handler, (void*) RC_PIN_PITCH); 
+  gpio_isr_handler_add(RC_PIN_YAW,      gpio_isr_handler, (void*) RC_PIN_YAW); 
+  gpio_isr_handler_add(RC_PIN_AUX1,     gpio_isr_handler, (void*) RC_PIN_AUX1);  
+  gpio_isr_handler_add(RC_PIN_AUX2,     gpio_isr_handler, (void*) RC_PIN_AUX2);         
+#endif  
+
   rcValue[THROTTLE] = MINPPM;
   rcValue[ROLL]     = MIDPPM;
   rcValue[PITCH]    = MIDPPM;
@@ -135,10 +218,15 @@ A15	  PCINT23 (PCMSK2 / PCIF2 / PCIE2) PK7
 uint16_t RCClass::RC_readRaw(uint8_t chan)
 {
   uint16_t data;
-   
+
+#ifdef ARDUINO_AVR_MEGA2560      
   cli();		// turn off interrupts
-  data = rcValue[chan];  // Let's copy the data Atomically
+  data = rcValue[chan];  // Let's copy the data 16 bits Atomically (AVR is only on 8 bits)
   sei();		// turn on interrupts
+
+#else 
+  data = rcValue[chan]; 
+#endif  
  
   return data; // We return the value correctly copied when the IRQ's where disabled
 }

@@ -1,6 +1,6 @@
-#ifndef LOG_h
-#define LOG_h
-	
+#ifndef MyLOG_h
+#define MyLOG_h
+
 #ifdef NOLOG    // no logging
    
    #define PRINTbegin

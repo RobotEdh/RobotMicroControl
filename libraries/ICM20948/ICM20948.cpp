@@ -1,9 +1,14 @@
 #include <Arduino.h>
-#include <SPI.h>
+
 #include <ICM20948.h>
 #include <ICM20948_DMP.h>
 
+#ifdef ARDUINO_AVR_MEGA
 #include <avr/pgmspace.h>
+#else
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+#endif
 const uint8_t dmp3_image[] PROGMEM = {
 #include "icm20948_img.dmp3a.h"
 };
@@ -2120,7 +2125,7 @@ void ICM20948Class::ICM20948_configureMagnetometer()
   // So, we need to set up I2C_SLV0 to do the ten byte reading. The parameters passed to i2cControllerConfigurePeripheral are:
   
   // 0: use I2C_SLV0
-  // AK09916_I2C_ADDR: the I2C address of the AK09916 magnetometer (0x0C unshifted)
+  // AK09916_ADDR: the address of the AK09916 magnetometer (0x0C unshifted)
   // AK09916_REG_RSV2: we start reading here (0x03). Secret sauce...
   // 10: we read 10 bytes each cycle
   // true: set the I2C_SLV0_RNW ReadNotWrite bit so we read the 10 bytes (not write them)
@@ -2129,11 +2134,11 @@ void ICM20948Class::ICM20948_configureMagnetometer()
   // true: set the I2C_SLV0_CTRL I2C_SLV0_GRP bit to show the register pairing starts at byte 1+2 (copied from inv_icm20948_resume_akm)
   // true: set the I2C_SLV0_CTRL I2C_SLV0_BYTE_SW to byte-swap the data from the mag (copied from inv_icm20948_resume_akm)
   
-  ICM20948_i2cControllerConfigurePeripheral(0, AK09916_I2C_ADDR, AK09916_REG_RSV2, 10, true, true, false, true, true, 0);
+  ICM20948_i2cControllerConfigurePeripheral(0, AK09916_ADDR, AK09916_REG_RSV2, 10, true, true, false, true, true, 0);
    //
   // We also need to set up I2C_SLV1 to do the Single Measurement triggering:
   // 1: use I2C_SLV1
-  // MAG_AK09916_I2C_ADDR: the I2C address of the AK09916 magnetometer (0x0C unshifted)
+  // AK09916_ADDR: the address of the AK09916 magnetometer (0x0C unshifted)
   // AK09916_REG_CNTL2: we start writing here (0x31)
   // 1: not sure why, but the write does not happen if this is set to zero
   // false: clear the I2C_SLV0_RNW ReadNotWrite bit so we write the dataOut byte
@@ -2143,7 +2148,7 @@ void ICM20948Class::ICM20948_configureMagnetometer()
   // false: clear the I2C_SLV0_CTRL I2C_SLV0_BYTE_SW bit
   // AK09916_mode_single: tell I2C_SLV1 to write the Single Measurement command each sample
 
-   ICM20948_i2cControllerConfigurePeripheral(1, AK09916_I2C_ADDR, AK09916_REG_CNTL2, 1, false, true, false, false, false, AK09916_mode_single);
+   ICM20948_i2cControllerConfigurePeripheral(1, AK09916_ADDR, AK09916_REG_CNTL2, 1, false, true, false, false, false, AK09916_mode_single);
    if (_last_status > 0) return; 
 
   // Set the I2C Master ODR configuration
@@ -2175,7 +2180,7 @@ uint8_t ICM20948Class::ICM20948_startupMagnetometer()
   uint8_t SRST = 1;
   // Soft reset on bit 0 (SRST) of CNTL3: CONTROL 3 SRST= “0”: Normal,  SRST= “1”: Reset
   // When “1” is set, all registers are initialized. After reset, SRST bit turns to “0” automatically.
-  retval = ICM20948_i2c_controller_periph4_txn(AK09916_I2C_ADDR, AK09916_REG_CNTL3, SRST, false); // Write 1 byte
+  retval = ICM20948_i2c_controller_periph4_txn(AK09916_ADDR, AK09916_REG_CNTL3, SRST, false); // Write 1 byte
   if (_last_status > 0) return _last_status;
   
   //After a ICM reset the Mag sensor may stop responding over the I2C master
@@ -2222,7 +2227,7 @@ uint8_t ICM20948Class::ICM20948_magWhoIAm()
 {
   uint8_t whoiam = 0;
  
-  whoiam = ICM20948_i2c_controller_periph4_txn(AK09916_I2C_ADDR, AK09916_REG_WIA2, 0x00, true);  // Read 1 byte
+  whoiam = ICM20948_i2c_controller_periph4_txn(AK09916_ADDR, AK09916_REG_WIA2, 0x00, true);  // Read 1 byte
   if (_last_status > 0) return 2;
 
   if (whoiam == AK09916_WHO_AM_I) return 0;

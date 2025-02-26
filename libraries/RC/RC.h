@@ -4,10 +4,10 @@
 #include <Arduino.h>
 
 #define NBCHANNELS 6 
-#define ROLL       0
-#define PITCH      1
-#define YAW        2
-#define THROTTLE   3
+#define THROTTLE   0
+#define ROLL       1
+#define PITCH      2
+#define YAW        3
 #define AUX1       4
 #define AUX2       5
 

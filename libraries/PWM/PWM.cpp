@@ -6,6 +6,19 @@
    volatile uint8_t Nb_tick_Low;
    volatile uint8_t Nb_tick_High;
 #endif
+
+//#define DEBUGLEVEL0
+//#define DEBUGLEVEL1
+#ifdef  DEBUGLEVEL0
+ #define  DEBUGLEVEL1
+#endif
+ 
+// Logging mode
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define AUTOFLUSH // auto flush following each write
+//#define LOGTRACE   // Enable trace
+#include <MyLog.h>
   
 uint32_t pwmUs[4];  
 
@@ -14,6 +27,7 @@ PWMClass::PWMClass()
 {
 }
 
+#ifdef ARDUINO_AVR_MEGA2560
 ISR(TIMER5_COMPA_vect)  // Interrupt trigerred when TCNT5 = OCR5A
 { 
   static bool low_level = true;
@@ -63,14 +77,16 @@ ISR(TIMER5_COMPA_vect)  // Interrupt trigerred when TCNT5 = OCR5A
      OCR5A = TCNT5 + tick - TRIMTICK; // set next Timer5 interrupt compare, add a trim to avoid too close interrupt
   }   
 }  
+#endif
 
 #ifdef MEASURE_ON   
 uint8_t PWMClass::get_Nb_tick_Low()  {return Nb_tick_Low;}
 uint8_t PWMClass::get_Nb_tick_High() {return Nb_tick_High;}
 #endif
    
-void PWMClass::PWMInit()
-{        
+bool PWMClass::PWMInit()
+{  
+#ifdef ARDUINO_AVR_MEGA2560      
 #ifdef MEASURE_ON      
     TCCR2A = 0;  //normal mode
     TCCR2B = 1;  //Bit 2:0 ? CSn2:0: Clock Select (No prescaling)
@@ -116,13 +132,42 @@ void PWMClass::PWMInit()
     //TIMSK5 ? Timer/Counter 5 Interrupt Mask Register
     //Bit 1 ? OCIE5A: Timer/Countern, Output Compare A Match Interrupt Enable
     TIMSK5 =  _BV(OCIE5A) ; // enable the output compare interrupt
+    
+    return true;
+#else
+    for (uint8_t i=0;i<4;i++) {
+       if (!ledcAttach(pwm_pins[i], PWM_FREQUENCY, PWM_RESOLUTION)) {
+          PRINT("ledcAttach failled for Pin: ", pwm_pins[i]);
+          return false;
+       }
+       if (!ledcWrite(pwm_pins[i], (uint32_t)usToTicks(MINPWM))) {
+          PRINT("ledcWrite failled for Pin: ", pwm_pins[i]);
+          return false;
+       }
+    }
+    return true;
+  
+#endif
 }
 
-void PWMClass::writeServo (uint8_t index, uint8_t degree) {
-  if (degree > 180) degree = 180;  
+bool PWMClass::writeServo (uint8_t index, uint8_t degree) {
+  if (degree > 180) degree = 180; 
+#ifdef ARDUINO_AVR_MEGA2560     
   pwmUs[index] = map(degree,0,180,MIN_PULSE_SERVO,MAX_PULSE_SERVO);
+  return true;
+
+#else   
+ return ledcWrite(pwm_pins[index], (uint32_t)usToTicks(map(degree,0,180,MIN_PULSE_SERVO,MAX_PULSE_SERVO)));   
+#endif 
 }
 
-void PWMClass::writeESC (uint8_t index, uint32_t duration_us) {  
+bool PWMClass::writeESC (uint8_t index, uint32_t duration_us) {  
+
+#ifdef ARDUINO_AVR_MEGA2560      
   pwmUs[index] = duration_us;
+  return true;
+
+#else   
+ return ledcWrite(pwm_pins[index], (uint32_t)usToTicks(duration_us));   
+#endif    
 }
