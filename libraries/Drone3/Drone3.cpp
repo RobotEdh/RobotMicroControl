@@ -1,19 +1,5 @@
 #include <Drone3.h>
 
-//#define DEBUGLEVEL0
-//#define DEBUGLEVEL1
-
-#ifdef  DEBUGLEVEL0
- #define  DEBUGLEVEL1
-#endif
-
-// Logging mode
-//#define  LOGSERIAL
-#define LOGSDCARD  // log to SD Card
-#define AUTOFLUSH // auto flush following each write
-//#define LOGTRACE   // Enable trace
-#include <log.h> //SPI CS=10 for SD Card
-
 #ifdef  LOGSDCARD
 File logFile; 
 int countwrite = -1; 
@@ -92,11 +78,127 @@ void print_time()
       PRINTd
       PRINTt
    }
-#endif    
+#endif  
+
 }
-  
+ 
+#ifndef ARDUINO_AVR_MEGA2560
+static volatile double vangle[3] = {0.0, 0.0, 0.0};
+
+static void get_angles_task(void* arg)
+{
+ icm20948_DMP_data_t data;
+  const double   safeguard = 20.0;  // safeguard angle variation
+  double angle[3] = {0.0,0.0,0.0};
+  static double lastAngle[3] = {0.0,0.0,0.0};
+  uint8_t status = 0;
+#ifdef DEBUGLEVEL1     
+  static unsigned long count = 0;
+  static unsigned long counterr = 0;
+#endif  
+
+  // Read any DMP data waiting in the FIFO
+  status = ICM20948.ICM20948_readDMPdataFromFIFO(&data);
+  if ((status == DMP_NO_ERR) || (status == DMP_FIFO_NOT_EMPTY)) // Was valid data available?
+  { 
+#ifdef DEBUGLEVEL0 
+     PRINTx("Received data! Header: ",data.header) // Print the header in HEX so we can see what data is arriving in the FIFO
+#endif     
+    if ((data.header & DMP_header_bitmap_Quat6) > 0)
+    {
+      
+      // Q0 value is computed from this equation: Q0^2 + Q1^2 + Q2^2 + Q3^2 = 1.
+      // In case of drift, the sum will not add to 1, therefore, quaternion data need to be corrected with right bias values.
+      // The quaternion data is scaled by 2^30.
+
+      // Scale to +/- 1
+      double qy = ((double)data.Quat6.Data.Q1) / 1073741824.0; // Convert to double. Divide by 2^30
+      double qx = ((double)data.Quat6.Data.Q2) / 1073741824.0; // Convert to double. Divide by 2^30
+      double qz = -((double)data.Quat6.Data.Q3) / 1073741824.0; // Convert to double. Divide by 2^30
+      double u = ((qx * qx) + (qy * qy) + (qz * qz));
+      double qw;
+      if (u < 1.0) qw = sqrt(1.0 - u);
+      else         qw = 0.0;
+
+      // The ICM 20948 chip has axes y-forward, x-right and Z-up - see Figure 12:
+      // Orientation of Axes of Sensitivity and Polarity of Rotation
+      // in DS-000189-ICM-20948-v1.6.pdf  These are the axes for gyro and accel and quat
+      //
+      // For conversion to roll, pitch and yaw for the equations below, the coordinate frame
+      // must be in aircraft reference frame.
+      //  
+      // We use the Tait Bryan angles (in terms of flight dynamics):
+      // ref: https://en.wikipedia.org/w/index.php?title=Conversion_between_quaternions_and_Euler_angles
+      //
+      // Heading – ψ : rotation about the Z-axis (+/- 180 deg.)
+      // Pitch – θ : rotation about the new Y-axis (+/- 90 deg.)
+      // Bank – ϕ : rotation about the new X-axis  (+/- 180 deg.)
+      //
+      // where the X-axis points forward (pin 1 on chip), Y-axis to the right and Z-axis downward.
+      // In the conversion example above the rotation occurs in the order heading, pitch, bank. 
+      // To get the roll, pitch and yaw equations to work properly we need to exchange the axes
+
+      // Note when pitch approaches +/- 90 deg. the heading and bank become less meaningfull because the
+      // device is pointing up/down. (Gimbal lock)
+
+      // roll (x-axis rotation)
+      double t0 = +2.0 * (qw * qx + qy * qz);
+      double t1 = +1.0 - 2.0 * (qx * qx + qy * qy);
+      angle[0] = atan2(t0, t1) * 180.0 / PI;
+      if (abs(lastAngle[0] - angle[0]) > safeguard) angle[0] = lastAngle[0];  // safeguard
+      else                                          lastAngle[0] = angle[0]; 
+
+      // pitch (y-axis rotation)
+      double t2 = +2.0 * (qw * qy - qx * qz);
+      t2 = t2 > 1.0 ? 1.0 : t2;
+      t2 = t2 < -1.0 ? -1.0 : t2;
+      angle[1] = asin(t2) * 180.0 / PI;
+      if (abs(lastAngle[1] - angle[1]) > safeguard) angle[1] = lastAngle[1];  // safeguard
+      else                                          lastAngle[1] = angle[1]; 
+              
+      // yaw (z-axis rotation)
+      double t3 = +2.0 * (qw * qz + qx * qy);
+      double t4 = +1.0 - 2.0 * (qy * qy + qz * qz);
+      angle[2] = atan2(t3, t4) * 180.0 / PI;
+      if (abs(lastAngle[2] - angle[2]) > safeguard) angle[2] = lastAngle[2];  // safeguard
+      else                                          lastAngle[2] = angle[2]; 
+#ifdef DEBUGLEVEL1        
+      count++;
+#endif 
+      for (uint8_t i=0;i<3;i++) {
+         vangle[i] = angle[i];
+      }
+      delay(1);  // 1ms          
+    }   // end data.header 
+    else
+    {
+#ifdef DEBUGLEVEL1
+      counterr++;  
+      PRINTs("ICM20948_readDMPdataFromFIFO error: No Header available")
+      PRINT("count: ",count)
+      PRINT("counterr: ",counterr)
+#endif     
+      // Reset FIFO
+      ICM20948.ICM20948_resetFIFO();
+    }
+  }  // end data available
+  else
+  {    
+#ifdef DEBUGLEVEL1 
+     counterr++;   
+     PRINT("ICM20948_readDMPdataFromFIFO error: ",status)
+     PRINT("count Read FIFO OK: ",count)
+     PRINT("count Read FIFO ERR: ",counterr)
+#endif       
+     // Reset FIFO
+     ICM20948.ICM20948_resetFIFO(); 
+   }      
+}
+#endif 
+
 Drone3Class::Drone3Class(void) {
 }
+
 
 
 uint8_t Drone3Class::Drone_init() {
@@ -149,7 +251,16 @@ uint8_t Drone3Class::Drone_init() {
      PRINTs("End KO Init ICM20948")
      return status;
   }
- 
+  
+#ifndef ARDUINO_AVR_MEGA2560
+  //Start get_angles_task task on Core 0
+  //usStackDepth = 2048
+  //pvParameters = NULL
+  //uxPriority = 10
+  //pvCreatedTask = NULL
+  xTaskCreatePinnedToCore(get_angles_task, "get_angles_task", 2048, NULL, 10, NULL, 0);// Task running on Core 0
+#endif
+  
   blink(LED_INIT, 15);  // blink led init 15*2s
   ledOff(LED_INIT);     // turn off led init
   
@@ -353,6 +464,19 @@ uint8_t Drone3Class::Drone_pid(double dt, double anglePID[3], int16_t &throttle,
 }
 
 uint8_t Drone3Class::Drone_get_angles(double angle[3])
+{
+#ifdef ARDUINO_AVR_MEGA2560  
+  return Drone_get_DMP_angles(angle);
+  
+#else
+  for (uint8_t i=0;i<3;i++) {
+            angle[i] = vangle[i] - _angleOffset[i];
+  } 
+  return 0;    
+#endif
+}
+
+uint8_t Drone3Class::Drone_get_DMP_angles(double angle[3])
 {
   icm20948_DMP_data_t data;
   static double lastAngle[3] = {0.0,0.0,0.0};

@@ -1,6 +1,20 @@
 #ifndef DRONE3_h
 #define DRONE3_h
 
+//#define DEBUGLEVEL0
+//#define DEBUGLEVEL1
+
+#ifdef  DEBUGLEVEL0
+ #define  DEBUGLEVEL1
+#endif
+
+// Logging mode
+#define  LOGSERIAL
+//#define LOGSDCARD  // log to SD Card
+//#define AUTOFLUSH // auto flush following each write
+//#define LOGTRACE   // Enable trace
+#include <MyLog.h> //SPI CS=10 for SD Card
+
 #include <ICM20948.h>    // IMU ICN20948
 #include <RC.h>         // Radio Command
 #include <MotorESC2.h>  // Motor ESC
@@ -26,6 +40,7 @@ class Drone3Class
     uint8_t    Drone_compute_offsets(void);
     uint8_t    Drone_pid(double dt, double anglePID[3], int16_t &throttle, uint16_t tick);
     void       Drone_main(void);
+    uint8_t    Drone_get_DMP_angles(double angle[3]);
     uint8_t    Drone_get_angles(double angle[3]);
     void       Drone_get_instructions(double instruction[3], int16_t &throttle);
 
